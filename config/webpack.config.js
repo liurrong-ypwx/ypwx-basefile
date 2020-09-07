@@ -461,7 +461,7 @@ module.exports = function(webpackEnv) {
               use: getStyleLoaders({
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
-              }),
+              }, 'less-loader'),
               sideEffects: true,
             },
             {
@@ -472,7 +472,7 @@ module.exports = function(webpackEnv) {
                 modules: {
                   getLocalIdent: getCSSModuleLocalIdent,
                 },
-              }),
+              }, 'less-loader'),
             },
             // Opt-in support for SASS (using .scss or .sass extensions).
             // By default we support SASS Modules with the
