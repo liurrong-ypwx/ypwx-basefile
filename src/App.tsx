@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import './App.css';
 import TestPage from './pages/TestPage/TestPage';
 import UtilScreen from './utils/comUtil/UtilScreen';
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+
 
 function App() {
 
@@ -20,9 +22,13 @@ function App() {
   }
 
   return (
-    <div className="App">   
-      <TestPage/>
-    </div>
+    <BrowserRouter>
+      <Switch>
+        <Route path={"/test"} exact={true} component={TestPage} />
+      </Switch>
+    </BrowserRouter>
+
+
   );
 }
 
