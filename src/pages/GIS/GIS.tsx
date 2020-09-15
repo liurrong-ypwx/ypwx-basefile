@@ -83,7 +83,7 @@ function GIS(props: any): JSX.Element {
 
                 </Sider>
 
-                <Layout style={{ padding: '0 24px 24px' }}>
+                <Layout style={{ padding: '0 24px 24px' }} className="gis-content" >
                     <Breadcrumb style={{ margin: '16px 0' }}>
                         <Breadcrumb.Item>Home</Breadcrumb.Item>
                         <Breadcrumb.Item>List</Breadcrumb.Item>
@@ -92,7 +92,6 @@ function GIS(props: any): JSX.Element {
                     <Content
                         className="site-layout-background"
                         style={{
-                            padding: 24,
                             margin: 0,
                             minHeight: 280,
                         }}
