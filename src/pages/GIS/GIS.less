@@ -1,16 +1,38 @@
-.gis-container{
+.gis-container {
     height: 100%;
     overflow: hidden;
 
-    .gis-sider{
-        .gis-menu{
+    // 顶栏
+    .gis-header {
+        .gis-logo-title {
+            display: flex;
+            flex-direction: row;
+
+            .iconfont {
+                color: #FFF;
+            }
+
+            .gis-title {
+                color: #FFF;
+                font-size: .36rem;
+                margin-left: .2rem;
+            }
+        }
+
+
+    }
+
+    // 侧边栏
+    .gis-sider {
+        .gis-menu {
             height: 90%;
             width: 100%;
             overflow: hidden;
             overflow-y: auto;
             background-color: #FFFFFF;
         }
-        .toggle-collapsed{
+
+        .toggle-collapsed {
             height: 10%;
             background-color: #FFFFFF;
         }

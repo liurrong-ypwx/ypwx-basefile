@@ -12,7 +12,12 @@ function GIS(): JSX.Element {
     return (
         <Layout className="gis-container" >
             <Header className="gis-header" >
-                <div className="gis-logo" />
+                <div className="gis-logo-title">
+                    <i className="iconfont" >&#xe664;</i>
+                    <div className="gis-title">
+                        ArcGIS API for JS 学习总结
+                    </div>
+                </div>                
             </Header>
             <Layout>
                 <Sider width={200} className="gis-sider" >
@@ -20,15 +25,16 @@ function GIS(): JSX.Element {
                     <div className="gis-menu">
                         <Menu
                             mode="inline"
-                            defaultSelectedKeys={['1']}
-                            defaultOpenKeys={['sub1']}
+                            defaultSelectedKeys={['0']}
+                            // defaultOpenKeys={['sub1']}
                             style={{ height: '100%', borderRight: 0 }}
                         >
-                            <SubMenu key="sub1" title="subnav 1">
-                                <Menu.Item key="1">option1</Menu.Item>
-                                <Menu.Item key="2">option2</Menu.Item>
-                                <Menu.Item key="3">option3</Menu.Item>
-                                <Menu.Item key="4">option4</Menu.Item>
+                            <Menu.Item key="0">总览</Menu.Item>
+                            <SubMenu key="sub1" title="地图基础">
+                                <Menu.Item key="1">开始</Menu.Item>
+                                <Menu.Item key="2">选择底图</Menu.Item>
+                                <Menu.Item key="3">添加图层</Menu.Item>
+                                <Menu.Item key="4">图层符号化</Menu.Item>
                             </SubMenu>
                             <SubMenu key="sub2" title="subnav 2">
                                 <Menu.Item key="5">option5</Menu.Item>
