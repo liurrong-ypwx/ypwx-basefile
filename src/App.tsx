@@ -4,6 +4,7 @@ import TestPage from './pages/TestPage/TestPage';
 import UtilScreen from './utils/comUtil/UtilScreen';
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import ThreeJsDemo from './pages/ThreeJsDemo/ThreeJsDemo';
+import GIS from './pages/GIS/GIS';
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
       <Switch>
         <Route path={"/test"} exact={true} component={TestPage} />
         <Route path={"/threejsdemo"} exact={true} component={ThreeJsDemo} />
+        <Route path={"/gis"} exact={true} component={GIS} />
       </Switch>
     </BrowserRouter>
 
