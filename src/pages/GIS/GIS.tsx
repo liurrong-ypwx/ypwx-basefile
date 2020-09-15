@@ -2,47 +2,75 @@ import React, { useState } from "react";
 import "./GIS.less";
 import { Layout, Menu, Breadcrumb, Button } from "antd";
 import SubMenu from "antd/lib/menu/SubMenu";
+import { withRouter } from "react-router-dom";
 const { Header, Content, Sider } = Layout;
 
-function GIS(): JSX.Element {
+function GIS(props: any): JSX.Element {
 
     const [collapsed, setCollapsed] = useState(false);
+    const [openKeys, setOpenKeys] = useState([""]);
+
+    const rootSubmenuKeys = ['sub1', 'sub2', 'sub3'];
+
+    const onOpenChange = (oKeys: any) => {
+        console.log("okeys", oKeys);
+        const latestOpenKey = oKeys.find((key:any) => openKeys.indexOf(key) === -1);
+        console.log(latestOpenKey)
+        if (rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
+          setOpenKeys(oKeys)
+        } else {       
+          setOpenKeys(latestOpenKey?[latestOpenKey] : [])
+        }
+    };
 
 
     return (
         <Layout className="gis-container" >
+
+            {/* 顶栏 */}
             <Header className="gis-header" >
                 <div className="gis-logo-title">
-                    <i className="iconfont" >&#xe664;</i>
+                    <i className="iconfont" >&#xe7b7;</i>
                     <div className="gis-title">
                         ArcGIS API for JS 学习总结
                     </div>
-                </div>                
+                </div>
             </Header>
+
+            {/* 中间 */}
             <Layout>
-                <Sider width={200} className="gis-sider" >
+
+                {/* 侧边栏 */}
+                <Sider width={200} className="gis-sider"
+                    collapsible={true}
+                    collapsed={collapsed}
+                    onCollapse={() => setCollapsed(!collapsed)} >
 
                     <div className="gis-menu">
                         <Menu
                             mode="inline"
                             defaultSelectedKeys={['0']}
-                            // defaultOpenKeys={['sub1']}
                             style={{ height: '100%', borderRight: 0 }}
+                            inlineCollapsed={collapsed}
+                            openKeys={openKeys}
+                            onOpenChange={onOpenChange}
                         >
-                            <Menu.Item key="0">总览</Menu.Item>
-                            <SubMenu key="sub1" title="地图基础">
-                                <Menu.Item key="1">开始</Menu.Item>
+                            <Menu.Item key="0" icon={<i className="iconfont" >&#xe639;</i>}
+                            onClick={()=>{props.history.push("/overview")}} 
+                             >总览</Menu.Item>
+                            <SubMenu key="sub1" icon={<i className="iconfont" >&#xe639;</i>} title="地图基础">
+                                <Menu.Item key="1" onClick={() => props.history.push("/startgis")} >开始</Menu.Item>
                                 <Menu.Item key="2">选择底图</Menu.Item>
                                 <Menu.Item key="3">添加图层</Menu.Item>
                                 <Menu.Item key="4">图层符号化</Menu.Item>
                             </SubMenu>
-                            <SubMenu key="sub2" title="subnav 2">
+                            <SubMenu key="sub2" icon={<i className="iconfont" >&#xe639;</i>} title="subnav 2">
                                 <Menu.Item key="5">option5</Menu.Item>
                                 <Menu.Item key="6">option6</Menu.Item>
                                 <Menu.Item key="7">option7</Menu.Item>
                                 <Menu.Item key="8">option8</Menu.Item>
                             </SubMenu>
-                            <SubMenu key="sub3" title="subnav 3">
+                            <SubMenu key="sub3" icon={<i className="iconfont" >&#xe639;</i>} title="subnav 3">
                                 <Menu.Item key="9">option5</Menu.Item>
                                 <Menu.Item key="10">option6</Menu.Item>
                                 <Menu.Item key="11">option7</Menu.Item>
@@ -50,15 +78,8 @@ function GIS(): JSX.Element {
                             </SubMenu>
 
                         </Menu>
-
-
                     </div>
-                    <div className="toggle-collapsed">
 
-                        <i className="iconfont iconzhedie" />
-                        <i className="iconfont" >&#xe620;</i>
-                        <Button type="primary" onClick={() => setCollapsed(!collapsed)} >{collapsed ? "收起" : "打开"}</Button>
-                    </div>
 
                 </Sider>
 
@@ -76,7 +97,7 @@ function GIS(): JSX.Element {
                             minHeight: 280,
                         }}
                     >
-                        Content
+                        {props.children}
                     </Content>
                 </Layout>
 
@@ -85,4 +106,4 @@ function GIS(): JSX.Element {
     )
 }
 
-export default GIS;
+export default withRouter(GIS);
