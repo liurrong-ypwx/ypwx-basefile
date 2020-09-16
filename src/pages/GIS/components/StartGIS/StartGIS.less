@@ -1,0 +1,30 @@
+.startgis-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    .test {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .webmap {
+        width: 100%;
+        height: 100%;
+
+        /* 去除mapview拖动时的边框 */
+        canvas,
+        .webmap:focus,
+        .esri-view-surface,
+        .esri-view-surface::after {
+            outline: none;
+        }
+
+        /* 去掉放大缩小的框 */
+        .esri-zoom .esri-widget--button {
+            outline: none;
+        }
+
+    }
+}

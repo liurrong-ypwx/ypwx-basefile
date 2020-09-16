@@ -4,7 +4,7 @@ import "./Overview.less";
 export default function Overview(): JSX.Element {
     return (
         <div className="overview">
-            <div>
+            <div className="npm-top">
                 Use <b>esri-loader</b> with tools like <b>create-react-app</b>.
             </div>
             <div className="npm-install">

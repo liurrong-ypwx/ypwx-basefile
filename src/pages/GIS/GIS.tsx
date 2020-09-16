@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./GIS.less";
-import { Layout, Menu, Breadcrumb, Button } from "antd";
+import { Layout, Menu, Breadcrumb } from "antd";
 import SubMenu from "antd/lib/menu/SubMenu";
 import { withRouter } from "react-router-dom";
 const { Header, Content, Sider } = Layout;
