@@ -9,6 +9,7 @@ import Overview from './pages/GIS/components/Overview/Overview';
 import StartGIS from './pages/GIS/components/StartGIS/StartGIS';
 import { StoreInterface } from './store/appStore/storeInterface';
 import { appReducer, defaultState } from './store/appStore/storeReducer';
+import OpenLayerDemo from './pages/OpenLayer/OpenLayer';
 
 export const TContext = React.createContext<StoreInterface | any>(defaultState);
 
@@ -37,6 +38,7 @@ function App() {
         <Switch>
           <Route path={"/test"} exact={true} component={TestPage} />
           <Route path={"/threejsdemo"} exact={true} component={ThreeJsDemo} />
+          <Route path={"/openlayer"} exact={true} component={OpenLayerDemo} />
 
           <GIS>
             <Route path={"/"} exact={true} component={Overview} />
