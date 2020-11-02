@@ -64,6 +64,9 @@ function ThreeJsDemo(): JSX.Element {
         light.position.set(0, 1, 0);
         scene.add(light);
 
+        // 导入材质
+        // const texture =THREE.
+
         
         
 
