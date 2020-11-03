@@ -5,7 +5,7 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 declare global{
-  interface Window { SPL: any }
+  interface Window { SPL: any, CESIUM_BASE_URL: any }
 }
 
 ReactDOM.render(
