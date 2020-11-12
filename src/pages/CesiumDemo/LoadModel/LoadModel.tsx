@@ -53,9 +53,12 @@ function LoadModel(): JSX.Element {
 
     const addItem = (type: string) => {
         if (type === "Cesium_Air") {
+            // 注意这个路径的设置可以是 https://**********/**.glb  也可以放在public下 */ */
             createModel("Models/Cesium_Air.glb", 0);
         } else if (type === "PSFS") {
             createModel("Models/PSFS.glb", 0);
+        }else if (type === "wood") {
+            createModel("Models/wood0.glb", 0);
         }
     }
 
@@ -66,6 +69,7 @@ function LoadModel(): JSX.Element {
             <div style={{ position: "fixed", zIndex: 1, top: 5, left: 5 }}>
                 <button onClick={() => { addItem("Cesium_Air") }} >Cesium_Air</button>
                 <button onClick={() => { addItem("PSFS") }} >PSFS</button>
+                <button onClick={() => { addItem("wood") }} >wood</button>
             </div>
             
         </div>
