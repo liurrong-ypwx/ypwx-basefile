@@ -16,15 +16,22 @@ function ChBuild(): JSX.Element {
         buildingsTileset.style=new Cesium.Cesium3DTileStyle({
             show:{
                 conditions:[
+                    // eslint-disable-next-line
                     ['${elementId} === 332469316', false],
+                    // eslint-disable-next-line
                     ['${elementId} === 332469317', false],
+                    // eslint-disable-next-line
                     ['${elementId} === 235368665', false],
+                    // eslint-disable-next-line
                     ['${elementId} === 530288179', false],
+                    // eslint-disable-next-line
                     ['${elementId} === 530288180', false],
+                    // eslint-disable-next-line
                     ['${elementId} === 532245203', false],
                     [true, true]
                 ]
             },
+            // eslint-disable-next-line
             color: "Boolean(${feature['cesium#color']}) ? color(${feature['cesium#color']}) : color('#ffffff')"
         })
 

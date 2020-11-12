@@ -12,6 +12,7 @@ import { appReducer, defaultState } from './store/appStore/storeReducer';
 import OpenLayerDemo from './pages/OpenLayer/OpenLayer';
 import GetStart from './pages/CesiumDemo/GetStart/GetStart';
 import ChBuild from './pages/CesiumDemo/ChBuild/ChBuild';
+import LoadModel from './pages/CesiumDemo/LoadModel/LoadModel';
 
 export const TContext = React.createContext<StoreInterface | any>(defaultState);
 
@@ -43,6 +44,7 @@ function App() {
           <Route path={"/openlayer"} exact={true} component={OpenLayerDemo} />
           <Route path={"/getstart"} exact={true} component={GetStart} />
           <Route path={"/chbuild"} exact={true} component={ChBuild} />
+          <Route path={"/loadModel"} exact={true} component={LoadModel} />
 
           <GIS>
             <Route path={"/"} exact={true} component={Overview} />

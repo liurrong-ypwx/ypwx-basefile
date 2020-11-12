@@ -150,6 +150,7 @@ export default function StartGIS(): JSX.Element {
                 }
             }
         })
+        // eslint-disable-next-line
     }, [])
 
     return (
