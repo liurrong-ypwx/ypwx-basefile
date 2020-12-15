@@ -11,7 +11,17 @@ function ChBuild(): JSX.Element {
         const viewer=new Cesium.Viewer("cesiumContainer",{
             terrainProvider: Cesium.createWorldTerrain()
         })
-        const buildingsTileset = viewer.scene.primitives.add(Cesium.createOsmBuildings());
+        const buildingsTileset = viewer.scene.primitives.add(Cesium.createOsmBuildings({
+            style: new Cesium.Cesium3DTileStyle({
+                color: {
+                    conditions: [
+                        ['${height} >= 100', 'color("purple", 0.5)'],
+                        ['${height} >= 50', 'color("red")'],
+                        ['true', 'color("blue")']
+                    ]
+                }
+            })
+        }));
         // 隐藏建筑物
         buildingsTileset.style=new Cesium.Cesium3DTileStyle({
             show:{

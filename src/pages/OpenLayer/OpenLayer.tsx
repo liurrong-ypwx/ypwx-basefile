@@ -1,35 +1,35 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./OpenLayer.less";
+import * as mapApi from "../../utils/mapOpe/mainMap";
 
 
 function OpenLayerDemo(): JSX.Element {
-    
-    useEffect(()=>{
-        const L: any = window.SPL;
-        debugger;
-        if(!L) return
-        
 
-        const url ="https://iserver.supermap.io/iserver/services/map-world/rest/maps/World";
-       
-        // 初始化地图信息
-        const map = L.map('map', {
-            crs: L.CRS.NonEarthCRS({
-                bounds: L.bounds([48.4, -7668.25],[8958.85, -55.58]),
-                origin: L.point(48.4,-55.58)
-            }),
-            center: [-4500, 4000],
-            maxZoom: 18,
-            zoom: 1
-        });
-        // 添加图层
-        L.supermap.tiledMapLayer(url, {noWrap: true}).addTo(map);
+    const [map, setMap] = useState<any>(null);
+
+    useEffect(() => {
+        setTimeout(() => {
+            initMap();
+        }, 500);
+        // eslint-disable-next-line
     }, [])
 
+    const initMap=()=>{
+        if(map){
+            map.off();
+            map.remove();
+        }
+        // const url = "https://iserver.supermap.io/iserver/services/map-world/rest/maps/World";
+        const tmpMap = mapApi.initMap("map");
+        // mapApi.addBaseMapSuper(tmpMap, url);
+        mapApi.addBaseMapTdt(tmpMap);
+        mapApi.addScale(tmpMap);
+        setMap(tmpMap);
+    }
+
     return (
-        <div>
-            hello OpenLayerDemo
-            <div id="map" style={{ position: "absolute", left: 0, right: 20, width: 800, height: 500 }}></div>
+        <div className="open-layer-page">
+            <div id="map" className="map-container" />
         </div>
     )
 }
