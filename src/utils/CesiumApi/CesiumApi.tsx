@@ -26,26 +26,85 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     })
     if (isAddBuilding) {
         const tmpTileset = new Cesium.Cesium3DTileset({
-            url: "./Models/building/tileset.json"
+            url: "./Models/building2/tileset.json"
         })
-        // tmpTileset.mate
-        tmpTileset.style = new Cesium.Cesium3DTileStyle({
-            color: {
-                conditions: [
-                    // eslint-disable-next-line
-                    ['${Height} >= 200', 'color("purple", 0.5)'],
-                    // eslint-disable-next-line
-                    ['${Height} >= 100', 'color("red")'],
-                    ['true', 'color("blue")']
-                ]
-            },        
-            // eslint-disable-next-line
-            show: '${Height} > 0',
-            meta: {
-                // eslint-disable-next-line
-                description: '"Building id ${id} has height ${Height}."'
-            }
-        });
+
+        // 给建筑物添加shader
+        tmpTileset.readyPromise.then(function (tileset) {
+
+            // 摄像机移动到建筑群
+            const boundingSphere = tileset.boundingSphere;
+            viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
+            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        
+        
+            tileset.style = new Cesium.Cesium3DTileStyle({
+                color: {
+                    conditions: [
+                        ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+                    ]
+                }
+            });
+        
+            tileset.tileVisible.addEventListener(function (tile) {
+                const content = tile.content;
+                const featuresLength = content.featuresLength;
+                for (let i = 0; i < featuresLength; i += 2) {
+                    let feature = content.getFeature(i)
+                    let model = feature.content._model
+        
+                    if (model && model._sourcePrograms && model._rendererResources) {
+                        Object.keys(model._sourcePrograms).forEach(key => {
+                            let program = model._sourcePrograms[key]
+                            let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+                            let v_position = "";
+                            if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+                                v_position = "v_positionEC";
+                            } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+                                v_position = "v_pos";
+                            }
+                            const color = `vec4(${feature.color.toString()})`;
+        
+                            model._rendererResources.sourceShaders[program.fragmentShader] =
+                                "varying vec3 " + v_position + ";\n" +
+                                "void main(void){\n" +
+                                "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+                                "    float glowRange = 360.0;\n" +
+                                "    gl_FragColor = "+color+";\n"+
+                                // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+                                "    gl_FragColor *= vec4(vec3(position.z / 100.0), 1.0);\n" +
+                                "    float time = fract(czm_frameNumber / 360.0);\n" +
+                                "    time = abs(time - 0.5) * 2.0;\n" +
+                                "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+                                "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+                                "}\n"
+                        })
+                        model._shouldRegenerateShaders = true
+                    }
+                }
+            });
+        })
+        
+
+
+        // // tmpTileset.mate
+        // tmpTileset.style = new Cesium.Cesium3DTileStyle({
+        //     color: {
+        //         conditions: [
+        //             // eslint-disable-next-line
+        //             ['${Height} >= 200', 'color("purple", 0.5)'],
+        //             // eslint-disable-next-line
+        //             ['${Height} >= 100', 'color("red")'],
+        //             ['true', 'color("blue")']
+        //         ]
+        //     },        
+        //     // eslint-disable-next-line
+        //     show: '${Height} > 0',
+        //     meta: {
+        //         // eslint-disable-next-line
+        //         description: '"Building id ${id} has height ${Height}."'
+        //     }
+        // });
 
 
 
@@ -54,9 +113,13 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
     // addGeometry(viewer, "no", { longitude: 123, latitude: 23, height: 23 });
 
+    new Cesium.UrlTemplateImageryProvider({
+        url: '你的照片'
+    })
 
 
-    setExtent(viewer);
+
+    // setExtent(viewer);
     return viewer;
 }
 
