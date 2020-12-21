@@ -20,11 +20,24 @@ function ChBuild(): JSX.Element {
 
     }, [orgView])
 
+    // 添加点线面
+    const handleAddGeometry = (type: string) => {
+        if (!orgView) return;
+        CesiumApi.addCustomGeometry(orgView, type);
+    }
+   
+
     return (
         <div className="main-map-container">
             {/* 初始化一个框来放置场景 */}
             <div id='cesiumContainer' />
-            <button id="toggle-building" style={{ position: "fixed", zIndex: 1, top: 5, left: 5 }}>TOGGLE NEW BUILDINGS</button>
+
+            {/* 按钮区 */}
+            <div className="test-btn-group">
+                <div className="sig-btn" onClick={() => { handleAddGeometry("Point") }} >添加标注</div>
+                <div className="sig-btn" onClick={() => { handleAddGeometry("Polyline") }} >添加Polyline</div>
+                <div className="sig-btn" onClick={() => { handleAddGeometry("Polygon") }} >添加Polygon</div>
+            </div>
         </div>
     )
 }

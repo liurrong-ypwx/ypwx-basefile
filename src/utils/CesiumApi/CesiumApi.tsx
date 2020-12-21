@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import "cesium/Build/Cesium/Widgets/widgets.css";
+import { lnglatArray } from '../../pages/CesiumDemo/ChBuild/testData';
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 
@@ -22,6 +23,8 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         timeline: false,
         fullscreenButton: false,
         vrButton: false,
+        selectionIndicator: false,
+        infoBox: false,
         terrainProvider: Cesium.createWorldTerrain()
     })
 
@@ -135,24 +138,71 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     //     })
     // )
 
-    // if(nightLayer){
-    //     // 
-    // }
+
 
 
     if (!isAddBuilding) {
-        setExtent(viewer);
+        // 缩放到深圳
+        setExtent(viewer);   
 
-        viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/shenzhengJson.json', {
-            clampToGround: true,
-            stroke: Cesium.Color.HOTPINK,
-            fill: Cesium.Color.PINK,
-            strokeWidth: 3,
-            markerSymbol: '?'
-        }));
+        // 添加Geojson数据
+        addGeoJsonData(viewer);
+
+        // 添加蓝色的泛光线
+        addTestBlueLine(viewer);
+
     }
 
     return viewer;
+}
+
+// =================================这是示例区域========================
+const addTestBlueLine = (viewer: any) => {
+    const orgArr = lnglatArray;
+    for (let i = 0; i < orgArr.length; i++) {
+        const tmpSigLine = orgArr[i];
+        const tmpArr: any = [];
+        for (let j = 0; j < tmpSigLine.length; j++) {
+            if (tmpSigLine[j][0] && tmpSigLine[j][1]) {
+                tmpArr.push(tmpSigLine[j][0]);
+                tmpArr.push(tmpSigLine[j][1]);
+            }
+        }
+        addGlowPolyLine(viewer, tmpArr);
+    }
+}   
+// --------------------------------------------------------------------
+
+// 添加geojson数据
+export const addGeoJsonData = (viewer: any) => {
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/shenzhengJson.json', {
+        clampToGround: true,
+        stroke: Cesium.Color.HOTPINK,
+        // fill: Cesium.Color.PINK,
+        strokeWidth: 3,
+        markerSymbol: '?'
+    }));
+}
+
+// 添加修改场景参数
+export const updateScenePara=(viewer:any)=>{
+    const viewModel = {
+        show: true,
+        glowOnly: false,
+        contrast: 128,
+        brightness: -0.3,
+        delta: 1.0,
+        sigma: 3.78,
+        stepSize: 5.0,
+      };
+    const bloom = viewer.scene.postProcessStages.bloom;
+    bloom.enabled = Boolean(viewModel.show);
+    bloom.uniforms.glowOnly = Boolean(viewModel.glowOnly);
+    bloom.uniforms.contrast = Number(viewModel.contrast);
+    bloom.uniforms.brightness = Number(viewModel.brightness);
+    bloom.uniforms.delta = Number(viewModel.delta);
+    bloom.uniforms.sigma = Number(viewModel.sigma);
+    bloom.uniforms.stepSize = Number(viewModel.stepSize);
 }
 
 // 缩放到指定位置
@@ -169,7 +219,7 @@ export const setExtent = (viewer: any) => {
 
 // 添加building
 export const addBuilding = (viewer: any, buildingUrl: string) => {
-    var entity = viewer.entities.add({
+    let entity = viewer.entities.add({
         name: "plane",
         position: Cesium.Cartesian3.fromDegrees(location.lng, location.lat, 1300.0),
         model: {
@@ -178,6 +228,26 @@ export const addBuilding = (viewer: any, buildingUrl: string) => {
     });
     //设置摄像头定位到模型处
     viewer.trackedEntity = entity;
+}
+
+// 添加发光的线
+export const addGlowPolyLine = (viewer: any, lineArr: any) => {
+    if (!viewer) return;
+
+    // 线纹理
+    const lineEntity = new Cesium.Entity({
+        polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
+            width: 20,
+            // 发光纹理
+            material: new Cesium.PolylineGlowMaterialProperty({
+                glowPower: 0.1,
+                color: Cesium.Color.BLUE
+            })
+        }
+    })
+
+    viewer.entities.add(lineEntity);
 }
 
 
@@ -329,6 +399,132 @@ export const addGeometry = (viewer: any, type: string, postion: IPostion) => {
 
 }
 
+
+// 2020-12-21 粉刷匠 添加画图工具中的，添加点线面
+let handler: any = null;
+export const addCustomGeometry = (viewer: any, type: string) => {
+    if (!viewer) return;
+
+    // viewer.camera.lookAt(
+    //     Cesium.Cartesian3.fromDegrees(-122.2058, 46.1955, 1000.0),
+    //     new Cesium.Cartesian3(5000.0, 5000.0, 5000.0)
+    // );
+    // viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+    let drawingMode = type;
+    let activeShapePoints: any = [];
+    let activeShape: any = null;
+    let floatingPoint: any = null;
+
+    // 检查是否支持选点
+    if (!viewer.scene.pickPositionSupported) {
+        window.alert("This browser does not support pickPosition.");
+        return;
+    }
+    // 检查是否支持polyline
+    if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+        window.alert("This browser does not support polylines on terrain.");
+        return;
+    }
+
+    // 移除双击事件
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+    );
+    if (handler) {
+        handler && handler.destroy();
+    }
+
+    // 添加新的处理函数
+    handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+    handler.setInputAction(function (event: any) {
+        // 使用 `viewer.scene.pickPosition` 而不是 `viewer.camera.pickEllipsoid` 为了 get correct cord over terrien
+        const earthPosition = viewer.scene.pickPosition(event.position);
+        // `earthPosition` will be undefined 假如你瞎**点到外太空
+        if (Cesium.defined(earthPosition)) {
+            if (activeShapePoints.length === 0) {
+                floatingPoint = createPoint(earthPosition);
+                activeShapePoints.push(earthPosition);
+                const dynamicPositions = new Cesium.CallbackProperty(function () {
+                    if (drawingMode === "Polygon") {
+                        return new Cesium.PolygonHierarchy(activeShapePoints);
+                    }
+                    return activeShapePoints;
+                }, false);
+                activeShape = drawShape(dynamicPositions);
+            }
+            activeShapePoints.push(earthPosition);
+            createPoint(earthPosition);
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    handler.setInputAction(function (event: any) {
+        if (Cesium.defined(floatingPoint)) {
+            const newPosition = viewer.scene.pickPosition(event.endPosition);
+            if (Cesium.defined(newPosition)) {
+                floatingPoint.position.setValue(newPosition);
+                activeShapePoints.pop();
+                activeShapePoints.push(newPosition);
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    // Redraw the shape so it's not dynamic and remove the dynamic shape.
+    function terminateShape() {
+        activeShapePoints.pop();
+        drawShape(activeShapePoints);
+        viewer.entities.remove(floatingPoint);
+        viewer.entities.remove(activeShape);
+        floatingPoint = undefined;
+        activeShape = undefined;
+        activeShapePoints = [];
+    }
+
+    handler.setInputAction(function (event: any) {
+        terminateShape();
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+
+
+  
+    function createPoint(worldPosition: any) {
+        const point = viewer.entities.add({
+            position: worldPosition,
+            point: {
+                color: Cesium.Color.WHITE,
+                pixelSize: 5,
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            },
+        });
+        return point;
+    }
+
+    function drawShape(positionData: any) {
+        let shape: any;
+        if (drawingMode === "Polyline") {
+            shape = viewer.entities.add({
+                polyline: {
+                    positions: positionData,
+                    clampToGround: true,
+                    width: 3,
+                },
+            });
+        } else if (drawingMode === "Polygon") {
+            shape = viewer.entities.add({
+                polygon: {
+                    hierarchy: positionData,
+                    material: new Cesium.ColorMaterialProperty(
+                        Cesium.Color.WHITE.withAlpha(0.7)
+                    ),
+                },
+            });
+        }
+        return shape;
+    }
+
+
+}
+
 // 获取颜色渐变条带
 const getColorRamp = (elevationRamp: any, isTransparent?: boolean) => {
     const ramp = document.createElement('canvas');
@@ -372,4 +568,26 @@ export const changeHeight = (tileset: any, height: any) => {
     const offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
     const translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
     tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+}
+
+
+// 添加webmapTileServiceImageryProvider
+export const addWebMapTileService = (viewer: any, url: string) => {
+    const shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
+        url: 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
+        layer: 'USGSShadedReliefOnly',
+        style: 'default',
+        format: 'image/jpeg',
+        tileMatrixSetID: 'default028mm',
+        // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
+        maximumLevel: 19,
+        credit: new Cesium.Credit('U. S. Geological Survey')
+    });
+    viewer.imageryLayers.addImageryProvider(shadedRelief1);
+}
+
+// 移除imagelayer
+export const removeImageryLayer = (viewer: any, layer: any) => {
+    if (!viewer || !layer) return
+    viewer.imageryLayers.remove(layer);
 }
