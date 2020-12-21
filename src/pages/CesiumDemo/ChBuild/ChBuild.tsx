@@ -8,7 +8,7 @@ function ChBuild(): JSX.Element {
     const [orgView, setOrgView] = useState<any>(null);
 
     useEffect(() => {
-        const tmpView = CesiumApi.initMap("cesiumContainer", true);
+        const tmpView = CesiumApi.initMap("cesiumContainer", false);
         // CesiumApi.addBuilding(tmpView, "");
         setOrgView(tmpView);
     }, [])

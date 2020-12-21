@@ -24,7 +24,17 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         vrButton: false,
         terrainProvider: Cesium.createWorldTerrain()
     })
+
+    // 假如添加建筑物3dtile
     if (isAddBuilding) {
+
+        // 添加一个蓝色底图来加强图像的展示
+        viewer.scene.imageryLayers.addImageryProvider(
+            new Cesium.SingleTileImageryProvider({
+                url: './Models/image/dark.png'
+            })
+        )
+
         const tmpTileset = new Cesium.Cesium3DTileset({
             url: "./Models/building2/tileset.json"
         })
@@ -46,6 +56,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
                 }
             });
         
+            
             tileset.tileVisible.addEventListener(function (tile) {
                 const content = tile.content;
                 const featuresLength = content.featuresLength;
@@ -87,7 +98,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         
 
 
-        // // tmpTileset.mate
+        // 普通款制作专题图的样式
         // tmpTileset.style = new Cesium.Cesium3DTileStyle({
         //     color: {
         //         conditions: [
@@ -113,13 +124,34 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
     // addGeometry(viewer, "no", { longitude: 123, latitude: 23, height: 23 });
 
-    new Cesium.UrlTemplateImageryProvider({
-        url: '你的照片'
-    })
+    // new Cesium.UrlTemplateImageryProvider({
+    //     url: '你的照片'
+    // })
+
+    // 贴图
+    // const nightLayer = viewer.scene.imageryLayers.addImageryProvider(
+    //     new Cesium.SingleTileImageryProvider({
+    //         url: './Models/image/night2012.jpg'
+    //     })
+    // )
+
+    // if(nightLayer){
+    //     // 
+    // }
 
 
+    if (!isAddBuilding) {
+        setExtent(viewer);
 
-    // setExtent(viewer);
+        viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/shenzhengJson.json', {
+            clampToGround: true,
+            stroke: Cesium.Color.HOTPINK,
+            fill: Cesium.Color.PINK,
+            strokeWidth: 3,
+            markerSymbol: '?'
+        }));
+    }
+
     return viewer;
 }
 
