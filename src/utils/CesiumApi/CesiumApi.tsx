@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
+// import moment from "moment";
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import { lnglatArray } from '../../pages/CesiumDemo/ChBuild/testData';
+import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testData';
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 
@@ -20,7 +21,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         baseLayerPicker: false,
         animation: false,
         // creditContainer:"credit",
-        timeline: false,
+        // timeline: false,
         fullscreenButton: false,
         vrButton: false,
         selectionIndicator: false,
@@ -150,11 +151,17 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 添加Geojson数据
         addGeoJsonData(viewer);
 
-        // 添加测试标注的立方体
+        // 添加测试道路数据
+        addTestRroadGeoJsonData(viewer);
+
+        // 添加一个glb模型
+        addTestGlbLabel(viewer);
+
+        // 添加测试标注的立方体---透明png
         addTestBox(viewer);
 
         // 添加蓝色的泛光线
-        // addTestBlueLine(viewer);
+        addTestBlueLine(viewer);
 
         // 添加流动的线
         // addTestFlowLine(viewer);
@@ -175,7 +182,7 @@ const addTestDarkImg = (viewer: any) => {
 }
 
 const addTestBlueLine = (viewer: any) => {
-    const orgArr = lnglatArray;
+    const orgArr = flowArray;
     for (let i = 0; i < orgArr.length; i++) {
         const tmpSigLine = orgArr[i];
         const tmpArr: any = [];
@@ -189,37 +196,53 @@ const addTestBlueLine = (viewer: any) => {
     }
 }
 
-const addTestFlowLine = (viewer: any) => {
-    const orgArr = lnglatArray;
-    for (let i = 0; i < orgArr.length; i++) {
-        const tmpSigLine = orgArr[i];
-        const tmpArr: any = [];
-        for (let j = 0; j < tmpSigLine.length; j++) {
-            if (tmpSigLine[j][0] && tmpSigLine[j][1]) {
-                tmpArr.push(tmpSigLine[j][0]);
-                tmpArr.push(tmpSigLine[j][1]);
-            }
-        }
-        addFlowLine(viewer, tmpArr);
-    }
-}
+// const addTestFlowLine = (viewer: any) => {
+//     const orgArr = flowArray;
+//     for (let i = 0; i < orgArr.length; i++) {
+//         const tmpSigLine = orgArr[i];
+//         const tmpArr: any = [];
+//         for (let j = 0; j < tmpSigLine.length; j++) {
+//             if (tmpSigLine[j][0] && tmpSigLine[j][1]) {
+//                 tmpArr.push(tmpSigLine[j][0]);
+//                 tmpArr.push(tmpSigLine[j][1]);
+//             }
+//         }
+//         addFlowLine(viewer, tmpArr);
+//     }
+// }
 
 const addTestBox = (viewer: any) => {
+
+    let rotation = Cesium.Math.toRadians(30);
+    function getRotationValue() {
+        rotation += 0.002;
+        return rotation;
+    }
+
     // 箱子纹理
-    const boxEntity = new Cesium.Entity({
-        // id: "boxID01",
+    viewer.entities.add({
+        name: "a rotate ellipse ",
         position: Cesium.Cartesian3.fromDegrees(113.91, 22.52, 1000),
-        box: {
-            dimensions: new Cesium.Cartesian3(400, 400, 400),
-            // 图像材质
+        ellipse: {
+            semiMinorAxis: 1000,
+            semiMajorAxis: 1000,
+            height: 2000,
             material: new Cesium.ImageMaterialProperty({
-                image: "./Models/image/box.png",
-                transparent: true,
+                image: './Models/image/circle.png',
+                repeat: new Cesium.Cartesian2(1, 1),
+                transparent: true
             }),
-        }
+            rotation: new Cesium.CallbackProperty(getRotationValue, false),
+            stRotation: new Cesium.CallbackProperty(getRotationValue, false),
+            outline: false, // height must be set for outline to display
+            numberOfVerticalLines: 100
+        },
+        description: '测试数据'
     });
-    viewer.entities.add(boxEntity);
+
 }
+
+
 
 const addTestBlueBuilding = (viewer: any) => {
 
@@ -280,6 +303,62 @@ const addTestBlueBuilding = (viewer: any) => {
     viewer.scene.primitives.add(tmpTileset);
 }
 
+const addTestGlbLabel = (viewer: any) => {
+    const flightData = testFlightData;
+    const timeStepInSeconds = 30;
+    const totalSeconds = timeStepInSeconds * (flightData.length - 1);
+    const start = Cesium.JulianDate.fromIso8601("2020-03-09T23:10:00Z");
+    const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate());
+    viewer.clock.startTime = start.clone();
+    viewer.clock.stopTime = stop.clone();
+    viewer.clock.currentTime = start.clone();
+    viewer.timeline.zoomTo(start, stop);
+    // Speed up the playback speed 50x.
+    viewer.clock.multiplier = 50;
+    // Start playing the scene.
+    viewer.clock.shouldAnimate = true;
+
+    // The SampledPositionedProperty stores the position and timestamp for each sample along the radar sample series.
+    const positionProperty = new Cesium.SampledPositionProperty();
+
+    for (let i = 0; i < flightData.length; i++) {
+        const dataPoint = flightData[i];
+        // Declare the time for this individual sample and store it in a new JulianDate instance.
+        const time = Cesium.JulianDate.addSeconds(start, i * timeStepInSeconds, new Cesium.JulianDate());
+        const position = Cesium.Cartesian3.fromDegrees(dataPoint[0], dataPoint[1], dataPoint[2]);
+        // Store the position along with its timestamp.
+        // Here we add the positions all upfront, but these can be added at run-time as samples are received from a server.
+        positionProperty.addSample(time, position);
+    }
+
+    // STEP 4 CODE (green circle entity)        
+    const loadModel = async () => {
+        const airplaneUrl = "./Models/Cesium_Air.glb";
+        viewer.entities.add({
+            availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({ start: start, stop: stop })]),
+            position: positionProperty,
+            // path: new Cesium.PathGraphics({ width: 3 }),
+            model: {
+                uri: airplaneUrl,
+                minimumPixelSize: 40,
+                maximumScale: 20000,
+            },
+            orientation: new Cesium.VelocityOrientationProperty(positionProperty)
+        });
+    }
+
+    loadModel();
+
+}
+
+export const addTestRroadGeoJsonData = (viewer: any) => {
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/line.json', {
+        clampToGround: true,
+        stroke: Cesium.Color.CHOCOLATE,
+        strokeWidth: 1,
+        markerSymbol: '?'
+    }));
+}
 
 // --------------------------------------------------------------------
 
@@ -287,9 +366,8 @@ const addTestBlueBuilding = (viewer: any) => {
 export const addGeoJsonData = (viewer: any) => {
     viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/shenzhengJson.json', {
         clampToGround: true,
-        stroke: Cesium.Color.HOTPINK,
-        // fill: Cesium.Color.PINK,
-        strokeWidth: 3,
+        stroke: Cesium.Color.BLUE,
+        strokeWidth: 1,
         markerSymbol: '?'
     }));
 }
@@ -352,7 +430,7 @@ export const addGlowPolyLine = (viewer: any, lineArr: any) => {
             // 发光纹理
             material: new Cesium.PolylineGlowMaterialProperty({
                 glowPower: 0.1,
-                color: Cesium.Color.BLUE.withAlpha(0.9),
+                color: Cesium.Color.BLUE.withAlpha(0.7),
             })
         }
     })
@@ -361,22 +439,22 @@ export const addGlowPolyLine = (viewer: any, lineArr: any) => {
 }
 
 // 添加流动的线
-export const addFlowLine = (viewer: any, lineArr: any) => {
-    if (!viewer) return;
+// export const addFlowLine = (viewer: any, lineArr: any) => {
+//     if (!viewer) return;
 
-    viewer.entities.add({
-        polyline: {
-            positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
-            width: 5,
-            // 流动纹理
-            material: new Cesium.PolylineTrailLinkMaterialProperty({
-                color: Cesium.Color.BLUE,
-                duration: 3000,
-                d: 1
-            })
-        }
-    });
-}
+//     viewer.entities.add({
+//         polyline: {
+//             positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
+//             width: 6,
+//             // 流动纹理
+//             material: new Cesium.PolylineTrailLinkMaterialProperty({
+//                 color: Cesium.Color.CRIMSON,
+//                 duration: 5000,
+//                 d: 1
+//             })
+//         }
+//     });
+// }
 
 
 // 添加几何体

@@ -25,6 +25,12 @@ function ChBuild(): JSX.Element {
         if (!orgView) return;
         CesiumApi.addCustomGeometry(orgView, type);
     }
+
+    // 重置地图
+    const setDedaultExtent = () => {
+        if (!orgView) return;
+        CesiumApi.setExtent(orgView);
+    }
    
 
     return (
@@ -34,6 +40,7 @@ function ChBuild(): JSX.Element {
 
             {/* 按钮区 */}
             <div className="test-btn-group">
+                <div className="sig-btn" onClick={() => { setDedaultExtent() }} >重置</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Point") }} >添加标注</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polyline") }} >添加Polyline</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polygon") }} >添加Polygon</div>
