@@ -888,126 +888,237 @@ export const addGeometry = (viewer: any, type: string, postion: IPostion) => {
 let handler: any = null;
 export const addCustomGeometry = (viewer: any, type: string) => {
     if (!viewer) return;
-
-    // viewer.camera.lookAt(
-    //     Cesium.Cartesian3.fromDegrees(-122.2058, 46.1955, 1000.0),
-    //     new Cesium.Cartesian3(5000.0, 5000.0, 5000.0)
-    // );
-    // viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-
-    let drawingMode = type;
-    let activeShapePoints: any = [];
-    let activeShape: any = null;
-    let floatingPoint: any = null;
-
-    // 检查是否支持选点
-    if (!viewer.scene.pickPositionSupported) {
-        window.alert("This browser does not support pickPosition.");
-        return;
+    if (type === "Point") {
+        addPoint(viewer, handler);
+    } else if (type === "Polyline") {
+        addPolyline(viewer, handler);
+    } else if (type === "Polygon") {
+        addPolygon(viewer, handler);
     }
-    // 检查是否支持polyline
-    if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
-        window.alert("This browser does not support polylines on terrain.");
-        return;
-    }
+}
 
-    // 移除双击事件
-    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
-        Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
-    );
-    if (handler) {
-        handler && handler.destroy();
-    }
+// 添加点标注
+const addPoint = (viewer: any, handler: any) => {
+    // 移除双击事件,清除不该有的东西
+    if (!viewer) return;
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    if (handler) { handler && handler.destroy(); }
 
-    // 添加新的处理函数
-    handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-    handler.setInputAction(function (event: any) {
-        // 使用 `viewer.scene.pickPosition` 而不是 `viewer.camera.pickEllipsoid` 为了 get correct cord over terrien
-        const earthPosition = viewer.scene.pickPosition(event.position);
-        // `earthPosition` will be undefined 假如你瞎**点到外太空
-        if (Cesium.defined(earthPosition)) {
-            if (activeShapePoints.length === 0) {
-                floatingPoint = createPoint(earthPosition);
-                activeShapePoints.push(earthPosition);
-                const dynamicPositions = new Cesium.CallbackProperty(function () {
-                    if (drawingMode === "Polygon") {
-                        return new Cesium.PolygonHierarchy(activeShapePoints);
-                    }
-                    return activeShapePoints;
-                }, false);
-                activeShape = drawShape(dynamicPositions);
+    let positions: any = [];
+    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
+
+    // 注册鼠标左击事件
+    handler.setInputAction((movement: any) => {
+        let ray = viewer.camera.getPickRay(movement.position);
+        const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        positions.push(cartesian);
+
+        viewer.entities.add({
+            name: '空间直线距离',
+            position: positions[positions.length - 1],
+            point: {
+                pixelSize: 5,
+                color: Cesium.Color.RED,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 2,
+            },
+            label: {
+                text: "Point" + positions.length,
+                font: '18px sans-serif',
+                fillColor: Cesium.Color.GOLD,
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(20, -20),
             }
-            activeShapePoints.push(earthPosition);
-            createPoint(earthPosition);
-        }
+        });
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    handler.setInputAction(function (event: any) {
-        if (Cesium.defined(floatingPoint)) {
-            const newPosition = viewer.scene.pickPosition(event.endPosition);
-            if (Cesium.defined(newPosition)) {
-                floatingPoint.position.setValue(newPosition);
-                activeShapePoints.pop();
-                activeShapePoints.push(newPosition);
+    handler.setInputAction((movement: any) => {
+        handler && handler.destroy();
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+}
+
+// 添加线
+const addPolyline = (viewer: any, handler: any) => {
+    // 移除双击事件,清除不该有的东西
+    if (!viewer) return;
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    if (handler) { handler && handler.destroy(); }
+
+    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
+    let positions: any = [];
+    let poly: any = null;
+    let cartesian: any = null;
+    let floatingPoint: any = null;
+
+    // 注册鼠标移动事件 
+    handler.setInputAction((movement: any) => {
+        // 获取地面点的方法有很多，这是很幸运的一个
+        let ray = viewer.camera.getPickRay(movement.endPosition);
+        cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        if (positions.length >= 2) {
+            if (!Cesium.defined(poly)) {
+                poly = new PolyLinePrimitive(positions);
+            } else {
+                positions.pop();
+                positions.push(cartesian);
             }
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    // Redraw the shape so it's not dynamic and remove the dynamic shape.
-    function terminateShape() {
-        activeShapePoints.pop();
-        drawShape(activeShapePoints);
-        viewer.entities.remove(floatingPoint);
-        viewer.entities.remove(activeShape);
-        floatingPoint = undefined;
-        activeShape = undefined;
-        activeShapePoints = [];
-    }
+    // 注册鼠标左击事件
+    handler.setInputAction((movement: any) => {
+        let ray = viewer.camera.getPickRay(movement.position);
+        cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        if (positions.length === 0) {
+            positions.push(cartesian.clone());
+        }
+        positions.push(cartesian);
+        floatingPoint = viewer.entities.add({
+            name: '空间直线距离',
+            position: positions[positions.length - 1],
+            point: {
+                pixelSize: 5,
+                color: Cesium.Color.RED,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 2,
+            }
+        });
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    handler.setInputAction(function (event: any) {
-        terminateShape();
+    // 注册鼠标右击--取消操作
+    handler.setInputAction((movement: any) => {
+        handler && handler.destroy();
+        positions.pop(); // 最后一个点无效
     }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
 
-
-
-    function createPoint(worldPosition: any) {
-        const point = viewer.entities.add({
-            position: worldPosition,
-            point: {
-                color: Cesium.Color.WHITE,
-                pixelSize: 5,
-                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            },
-        });
-        return point;
-    }
-
-    function drawShape(positionData: any) {
-        let shape: any;
-        if (drawingMode === "Polyline") {
-            shape = viewer.entities.add({
+    const PolyLinePrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            this.options = {
+                name: '直线',
                 polyline: {
-                    positions: positionData,
-                    clampToGround: true,
-                    width: 3,
-                },
-            });
-        } else if (drawingMode === "Polygon") {
-            shape = viewer.entities.add({
-                polygon: {
-                    hierarchy: positionData,
-                    material: new Cesium.ColorMaterialProperty(
-                        Cesium.Color.WHITE.withAlpha(0.7)
-                    ),
-                },
-            });
+                    show: true,
+                    positions: [],
+                    material: Cesium.Color.CHARTREUSE,
+                    width: 10,
+                    clampToGround: true
+                }
+            };
+            this.positions = positions;
+            this._init();
         }
-        return shape;
-    }
 
+        _.prototype._init = function () {
+            var _self = this;
+            var _update = function () {
+                return _self.positions;
+            };
+            //实时更新polyline.positions
+            this.options.polyline.positions = new Cesium.CallbackProperty(_update, false);
+            viewer.entities.add(this.options);
+        };
+
+        return _;
+    })();
 
 }
+
+// 添加面
+const addPolygon = (viewer: any, handler: any) => {
+    // 移除双击事件,清除不该有的东西
+    if (!viewer) return;
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    if (handler) { handler && handler.destroy(); }
+
+    // 鼠标事件
+    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
+    let positions :any= [];
+    let tempPoints:any = [];
+    let polygon:any = null;
+    let cartesian:any = null;
+    let floatingPoint: any = []; // 浮动点
+
+    // 注册鼠标移动事件
+    handler.setInputAction((movement: any) => {
+        // 获取地面点的方法有很多，这是很幸运的一个
+        let ray = viewer.camera.getPickRay(movement.endPosition);
+        cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        if (positions.length >= 2) {
+            if (!Cesium.defined(polygon)) {
+                polygon = new PolygonPrimitive(positions);
+            } else {
+                positions.pop();
+                positions.push(cartesian);
+            }          
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+
+    // 注册鼠标左击效果
+    handler.setInputAction(function (movement: any) {
+
+        let ray = viewer.camera.getPickRay(movement.position);
+        cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        if (positions.length === 0) {
+            positions.push(cartesian.clone());
+        }
+        positions.push(cartesian);
+        //在三维场景中添加点
+        let cartographic = Cesium.Cartographic.fromCartesian(positions[positions.length - 1]);
+        let longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
+        let latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
+        let heightString = cartographic.height;
+        tempPoints.push({ lon: longitudeString, lat: latitudeString, hei: heightString });
+        floatingPoint = viewer.entities.add({
+            name: '多边形面积',
+            position: positions[positions.length - 1],
+            point: {
+                pixelSize: 5,
+                color: Cesium.Color.RED,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 2,
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            }
+        });
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    // 注册鼠标右击效果
+    handler.setInputAction(function (movement: any) {
+        handler.destroy();
+        positions.pop();
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+    const PolygonPrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            this.options = {
+                name: '多边形',
+                polygon: {
+                    hierarchy: [],
+                    material: Cesium.Color.GREEN.withAlpha(0.5),
+                }
+            };
+
+            this.hierarchy = { positions };
+            this._init();
+        }
+
+        _.prototype._init = function () {
+            var _self = this;
+            var _update = function () {
+                return _self.hierarchy;
+            };
+            // 实时更新polygon.hierarchy
+            this.options.polygon.hierarchy = new Cesium.CallbackProperty(_update, false);
+            viewer.entities.add(this.options);
+        };
+
+        return _;
+    })();
+
+}
+
 
 // 添加测距 or 测量面积
 export const addMeasureTool = (viewer: any, type: any) => {
@@ -1314,8 +1425,6 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
         return s;
     }
 }
-
-
 
 
 // 获取颜色渐变条带

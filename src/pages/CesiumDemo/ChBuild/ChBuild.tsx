@@ -51,7 +51,7 @@ function ChBuild(): JSX.Element {
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polyline") }} >添加Polyline</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polygon") }} >添加Polygon</div>
                 <div className="sig-btn" onClick={() => { handleMeasure("distance") }} >测距</div>
-                <div className="sig-btn" onClick={() => { handleMeasure("area") }} >侧面积</div>
+                <div className="sig-btn" onClick={() => { handleMeasure("area") }} >测面积</div>
             </div>
         </div>
     )
