@@ -26,6 +26,12 @@ function ChBuild(): JSX.Element {
         CesiumApi.addCustomGeometry(orgView, type);
     }
 
+    // 测量距离 or 面积
+    const handleMeasure = (type: string) => {
+        if (!orgView) return;
+        CesiumApi.addMeasureTool(orgView, type);
+    }
+
     // 重置地图
     const setDedaultExtent = () => {
         if (!orgView) return;
@@ -44,6 +50,8 @@ function ChBuild(): JSX.Element {
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Point") }} >添加标注</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polyline") }} >添加Polyline</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polygon") }} >添加Polygon</div>
+                <div className="sig-btn" onClick={() => { handleMeasure("distance") }} >测距</div>
+                <div className="sig-btn" onClick={() => { handleMeasure("area") }} >侧面积</div>
             </div>
         </div>
     )
