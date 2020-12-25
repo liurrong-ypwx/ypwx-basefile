@@ -1,3 +1,4 @@
+// 经纬度数据
 export const lnglatArray = [
     [
         [
@@ -397,6 +398,7 @@ export const lnglatArray = [
     ]
 ]
 
+// 流动的经纬度数据
 export const flowArray = [
     [
         [
@@ -3116,6 +3118,7 @@ export const flowArray = [
     ]
 ]
 
+// 飞行数据
 export const testFlightData = [
     [
         114.0185919,
@@ -4292,3 +4295,71 @@ export const testFlightData = [
         22.4822913
     ]
 ]
+
+// czml数据
+export const testCzmlData = [{
+    "id": "shape2",
+    "name": "Red box with black outline",
+    "availability": "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
+    "box": {
+        "dimensions": {
+            "cartesian": [30.0, 30.0]
+        },
+        "material": {
+            "stripe": {
+                "orientation": "VERTICAL",
+                "evenColor": {
+                    "rgba": [10, 211, 250, 0]
+                },
+                "oddColor": {
+                    "rgba": [10, 211, 250, 255]
+                },
+                "offset": {
+                    "number": 1
+                },
+                "repeat": 0.5
+            }
+        },
+    },
+    "path": {
+        "material": {
+            "solidColor": {
+                "color": {
+                    "interval": "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
+                    "rgba": [255, 255, 255, 128]
+                }
+            }
+        },
+        "width": [{
+            "interval": "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
+            "number": 3.0
+        }],
+        "show": [{
+            "interval": "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
+            "boolean": true
+        }]
+    },
+    "position": {
+        "interpolationAlgorithm": "LAGRANGE",
+        "interpolationDegree": 1,
+        "epoch": "2012-08-04T16:00:00Z",
+        "cartographicDegrees": [
+            0.0, 113.91, 22.52, 0.0,
+            10.0, 113.92, 22.52, 0.0,
+            20.0, 113.93, 22.52, 0.0,
+            30.0, 113.94, 22.52, 0.0,
+            40.0, 113.95, 22.52, 0.0,
+            50.0, 113.96, 22.52, 0.0,
+            60.0, 113.97, 22.52, 0.0,
+            70.0, 113.98, 22.52, 0.0,
+            80.0, 113.99, 22.53, 0.0,
+            90.0, 113.99, 22.54, 0.0,
+            100.0, 113.99, 22.55, 0.0,
+            110.0, 113.99, 22.56, 0.0,
+            120.0, 113.99, 22.57, 0.0,
+            130.0, 113.99, 22.58, 0.0,
+            140.0, 113.99, 22.59, 0.0,
+            150.0, 113.99, 22.60, 0.0
+        ]
+    }
+}];

@@ -1,7 +1,8 @@
 import * as Cesium from 'cesium';
-// import moment from "moment";
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testData';
+// import CesiumHeatmap from "../../../public/js/CesiumHeatmap";
+// const CesiumHeatmap = require('./component/CesiumHeatmap');
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 
@@ -9,16 +10,18 @@ const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
 // const locationJDY = { lng: 104.06, lat: 30.78, height: 13000.0 };
 const location = locationSZ;
 
+
 // 初始化地图
 export const initMap = (domID: string, isAddBuilding: boolean) => {
 
     if (!document.getElementById(domID)) return;
 
     const viewer = new Cesium.Viewer(domID, {
-        geocoder: false,
+        geocoder: false,   
         homeButton: true,
         sceneModePicker: false,
         baseLayerPicker: false,
+        navigationHelpButton: false,
         animation: false,
         // creditContainer:"credit",
         // timeline: false,
@@ -26,8 +29,25 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
-        terrainProvider: Cesium.createWorldTerrain()
+        // terrainProvider: Cesium.createWorldTerrain({
+        //     // requestVertexNormals:true,
+        //     // requestWaterMask:true
+        // }),
+        skyBox: new Cesium.SkyBox({
+            sources: {
+                positiveX: './Models/image/box.png',
+                negativeX: './Models/image/box.png',
+                positiveY: './Models/image/box.png',
+                negativeY: './Models/image/box.png',
+                positiveZ: './Models/image/box.png',
+                negativeZ: './Models/image/box.png'
+            }
+        })
     })
+
+    // 额外设置之显示帧速
+    viewer.scene.debugShowFramesPerSecond = true;
+
 
     // 假如添加建筑物3dtile
     if (isAddBuilding) {
@@ -172,6 +192,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 雷达圆扫描图
         // showRadarScan(viewer);
 
+        // 添加热力图
+        addTestHeatmap(viewer);
+
+    
+
     }
 
     return viewer;
@@ -186,6 +211,48 @@ const addTestDarkImg = (viewer: any) => {
         })
     )
 }
+
+// 2020-12-25 粉刷匠 添加热力图
+const addTestHeatmap = (viewer: any) => {
+    // 矩形坐标 xmin ymin xmax ymax
+    // let bounds = {
+    //     west: 113.779,
+    //     east: 114.142,
+    //     south: 22.564,
+    //     north:22.774
+    // };
+
+    // let heatMap = CesiumHeatmap.create(
+    //     viewer, // your cesium viewer
+    //     bounds, // bounds for heatmap layer
+    //     {
+    //         // backgroundColor: "rgba(0,0,0,0)",
+    //         // radius: 50,
+    //         // maxOpacity: .5,
+    //         // minOpacity: 0,
+    //         // blur: .75
+    //     }
+    // );
+
+    // // random example data
+    // let data = [{ "x": 114.1383442264, "y": 22.4360048372, "value": 76 },
+    //  { "x": 114.1384363011, "y": 22.4360298848, "value": 63 }, 
+    //  { "x": 114.138368102, "y": 22.4358360603, "value": 1 }, 
+    //  { "x": 114.1385627739, "y": 22.4358799123, "value": 21 }, 
+    //  { "x": 114.1385138501, "y": 22.4359327669, "value": 28 }, 
+    //  { "x": 114.1385031219, "y": 22.4359730105, "value": 41 }, 
+    //  { "x": 114.1384127393, "y": 22.435928255, "value": 75 },
+    //   { "x": 114.1384551136, "y": 22.4359450132, "value": 3 },
+    //    { "x": 114.1384927196, "y": 22.4359158649, "value": 45 }, 
+    //    { "x": 114.1384938639, "y": 22.4358498311, "value": 45 }, { "x": 114.1385183299, "y": 22.4360213794, "value": 93 }, { "x": 114.1384007925, "y": 22.4359860133, "value": 46 }, { "x": 114.1383604844, "y": 22.4358298672, "value": 54 }, { "x": 114.13851025, "y": 22.4359098303, "value": 39 }, { "x": 114.1383874733, "y": 22.4358511035, "value": 34 }, { "x": 114.1384981796, "y": 22.4359355403, "value": 81 }, { "x": 114.1384504107, "y": 22.4360332348, "value": 39 }, { "x": 114.1385582664, "y": 22.4359788335, "value": 20 }, { "x": 114.1383967364, "y": 22.4360581999, "value": 35 }, { "x": 114.1383839615, "y": 22.436016316, "value": 47 }, { "x": 114.1384082712, "y": 22.4358423338, "value": 36 }, { "x": 114.1385092651, "y": 22.4358577623, "value": 69 }, { "x": 114.138360356, "y": 22.436046789, "value": 90 }, { "x": 114.138471893, "y": 22.4359184292, "value": 88 }, { "x": 114.1385605689, "y": 22.4360271359, "value": 81 }, { "x": 114.1383585714, "y": 22.4359362476, "value": 32 }, { "x": 114.1384939114, "y": 22.4358844253, "value": 67 }, { "x": 114.138466724, "y": 22.436019121, "value": 17 }, { "x": 114.1385504355, "y": 22.4360614056, "value": 49 }, { "x": 114.1383883832, "y": 22.4358733544, "value": 82 }, { "x": 114.1385670669, "y": 22.4359650236, "value": 25 }, { "x": 114.1383416534, "y": 22.4359310876, "value": 82 }, { "x": 114.138525285, "y": 22.4359394661, "value": 66 }, { "x": 114.1385487719, "y": 22.4360137656, "value": 73 }, { "x": 114.1385496029, "y": 22.4359187277, "value": 73 }, { "x": 114.1383989222, "y": 22.4358556562, "value": 61 }, { "x": 114.1385499424, "y": 22.4359149305, "value": 67 }, { "x": 114.138404523, "y": 22.4359563326, "value": 90 }, { "x": 114.1383883675, "y": 22.4359794855, "value": 78 }, { "x": 114.1383967187, "y": 22.435891185, "value": 15 }, { "x": 114.1384610005, "y": 22.4359044797, "value": 15 }, { "x": 114.1384688489, "y": 22.4360396127, "value": 91 }, { "x": 114.1384431875, "y": 22.4360684409, "value": 8 }, { "x": 114.1385411067, "y": 22.4360645847, "value": 42 }, { "x": 114.1385237178, "y": 22.4358843181, "value": 31 }, { "x": 114.1384406464, "y": 22.4360003831, "value": 51 }, { "x": 114.1384679169, "y": 22.4359950456, "value": 96 }, { "x": 114.1384194314, "y": 22.4358419739, "value": 22 }, { "x": 114.1385049792, "y": 22.4359574813, "value": 44 }, { "x": 114.1384097378, "y": 22.4358598672, "value": 82 }, { "x": 114.1384993219, "y": 22.4360352975, "value": 84 }, { "x": 114.1383640499, "y": 22.4359839518, "value": 81 }];
+    // let valueMin = 0;
+    // let valueMax = 100;
+
+    // // add data to heatmap
+    // heatMap.setWGS84Data(valueMin, valueMax, data);
+
+}
+
 
 const addTestBlueLine = (viewer: any) => {
     const orgArr = flowArray;
