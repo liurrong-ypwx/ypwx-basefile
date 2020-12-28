@@ -3,9 +3,9 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testData';
 // import CesiumHeatmap from "../../../public/js/CesiumHeatmap";
 // const CesiumHeatmap = require('./component/CesiumHeatmap');
+
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
-
 const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
 // const locationJDY = { lng: 104.06, lat: 30.78, height: 13000.0 };
 const location = locationSZ;
@@ -33,17 +33,20 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         //     // requestVertexNormals:true,
         //     // requestWaterMask:true
         // }),
-        skyBox: new Cesium.SkyBox({
-            sources: {
-                positiveX: './Models/image/box.png',
-                negativeX: './Models/image/box.png',
-                positiveY: './Models/image/box.png',
-                negativeY: './Models/image/box.png',
-                positiveZ: './Models/image/box.png',
-                negativeZ: './Models/image/box.png'
-            }
-        })
+        // skyBox: new Cesium.SkyBox({
+        //     sources: {
+        //         positiveX: './Models/image/box.png',
+        //         negativeX: './Models/image/box.png',
+        //         positiveY: './Models/image/box.png',
+        //         negativeY: './Models/image/box.png',
+        //         positiveZ: './Models/image/box.png',
+        //         negativeZ: './Models/image/box.png'
+        //     }
+        // })
     })
+
+    // 导航插件
+    // viewer.extend(Cesium.viewerCesiumNavigationMixin, {});
 
     // 额外设置之显示帧速
     viewer.scene.debugShowFramesPerSecond = true;
@@ -59,7 +62,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         })
 
         // 给建筑物添加shader
-        tmpTileset.readyPromise.then(function (tileset) {
+        tmpTileset.readyPromise.then(function (tileset: any) {
 
             // 摄像机移动到建筑群
             const boundingSphere = tileset.boundingSphere;
@@ -76,7 +79,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
             });
 
 
-            tileset.tileVisible.addEventListener(function (tile) {
+            tileset.tileVisible.addEventListener(function (tile:any) {
                 const content = tile.content;
                 const featuresLength = content.featuresLength;
                 for (let i = 0; i < featuresLength; i += 2) {
@@ -203,7 +206,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 }
 
 // =================================这是示例区域========================
-const addTestDarkImg = (viewer: any) => {
+export const addTestDarkImg = (viewer: any) => {
     // 添加一个蓝色底图来加强图像的展示
     viewer.scene.imageryLayers.addImageryProvider(
         new Cesium.SingleTileImageryProvider({
@@ -213,7 +216,7 @@ const addTestDarkImg = (viewer: any) => {
 }
 
 // 2020-12-25 粉刷匠 添加热力图
-const addTestHeatmap = (viewer: any) => {
+export const addTestHeatmap = (viewer: any) => {
     // 矩形坐标 xmin ymin xmax ymax
     // let bounds = {
     //     west: 113.779,
@@ -254,7 +257,7 @@ const addTestHeatmap = (viewer: any) => {
 }
 
 
-const addTestBlueLine = (viewer: any) => {
+export const addTestBlueLine = (viewer: any) => {
     const orgArr = flowArray;
     for (let i = 0; i < orgArr.length; i++) {
         const tmpSigLine = orgArr[i];
@@ -269,23 +272,23 @@ const addTestBlueLine = (viewer: any) => {
     }
 }
 
-// const addTestFlowLine = (viewer: any) => {
-//     const orgArr = flowArray;
-//     for (let i = 0; i < orgArr.length; i++) {
-//         const tmpSigLine = orgArr[i];
-//         const tmpArr: any = [];
-//         for (let j = 0; j < tmpSigLine.length; j++) {
-//             if (tmpSigLine[j][0] && tmpSigLine[j][1]) {
-//                 tmpArr.push(tmpSigLine[j][0]);
-//                 tmpArr.push(tmpSigLine[j][1]);
-//             }
-//         }
-//         addFlowLine(viewer, tmpArr);
-//     }
-// }
+export const addTestFlowLine = (viewer: any) => {
+    const orgArr = flowArray;
+    for (let i = 0; i < orgArr.length; i++) {
+        const tmpSigLine = orgArr[i];
+        const tmpArr: any = [];
+        for (let j = 0; j < tmpSigLine.length; j++) {
+            if (tmpSigLine[j][0] && tmpSigLine[j][1]) {
+                tmpArr.push(tmpSigLine[j][0]);
+                tmpArr.push(tmpSigLine[j][1]);
+            }
+        }
+        addFlowLine(viewer, tmpArr);
+    }
+}
 
 // 添加一个旋转的圆圈
-const addTestBox = (viewer: any) => {
+export const addTestBox = (viewer: any) => {
 
     let rotation = Cesium.Math.toRadians(30);
     function getRotationValue() {
@@ -316,14 +319,14 @@ const addTestBox = (viewer: any) => {
 
 }
 
-const addTestBlueBuilding = (viewer: any) => {
+export const addTestBlueBuilding = (viewer: any) => {
 
     const tmpTileset = new Cesium.Cesium3DTileset({
         url: "./Models/building3/tileset.json"
     }) 
 
     // 给建筑物添加shader
-    tmpTileset.readyPromise.then(function (tileset) {
+    tmpTileset.readyPromise.then(function (tileset:any) {
 
         tileset.style = new Cesium.Cesium3DTileStyle({
             color: {
@@ -333,7 +336,7 @@ const addTestBlueBuilding = (viewer: any) => {
             }
         });
 
-        tileset.tileVisible.addEventListener(function (tile) {
+        tileset.tileVisible.addEventListener(function (tile:any) {
             const content = tile.content;
             const featuresLength = content.featuresLength;
             for (let i = 0; i < featuresLength; i += 2) {
@@ -375,7 +378,7 @@ const addTestBlueBuilding = (viewer: any) => {
     viewer.scene.primitives.add(tmpTileset);
 }
 
-const addTestGlbLabel = (viewer: any) => {
+export const addTestGlbLabel = (viewer: any) => {
     const flightData = testFlightData;
     const timeStepInSeconds = 30;
     const totalSeconds = timeStepInSeconds * (flightData.length - 1);
@@ -784,22 +787,23 @@ export const addGlowPolyLine = (viewer: any, lineArr: any) => {
 }
 
 // 添加流动的线
-// export const addFlowLine = (viewer: any, lineArr: any) => {
-//     if (!viewer) return;
+export const addFlowLine = (viewer: any, lineArr: any) => {
+    if (!viewer) return;
 
-//     viewer.entities.add({
-//         polyline: {
-//             positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
-//             width: 6,
-//             // 流动纹理
-//             material: new Cesium.PolylineTrailLinkMaterialProperty({
-//                 color: Cesium.Color.CRIMSON,
-//                 duration: 5000,
-//                 d: 1
-//             })
-//         }
-//     });
-// }
+    viewer.entities.add({
+        polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
+            width: 6,
+            // 流动纹理
+            material: new Cesium.PolylineTrailLinkMaterialProperty({
+                // color: Cesium.Color.CRIMSON,
+                color: Cesium.Color.YELLOW,
+                duration: 5000,
+                d: 1
+            })
+        }
+    });
+}
 
 
 // 添加几何体
@@ -1018,6 +1022,9 @@ const addPolyline = (viewer: any, handler: any) => {
     let poly: any = null;
     let cartesian: any = null;
     let floatingPoint: any = null;
+    if(floatingPoint){
+        // 
+    }
 
     // 注册鼠标移动事件 
     handler.setInputAction((movement: any) => {
@@ -1106,6 +1113,9 @@ const addPolygon = (viewer: any, handler: any) => {
     let polygon:any = null;
     let cartesian:any = null;
     let floatingPoint: any = []; // 浮动点
+    if(floatingPoint){
+        // 
+    }
 
     // 注册鼠标移动事件
     handler.setInputAction((movement: any) => {
@@ -1215,6 +1225,9 @@ export const measureLineSpace = (viewer: any, handler: any) => {
     let distance: any = 0;
     let cartesian: any = null;
     let floatingPoint: any = null;
+    if(floatingPoint){
+        // 
+    }
 
     // 注册鼠标移动事件 
     handler.setInputAction((movement: any) => {
@@ -1335,6 +1348,9 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
     let polygon:any = null;
     let cartesian:any = null;
     let floatingPoint: any = []; // 浮动点
+    if(floatingPoint){
+        // 
+    }
 
     // 注册鼠标移动事件
     handler.setInputAction((movement: any) => {
