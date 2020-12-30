@@ -163,13 +163,13 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     if (!isAddBuilding) {
 
         // 添加测试蓝色的底图
-        // addTestDarkImg(viewer);
+        addTestDarkImg(viewer);
 
         // 缩放到深圳
         setExtent(viewer);
 
         // 添加测试南山区建筑3dtile数据
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         addGeoJsonData(viewer);
@@ -181,7 +181,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestGlbLabel(viewer);
 
         // 添加测试标注的椭圆图片---透明png
-        addTestBox(viewer);
+        // addTestBox(viewer);
 
         // 添加蓝色的泛光线
         // addTestBlueLine(viewer);
@@ -191,6 +191,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 雷达圆扩散图
         // showCircleScan(viewer);
+
+        // 测试---雷达圆扫描图
+        showTestCircleScan(viewer);
+        // 测试---雷达圆扩散图
+        showTestCircleScan2(viewer);
 
         // 雷达圆扫描图
         // showRadarScan(viewer);
@@ -435,9 +440,137 @@ export const addTestRroadGeoJsonData = (viewer: any) => {
     }));
 }
 
+// 添加一个圆扫描--测试
+export const showTestCircleScan = (viewer: any) => {
+
+    let rotation = Cesium.Math.toRadians(30);
+    function getRotationValue() {
+        rotation += 0.01;
+        // rotation += 0.0;
+        return rotation;
+    }
+
+    // 旋转的 圆
+    viewer.entities.add({
+        name: "a rotate ellipse ",
+        position: Cesium.Cartesian3.fromDegrees(113.91, 22.52, 100),
+        ellipse: {
+            semiMinorAxis: 1000,
+            semiMajorAxis: 1000,
+            // height: 200,
+            //颜色回调
+            material: new Cesium.ImageMaterialProperty({
+                image: getColorCircle("()", 90, true),
+                transparent: true,
+            }),
+            rotation: new Cesium.CallbackProperty(getRotationValue, false),
+            stRotation: new Cesium.CallbackProperty(getRotationValue, false),
+            outline: false, // height must be set for outline to display
+            numberOfVerticalLines: 100
+        },
+        description: '测试数据'
+    });
+}
+
+// 添加一个圆扩散--测试
+export const showTestCircleScan2 = (viewer: any) => {
+
+    const data={
+        minR:100,
+        maxR: 1000,
+        deviationR:10,// 差值 差值也大 速度越快
+    }
+    let r1 = data.minR;
+    let r2 = data.minR;
+
+    function changeR1() { // 这是callback，参数不能内传
+        r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
+        if (r1 >= data.maxR) {
+            r1 = data.minR;
+        }
+        return r1;
+    }
+
+    function changeR2() {
+        r2 = r2 + data.deviationR;
+        if (r2 >= data.maxR) {
+            r2 = data.minR;
+        }
+        return r2;
+    }
+
+    // 旋转的 圆
+    viewer.entities.add({
+        name: "a rotate ellipse ",
+        position: Cesium.Cartesian3.fromDegrees(113.91, 22.51, 100),
+        ellipse: {
+            semiMinorAxis: new Cesium.CallbackProperty(changeR1, false),
+            semiMajorAxis: new Cesium.CallbackProperty(changeR2, false),
+            // height: 200,
+            //颜色回调
+            material: new Cesium.ImageMaterialProperty({
+                image: getColorCircle2("()", true),
+                transparent: true,
+            }),
+            // rotation: new Cesium.CallbackProperty(getRotationValue, false),
+            // stRotation: new Cesium.CallbackProperty(getRotationValue, false),
+            outline: false, // height must be set for outline to display
+            numberOfVerticalLines: 100
+        },
+        description: '测试数据'
+    });
+}
+
+// 获取渐变色颜色的环
+const getColorCircle2 = (color: any, isTransparent?: boolean) => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 100;
+    ramp.height = 100;
+    const ctx: any = ramp.getContext('2d');
+
+    // const values = elevationRamp;
+    const grd = ctx.createRadialGradient(50,50,50,50,50,0);
+    grd.addColorStop(1, 'transparent'); //black
+    grd.addColorStop(0.1, 'rgba(0,255,0,0.1)'); //black
+    grd.addColorStop(0, "rgba(0,255,0,0.7)");
+
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,100,100);
+    return ramp;
+}
+
+// 获取颜色环
+const getColorCircle = (color: any, deg: number, isTransparent?: boolean) => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 100;
+    ramp.height = 100;
+    const ctx: any = ramp.getContext('2d');
+
+    // const values = elevationRamp;
+    const grd = ctx.createLinearGradient(55, 25, 100, 50);
+    grd.addColorStop(0, 'transparent'); //black
+    grd.addColorStop(0.5, 'rgba(0,255,0,0.5)'); //orange
+    grd.addColorStop(1, 'rgba(0,255,0,1)'); //yellow
+
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.moveTo(50, 50);
+    ctx.arc(50, 50, 50, -90 / 180 * Math.PI, 0 / 180 * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = 'transparent';
+    ctx.strokeStyle = 'rgba(0,255,0,1)';
+    ctx.beginPath();
+    ctx.arc(50, 50, 50, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.stroke();
+    return ramp;
+}
+
 // showCircleScan() // 圆扩散
 export const showCircleScan = (viewer: any) => {
-    const cartographicCenter = new Cesium.Cartographic(Cesium.Math.toRadians(113.9), Cesium.Math.toRadians(22.51), 320);
+    const cartographicCenter = new Cesium.Cartographic(Cesium.Math.toRadians(113.9), Cesium.Math.toRadians(22.51), 1000);
     const scanColor = Cesium.Color.CYAN;
     addCircleScanPostStage(viewer, cartographicCenter, 1000, scanColor, 4000);
 }
@@ -1200,6 +1333,7 @@ const addPolygon = (viewer: any, handler: any) => {
 // 添加测距 or 测量面积
 export const addMeasureTool = (viewer: any, type: any) => {
     if (!viewer) return;
+    if (handler) { handler && handler.destroy(); }
 
     if (type === "distance") {
         measureLineSpace(viewer, handler);
