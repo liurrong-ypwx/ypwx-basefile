@@ -17,7 +17,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     if (!document.getElementById(domID)) return;
 
     const viewer = new Cesium.Viewer(domID, {
-        geocoder: false,   
+        geocoder: false,
         homeButton: true,
         sceneModePicker: false,
         baseLayerPicker: false,
@@ -55,7 +55,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     // 假如添加建筑物3dtile
     if (isAddBuilding) {
 
-    
+
 
         const tmpTileset = new Cesium.Cesium3DTileset({
             url: "./Models/building2/tileset.json"
@@ -79,7 +79,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
             });
 
 
-            tileset.tileVisible.addEventListener(function (tile:any) {
+            tileset.tileVisible.addEventListener(function (tile: any) {
                 const content = tile.content;
                 const featuresLength = content.featuresLength;
                 for (let i = 0; i < featuresLength; i += 2) {
@@ -175,7 +175,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         addGeoJsonData(viewer);
 
         // 添加测试道路数据
-        // addTestRroadGeoJsonData(viewer);
+        addTestRroadGeoJsonData(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -184,26 +184,23 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestBox(viewer);
 
         // 添加蓝色的泛光线
-        // addTestBlueLine(viewer);
+        addTestBlueLine(viewer);
 
         // 添加流动的线
-        // addTestFlowLine(viewer);
+        addTestFlowLine(viewer);
 
-        // 雷达圆扩散图
-        // showCircleScan(viewer);
 
         // 测试---雷达圆扫描图
         showTestCircleScan(viewer);
         // 测试---雷达圆扩散图
         showTestCircleScan2(viewer);
 
-        // 雷达圆扫描图
-        // showRadarScan(viewer);
+
 
         // 添加热力图
         addTestHeatmap(viewer);
 
-    
+
 
     }
 
@@ -218,6 +215,15 @@ export const addTestDarkImg = (viewer: any) => {
             url: './Models/image/dark.png'
         })
     )
+}
+
+// 获取相机参数
+export const getTestCameraPara = (viewer: any) => {
+    
+    console.log("参数postion", viewer.camera.position);
+    console.log("参数postion", viewer.camera.heading);
+    console.log("参数postion", viewer.camera.pitch);
+    console.log("参数postion", viewer.camera.roll);
 }
 
 // 2020-12-25 粉刷匠 添加热力图
@@ -328,10 +334,10 @@ export const addTestBlueBuilding = (viewer: any) => {
 
     const tmpTileset = new Cesium.Cesium3DTileset({
         url: "./Models/building3/tileset.json"
-    }) 
+    })
 
     // 给建筑物添加shader
-    tmpTileset.readyPromise.then(function (tileset:any) {
+    tmpTileset.readyPromise.then(function (tileset: any) {
 
         tileset.style = new Cesium.Cesium3DTileStyle({
             color: {
@@ -341,7 +347,7 @@ export const addTestBlueBuilding = (viewer: any) => {
             }
         });
 
-        tileset.tileVisible.addEventListener(function (tile:any) {
+        tileset.tileVisible.addEventListener(function (tile: any) {
             const content = tile.content;
             const featuresLength = content.featuresLength;
             for (let i = 0; i < featuresLength; i += 2) {
@@ -428,6 +434,66 @@ export const addTestGlbLabel = (viewer: any) => {
     }
 
     loadModel();
+}
+
+// 测试 沿指定的路径飞行
+export const addTestFlightLine = (viewer: any) => {
+    // const positionList = testFlightData2;
+
+    const positionList = [
+        {
+            direction: { x: 0.21737389927048856, y: -0.35625827851488445, z: 0.0005457635106811409 },
+            position: {x: -2391675.894952625, y: 5388787.412965841, z: 2426462.2897910792}
+        },
+        {
+            direction: { x: 0.29263695515353305, y: -0.40838371225120706, z: 0.0007456844237099247 },
+            position:  {x: -2391483.00669378, y: 5388427.905450816, z: 2427118.8780692583}
+        },
+        {
+            direction: { x: 0.3335510891862299, y: 0.060774701476857595, z: 0.0007774323957603357 },
+            position:{x: -2391466.8883185615, y: 5388021.038587686, z: 2427348.174456691}
+        },
+        {
+            direction: { x: 0.32721424136304833, y: 0.10707579115246624, z: 0.0007227711996984354 },
+            position: {x: -2391790.5365237165, y: 5387942.510425894, z: 2427250.5374713736}
+        }
+    ]
+    let count = 0;
+    fly();
+
+    function fly() {
+        if (count >= positionList.length) {
+            return;
+        }
+        var position = positionList[count];
+
+        viewer.camera.flyTo({
+            // destination: Cesium.Cartesian3.fromDegrees(
+            //     position[0],
+            //     position[1],
+            //     200
+            // ),
+            destination: position.position,
+            duration: 0.3,
+
+            orientation: {
+                heading: position.direction.x,
+                pitch: position.direction.y,
+                roll: position.direction.z
+            },
+        
+            // orientation: {
+            //     heading: Cesium.Math.toRadians(0.0),
+            //     pitch: Cesium.Math.toRadians(-90.0),
+            //     roll: Cesium.Math.toRadians(0.0)
+            // },
+            complete: function () {
+                fly();
+            }
+        });
+        count++;
+    }
+
 
 }
 
@@ -475,10 +541,10 @@ export const showTestCircleScan = (viewer: any) => {
 // 添加一个圆扩散--测试
 export const showTestCircleScan2 = (viewer: any) => {
 
-    const data={
-        minR:100,
+    const data = {
+        minR: 100,
         maxR: 1000,
-        deviationR:10,// 差值 差值也大 速度越快
+        deviationR: 10,// 差值 差值也大 速度越快
     }
     let r1 = data.minR;
     let r2 = data.minR;
@@ -529,13 +595,13 @@ const getColorCircle2 = (color: any, isTransparent?: boolean) => {
     const ctx: any = ramp.getContext('2d');
 
     // const values = elevationRamp;
-    const grd = ctx.createRadialGradient(50,50,50,50,50,0);
+    const grd = ctx.createRadialGradient(50, 50, 50, 50, 50, 0);
     grd.addColorStop(1, 'transparent'); //black
     grd.addColorStop(0.1, 'rgba(0,255,0,0.1)'); //black
     grd.addColorStop(0, "rgba(0,255,0,0.7)");
 
     ctx.fillStyle = grd;
-    ctx.fillRect(0,0,100,100);
+    ctx.fillRect(0, 0, 100, 100);
     return ramp;
 }
 
@@ -591,7 +657,7 @@ export const showRadarScan = (viewer: any) => {
     scanColor 扫描颜色
     duration 持续时间 毫秒
 */
-function addCircleScanPostStage(viewer:any, cartographicCenter:any, maxRadius:any, scanColor:any, duration:any) {
+function addCircleScanPostStage(viewer: any, cartographicCenter: any, maxRadius: any, scanColor: any, duration: any) {
     const _Cartesian3Center = Cesium.Cartographic.toCartesian(cartographicCenter);
     const _Cartesian4Center = new Cesium.Cartesian4(_Cartesian3Center.x, _Cartesian3Center.y, _Cartesian3Center.z, 1);
 
@@ -695,7 +761,7 @@ function getScanSegmentShader() {
     scanColor 扫描颜色
     duration 持续时间 毫秒
 */
-function addRadarScanPostStage(viewer:any, cartographicCenter:any, radius:any, scanColor:any, duration:any) {
+function addRadarScanPostStage(viewer: any, cartographicCenter: any, radius: any, scanColor: any, duration: any) {
     const _Cartesian3Center = Cesium.Cartographic.toCartesian(cartographicCenter);
     const _Cartesian4Center = new Cesium.Cartesian4(_Cartesian3Center.x, _Cartesian3Center.y, _Cartesian3Center.z, 1);
 
@@ -1155,7 +1221,7 @@ const addPolyline = (viewer: any, handler: any) => {
     let poly: any = null;
     let cartesian: any = null;
     let floatingPoint: any = null;
-    if(floatingPoint){
+    if (floatingPoint) {
         // 
     }
 
@@ -1241,12 +1307,12 @@ const addPolygon = (viewer: any, handler: any) => {
 
     // 鼠标事件
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
-    let positions :any= [];
-    let tempPoints:any = [];
-    let polygon:any = null;
-    let cartesian:any = null;
+    let positions: any = [];
+    let tempPoints: any = [];
+    let polygon: any = null;
+    let cartesian: any = null;
     let floatingPoint: any = []; // 浮动点
-    if(floatingPoint){
+    if (floatingPoint) {
         // 
     }
 
@@ -1261,7 +1327,7 @@ const addPolygon = (viewer: any, handler: any) => {
             } else {
                 positions.pop();
                 positions.push(cartesian);
-            }          
+            }
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -1359,7 +1425,7 @@ export const measureLineSpace = (viewer: any, handler: any) => {
     let distance: any = 0;
     let cartesian: any = null;
     let floatingPoint: any = null;
-    if(floatingPoint){
+    if (floatingPoint) {
         // 
     }
 
@@ -1477,12 +1543,12 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
 
     // 鼠标事件
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
-    let positions :any= [];
-    let tempPoints:any = [];
-    let polygon:any = null;
-    let cartesian:any = null;
+    let positions: any = [];
+    let tempPoints: any = [];
+    let polygon: any = null;
+    let cartesian: any = null;
     let floatingPoint: any = []; // 浮动点
-    if(floatingPoint){
+    if (floatingPoint) {
         // 
     }
 
@@ -1497,14 +1563,14 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
             } else {
                 positions.pop();
                 positions.push(cartesian);
-            }          
+            }
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 
     // 注册鼠标左击效果
     handler.setInputAction(function (movement: any) {
-    
+
         let ray = viewer.camera.getPickRay(movement.position);
         cartesian = viewer.scene.globe.pick(ray, viewer.scene);
         if (positions.length === 0) {
@@ -1531,7 +1597,7 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     // 注册鼠标右击效果
-    handler.setInputAction(function (movement:any) {
+    handler.setInputAction(function (movement: any) {
         handler.destroy();
         positions.pop();
         const textArea = getArea(tempPoints) + "平方公里";
@@ -1555,7 +1621,7 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
     let degreesPerRadian = 180.0 / Math.PI;//弧度转化为角度
 
     // 计算多边形面积
-    function getArea(points:any) {
+    function getArea(points: any) {
 
         let res = 0;
         //拆分三角曲面
@@ -1577,7 +1643,7 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
     }
 
     /* 角度 */
-    function Angle(p1:any, p2:any, p3:any) {
+    function Angle(p1: any, p2: any, p3: any) {
         let bearing21 = Bearing(p2, p1);
         let bearing23 = Bearing(p2, p3);
         let angle = bearing21 - bearing23;
@@ -1587,7 +1653,7 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
         return angle;
     }
     /* 方向 */
-    function Bearing(from:any, to:any) {
+    function Bearing(from: any, to: any) {
         let lat1 = from.lat * radiansPerDegree;
         let lon1 = from.lon * radiansPerDegree;
         let lat2 = to.lat * radiansPerDegree;
@@ -1600,12 +1666,12 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
         return angle;
     }
 
-    const PolygonPrimitive:any = (function () {
+    const PolygonPrimitive: any = (function () {
         function _(this: any, positions: any) {
             this.options = {
                 name: '多边形',
                 polygon: {
-                    hierarchy : [],
+                    hierarchy: [],
                     material: Cesium.Color.GREEN.withAlpha(0.5),
                 }
             };
@@ -1629,7 +1695,7 @@ export const measureAreaSpace = (viewer: any, handler: any) => {
 
 
 
-    function distance(point1:any, point2:any) {
+    function distance(point1: any, point2: any) {
         let point1cartographic = Cesium.Cartographic.fromCartesian(point1);
         let point2cartographic = Cesium.Cartographic.fromCartesian(point2);
         /** 根据经纬度计算出距离 **/

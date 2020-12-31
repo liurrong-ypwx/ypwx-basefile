@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./ChBuild.less";
 import * as CesiumApi from "../../../utils/CesiumApi/CesiumApi";
+import { titleList } from "./TuCao";
 
 
 function ChBuild(): JSX.Element {
@@ -37,6 +38,18 @@ function ChBuild(): JSX.Element {
         if (!orgView) return;
         CesiumApi.setExtent(orgView);
     }
+
+    // 测试飞行路线
+    const testFly = () => {
+        if (!orgView) return;
+        CesiumApi.addTestFlightLine(orgView);
+    }
+
+    // 获取相机飞行参数
+    const getPara = () => {
+        if (!orgView) return;
+        CesiumApi.getTestCameraPara(orgView);
+    }
    
 
     return (
@@ -52,6 +65,8 @@ function ChBuild(): JSX.Element {
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polygon") }} >添加Polygon</div>
                 <div className="sig-btn" onClick={() => { handleMeasure("distance") }} >测距</div>
                 <div className="sig-btn" onClick={() => { handleMeasure("area") }} >测面积</div>
+                <div className="sig-btn" onClick={() => { getPara() }} >获取相机参数</div>
+                <div className="sig-btn" onClick={() => { testFly() }} title={titleList.testFly} >飞行</div>
             </div>
         </div>
     )
