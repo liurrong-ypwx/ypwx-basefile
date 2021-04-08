@@ -3,12 +3,14 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testData';
 // import CesiumHeatmap from "../../../public/js/CesiumHeatmap";
 // const CesiumHeatmap = require('./component/CesiumHeatmap');
+// import roadImage from "../../assets/image/road.jpg";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
 // const locationJDY = { lng: 104.06, lat: 30.78, height: 13000.0 };
 const location = locationSZ;
+
 
 
 // 初始化地图
@@ -20,7 +22,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         geocoder: false,
         homeButton: true,
         sceneModePicker: false,
-        baseLayerPicker: false,
+        baseLayerPicker: true,
         navigationHelpButton: false,
         animation: false,
         // creditContainer:"credit",
@@ -29,9 +31,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
+
+        // 演示1：三维地形图
         // terrainProvider: Cesium.createWorldTerrain({
-        //     // requestVertexNormals:true,
-        //     // requestWaterMask:true
+        //     requestVertexNormals:true,
+        //     requestWaterMask:true
         // }),
         // skyBox: new Cesium.SkyBox({
         //     sources: {
@@ -44,6 +48,8 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         //     }
         // })
     })
+    // 演示1：添加免费的osm 建筑物图层
+    // viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
     // 导航插件
     // viewer.extend(Cesium.viewerCesiumNavigationMixin, {});
@@ -53,114 +59,98 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
     // 假如添加建筑物3dtile
-    if (isAddBuilding) {
+    // if (isAddBuilding) {
 
-
-
-        const tmpTileset = new Cesium.Cesium3DTileset({
-            url: "./Models/building2/tileset.json"
-        })
-
-        // 给建筑物添加shader
-        tmpTileset.readyPromise.then(function (tileset: any) {
-
-            // 摄像机移动到建筑群
-            const boundingSphere = tileset.boundingSphere;
-            viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
-            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-
-
-            tileset.style = new Cesium.Cesium3DTileStyle({
-                color: {
-                    conditions: [
-                        ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-                    ]
-                }
-            });
-
-
-            tileset.tileVisible.addEventListener(function (tile: any) {
-                const content = tile.content;
-                const featuresLength = content.featuresLength;
-                for (let i = 0; i < featuresLength; i += 2) {
-                    let feature = content.getFeature(i)
-                    let model = feature.content._model
-
-                    if (model && model._sourcePrograms && model._rendererResources) {
-                        Object.keys(model._sourcePrograms).forEach(key => {
-                            let program = model._sourcePrograms[key]
-                            let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-                            let v_position = "";
-                            if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-                                v_position = "v_positionEC";
-                            } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-                                v_position = "v_pos";
-                            }
-                            const color = `vec4(${feature.color.toString()})`;
-
-                            model._rendererResources.sourceShaders[program.fragmentShader] =
-                                "varying vec3 " + v_position + ";\n" +
-                                "void main(void){\n" +
-                                "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-                                "    float glowRange = 360.0;\n" +
-                                "    gl_FragColor = " + color + ";\n" +
-                                // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-                                "    gl_FragColor *= vec4(vec3(position.z / 100.0), 1.0);\n" +
-                                "    float time = fract(czm_frameNumber / 360.0);\n" +
-                                "    time = abs(time - 0.5) * 2.0;\n" +
-                                "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-                                "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-                                "}\n"
-                        })
-                        model._shouldRegenerateShaders = true
-                    }
-                }
-            });
-        })
-
-
-
-        // 普通款制作专题图的样式
-        // tmpTileset.style = new Cesium.Cesium3DTileStyle({
-        //     color: {
-        //         conditions: [
-        //             // eslint-disable-next-line
-        //             ['${Height} >= 200', 'color("purple", 0.5)'],
-        //             // eslint-disable-next-line
-        //             ['${Height} >= 100', 'color("red")'],
-        //             ['true', 'color("blue")']
-        //         ]
-        //     },        
-        //     // eslint-disable-next-line
-        //     show: '${Height} > 0',
-        //     meta: {
-        //         // eslint-disable-next-line
-        //         description: '"Building id ${id} has height ${Height}."'
-        //     }
-        // });
-
-
-
-        viewer.scene.primitives.add(tmpTileset);
-    }
-
-    // addGeometry(viewer, "no", { longitude: 123, latitude: 23, height: 23 });
-
-    // new Cesium.UrlTemplateImageryProvider({
-    //     url: '你的照片'
-    // })
-
-    // 贴图
-    // const nightLayer = viewer.scene.imageryLayers.addImageryProvider(
-    //     new Cesium.SingleTileImageryProvider({
-    //         url: './Models/image/night2012.jpg'
+    //     const tmpTileset = new Cesium.Cesium3DTileset({
+    //         url: "./Models/building2/tileset.json"
     //     })
-    // )
+
+    //     // 给建筑物添加shader
+    //     tmpTileset.readyPromise.then(function (tileset: any) {
+
+    //         // 摄像机移动到建筑群
+    //         const boundingSphere = tileset.boundingSphere;
+    //         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
+    //         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+
+    //         tileset.style = new Cesium.Cesium3DTileStyle({
+    //             color: {
+    //                 conditions: [
+    //                     ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+    //                 ]
+    //             }
+    //         });
+
+
+    //         tileset.tileVisible.addEventListener(function (tile: any) {
+    //             const content = tile.content;
+    //             const featuresLength = content.featuresLength;
+    //             for (let i = 0; i < featuresLength; i += 2) {
+    //                 let feature = content.getFeature(i)
+    //                 let model = feature.content._model
+
+    //                 if (model && model._sourcePrograms && model._rendererResources) {
+    //                     Object.keys(model._sourcePrograms).forEach(key => {
+    //                         let program = model._sourcePrograms[key]
+    //                         let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+    //                         let v_position = "";
+    //                         if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+    //                             v_position = "v_positionEC";
+    //                         } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+    //                             v_position = "v_pos";
+    //                         }
+    //                         const color = `vec4(${feature.color.toString()})`;
+
+    //                         model._rendererResources.sourceShaders[program.fragmentShader] =
+    //                             "varying vec3 " + v_position + ";\n" +
+    //                             "void main(void){\n" +
+    //                             "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+    //                             "    float glowRange = 360.0;\n" +
+    //                             "    gl_FragColor = " + color + ";\n" +
+    //                             // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+    //                             "    gl_FragColor *= vec4(vec3(position.z / 100.0), 1.0);\n" +
+    //                             "    float time = fract(czm_frameNumber / 360.0);\n" +
+    //                             "    time = abs(time - 0.5) * 2.0;\n" +
+    //                             "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+    //                             "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+    //                             "}\n"
+    //                     })
+    //                     model._shouldRegenerateShaders = true
+    //                 }
+    //             }
+    //         });
+    //     })
 
 
 
+    //     // 普通款制作专题图的样式
+    //     // tmpTileset.style = new Cesium.Cesium3DTileStyle({
+    //     //     color: {
+    //     //         conditions: [
+    //     //             // eslint-disable-next-line
+    //     //             ['${Height} >= 200', 'color("purple", 0.5)'],
+    //     //             // eslint-disable-next-line
+    //     //             ['${Height} >= 100', 'color("red")'],
+    //     //             ['true', 'color("blue")']
+    //     //         ]
+    //     //     },        
+    //     //     // eslint-disable-next-line
+    //     //     show: '${Height} > 0',
+    //     //     meta: {
+    //     //         // eslint-disable-next-line
+    //     //         description: '"Building id ${id} has height ${Height}."'
+    //     //     }
+    //     // });
 
-    if (!isAddBuilding) {
+
+
+    //     viewer.scene.primitives.add(tmpTileset);
+    // }
+
+
+    // 演示2：添加各类智慧城市的动效图，等等等等
+    if (isAddBuilding) {
 
         // 添加测试蓝色的底图
         addTestDarkImg(viewer);
@@ -168,14 +158,17 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 缩放到深圳
         setExtent(viewer);
 
+        // 添加测试道路数据
+        addTestRroadGeoJsonData(viewer);
+
+
         // 添加测试南山区建筑3dtile数据
         addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         addGeoJsonData(viewer);
 
-        // 添加测试道路数据
-        addTestRroadGeoJsonData(viewer);
+      
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -184,27 +177,40 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestBox(viewer);
 
         // 添加蓝色的泛光线
-        addTestBlueLine(viewer);
+        // addTestBlueLine(viewer);
+
+        // 添加带有贴图的道路
+        // addRoadWithImage(viewer);
 
         // 添加流动的线
-        addTestFlowLine(viewer);
+        // addTestFlowLine(viewer);
 
 
         // 测试---雷达圆扫描图
-        showTestCircleScan(viewer);
+        // showTestCircleScan(viewer);
         // 测试---雷达圆扩散图
-        showTestCircleScan2(viewer);
-
-
-
-        // 添加热力图
-        addTestHeatmap(viewer);
+        // showTestCircleScan2(viewer);
 
 
 
     }
 
+    // addWmtsLayer(viewer);
+
     return viewer;
+}
+
+// 添加geoserver发布的wmts服务
+export const addWmtsLayer = (viewer: any) => {
+    const turl = "http://localhost:8080/geoserver/gwc/service/wmts/rest/nurc:Pk50095/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png";
+    const tlayer = new Cesium.WebMapTileServiceImageryProvider({
+        url: turl,
+        layer: 'nurc:Pk50095',
+        style: 'default',
+        format: 'image/png',
+        tileMatrixSetID: 'EPSG:900913',
+    });
+    viewer.imageryLayers.addImageryProvider(tlayer);
 }
 
 // =================================这是示例区域========================
@@ -267,6 +273,36 @@ export const addTestHeatmap = (viewer: any) => {
 
 }
 
+export const addImageLine = (viewer: any, lineArr: any) => {
+    if (!viewer) return;
+
+    viewer.entities.add({
+        polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
+            width: 60,
+            // 流动纹理
+            material: new Cesium.ImageMaterialProperty({
+                image:'./Models/image/road.jpg'
+            })
+        }
+    });
+}
+
+// 添加带贴图的道路
+export const addRoadWithImage = (viewer: any) => {
+    const orgArr = flowArray;
+    for (let i = 0; i < 1; i++) {
+        const tmpSigLine = orgArr[i];
+        const tmpArr: any = [];
+        for (let j = 0; j < tmpSigLine.length; j++) {
+            if (tmpSigLine[j][0] && tmpSigLine[j][1]) {
+                tmpArr.push(tmpSigLine[j][0]);
+                tmpArr.push(tmpSigLine[j][1]);
+            }
+        }
+        addImageLine(viewer, tmpArr);
+    }
+}
 
 export const addTestBlueLine = (viewer: any) => {
     const orgArr = flowArray;
@@ -333,60 +369,94 @@ export const addTestBox = (viewer: any) => {
 export const addTestBlueBuilding = (viewer: any) => {
 
     const tmpTileset = new Cesium.Cesium3DTileset({
-        url: "./Models/building3/tileset.json"
+        url: "./Models/szNanshan/tileset.json"
     })
+    
 
     // 给建筑物添加shader
     tmpTileset.readyPromise.then(function (tileset: any) {
+        viewer.scene.primitives.add(tmpTileset);
 
-        tileset.style = new Cesium.Cesium3DTileStyle({
-            color: {
-                conditions: [
-                    ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-                ]
-            }
-        });
+        // tileset.style = new Cesium.Cesium3DTileStyle({
+        //     color: {
+        //         conditions: [
+        //             ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+        //         ]
+        //     }
+        // });
 
-        tileset.tileVisible.addEventListener(function (tile: any) {
-            const content = tile.content;
-            const featuresLength = content.featuresLength;
-            for (let i = 0; i < featuresLength; i += 2) {
-                let feature = content.getFeature(i)
-                let model = feature.content._model
+        // tileset.tileVisible.addEventListener(function (tile: any) {
+        //     const content = tile.content;
+        //     const featuresLength = content.featuresLength;
+        //     for (let i = 0; i < featuresLength; i += 2) {
+        //         let feature = content.getFeature(i)
+        //         let model = feature.content._model
 
-                if (model && model._sourcePrograms && model._rendererResources) {
-                    Object.keys(model._sourcePrograms).forEach(key => {
-                        let program = model._sourcePrograms[key]
-                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-                        let v_position = "";
-                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-                            v_position = "v_positionEC";
-                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-                            v_position = "v_pos";
-                        }
-                        const color = `vec4(${feature.color.toString()})`;
+        //         if (model && model._sourcePrograms && model._rendererResources) {
+        //             Object.keys(model._sourcePrograms).forEach(key => {
+        //                 let program = model._sourcePrograms[key]
+        //                 let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+        //                 let v_position = "";
+        //                 if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+        //                     v_position = "v_positionEC";
+        //                 } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+        //                     v_position = "v_pos";
+        //                 }
+        //                 const color = `vec4(${feature.color.toString()})`;
 
-                        model._rendererResources.sourceShaders[program.fragmentShader] =
-                            "varying vec3 " + v_position + ";\n" +
-                            "void main(void){\n" +
-                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-                            "    float glowRange = 120.0;\n" +
-                            "    gl_FragColor = " + color + ";\n" +
-                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
-                            "    float time = fract(czm_frameNumber / 120.0);\n" +
-                            "    time = abs(time - 0.5) * 2.0;\n" +
-                            "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-                            "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-                            "}\n"
-                    })
-                    model._shouldRegenerateShaders = true
-                }
-            }
-        });
+        //                 model._rendererResources.sourceShaders[program.fragmentShader] =
+        //                     "varying vec3 " + v_position + ";\n" +
+        //                     "void main(void){\n" +
+        //                     "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+        //                     "    float glowRange = 120.0;\n" +
+        //                     "    gl_FragColor = " + color + ";\n" +
+        //                     // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+        //                     "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
+        //                     "    float time = fract(czm_frameNumber / 120.0);\n" +
+        //                     "    time = abs(time - 0.5) * 2.0;\n" +
+        //                     "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+        //                     "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+        //                     "}\n"
+        //             })
+        //             model._shouldRegenerateShaders = true
+        //         }
+        //     }
+        // });
+
+        // 设置3dTiles贴地
+        set3DtilesHeight(5, tileset);
+       
+
     })
 
-    viewer.scene.primitives.add(tmpTileset);
+    
+
+
+   
+}
+
+// 设置建筑物贴地
+export const set3DtilesHeight = (height: number, tileset: any) => {
+    // const height = 10;
+    const cartographic = Cesium.Cartographic.fromCartesian(
+        tileset.boundingSphere.center
+    );
+    const surface = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        0.0
+    );
+    const offset = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        height
+    );
+    const translation = Cesium.Cartesian3.subtract(
+        offset,
+        surface,
+        new Cesium.Cartesian3()
+    );
+    tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 }
 
 export const addTestGlbLabel = (viewer: any) => {
@@ -597,8 +667,8 @@ const getColorCircle2 = (color: any, isTransparent?: boolean) => {
     // const values = elevationRamp;
     const grd = ctx.createRadialGradient(50, 50, 50, 50, 50, 0);
     grd.addColorStop(1, 'transparent'); //black
-    grd.addColorStop(0.1, 'rgba(0,255,0,0.1)'); //black
-    grd.addColorStop(0, "rgba(0,255,0,0.7)");
+    grd.addColorStop(0.1, 'rgba(225,255,255,0.1)'); //black
+    grd.addColorStop(0, "rgba(225,255,255,0.7)");
 
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 100, 100);
@@ -615,8 +685,8 @@ const getColorCircle = (color: any, deg: number, isTransparent?: boolean) => {
     // const values = elevationRamp;
     const grd = ctx.createLinearGradient(55, 25, 100, 50);
     grd.addColorStop(0, 'transparent'); //black
-    grd.addColorStop(0.5, 'rgba(0,255,0,0.5)'); //orange
-    grd.addColorStop(1, 'rgba(0,255,0,1)'); //yellow
+    grd.addColorStop(0.5, 'rgba(225,255,255,0.5)'); //orange
+    grd.addColorStop(1, 'rgba(225,255,255,1)'); //yellow
 
     ctx.fillStyle = grd;
     ctx.beginPath();
@@ -626,7 +696,7 @@ const getColorCircle = (color: any, deg: number, isTransparent?: boolean) => {
     ctx.fill();
 
     ctx.fillStyle = 'transparent';
-    ctx.strokeStyle = 'rgba(0,255,0,1)';
+    ctx.strokeStyle = 'rgba(225,255,255,1)';
     ctx.beginPath();
     ctx.arc(50, 50, 50, 0, 2 * Math.PI);
     ctx.closePath();
@@ -973,11 +1043,12 @@ export const addGlowPolyLine = (viewer: any, lineArr: any) => {
     const lineEntity = new Cesium.Entity({
         polyline: {
             positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
-            width: 20,
+            width: 10,
             // 发光纹理
             material: new Cesium.PolylineGlowMaterialProperty({
                 glowPower: 0.1,
-                color: Cesium.Color.BLUE.withAlpha(0.7),
+                taperPower: 0.9,
+                // color: Cesium.Color.BLUE,
             })
         }
     })
@@ -996,7 +1067,7 @@ export const addFlowLine = (viewer: any, lineArr: any) => {
             // 流动纹理
             material: new Cesium.PolylineTrailLinkMaterialProperty({
                 // color: Cesium.Color.CRIMSON,
-                color: Cesium.Color.YELLOW,
+                color: Cesium.Color.WHITE,
                 duration: 5000,
                 d: 1
             })
