@@ -6,6 +6,7 @@ import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testDa
 // import roadImage from "../../assets/image/road.jpg";
 import testPoint from "../../assets/image/point5.png";
 // import julei from "../../assets/image/point1.png";
+import testgif from "../../assets/image/testgif.gif";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
@@ -164,7 +165,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
-        addClusterPoint(viewer);
+        // addClusterPoint(viewer);
+
+        // 添加billboard gif
+        // addBillBoardGif(viewer);
         
 
 
@@ -428,6 +432,36 @@ export const makeClusterImg = (number: string) => {
     return ramp.toDataURL();
 }
 
+// 2021-04-09 粉刷匠 添加gif  billboard
+export const addBillBoardGif = (viewer: any) => {
+    const div = document.createElement("div");
+    const img = document.createElement("img");
+    div.appendChild(img);
+    img.src = testgif;
+
+    img.onload = () => {
+        const superGif = new window.SuperGif({
+            gif: img
+        });
+
+        superGif.load(() => {
+            viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(113.91, 22.52, 1000),
+                billboard: {
+                    image: new Cesium.CallbackProperty(() => {
+                        return superGif.get_canvas().toDataURL("image/png");
+                    }, false),
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                    scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 2000, 0.1)
+                }
+            });
+        });
+
+    }
+
+
+}
 
 
 // 添加geoserver发布的wmts服务
@@ -1306,12 +1340,12 @@ export const addFlowLine = (viewer: any, lineArr: any) => {
             positions: Cesium.Cartesian3.fromDegreesArray(lineArr),
             width: 6,
             // 流动纹理
-            material: new Cesium.PolylineTrailLinkMaterialProperty({
-                // color: Cesium.Color.CRIMSON,
-                color: Cesium.Color.WHITE,
-                duration: 5000,
-                d: 1
-            })
+            // material: new Cesium.PolylineTrailLinkMaterialProperty({
+            //     // color: Cesium.Color.CRIMSON,
+            //     color: Cesium.Color.WHITE,
+            //     duration: 5000,
+            //     d: 1
+            // })
         }
     });
 }
