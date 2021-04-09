@@ -4,7 +4,7 @@ import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testDa
 // import CesiumHeatmap from "../../../public/js/CesiumHeatmap";
 // const CesiumHeatmap = require('./component/CesiumHeatmap');
 // import roadImage from "../../assets/image/road.jpg";
-import testPoint from "../../assets/image/point3.png";
+import testPoint from "../../assets/image/point5.png";
 // import julei from "../../assets/image/point1.png";
 
 window.CESIUM_BASE_URL = './cesium/';
@@ -294,8 +294,8 @@ export const addClusterPoint = (viewer: any) => {
             // 对单个实体进行设置
             // entity.billboard = undefined;
             entity.billboard.image = testPoint;
-            entity.billboard.width = 30;
-            entity.billboard.height = 30;
+            entity.billboard.width = 20;
+            entity.billboard.height = 20;
             // todo:添加注记,下面的报错，有时间再修改，垃圾玩意
             // entity.label = new Cesium.LabelGraphics({
             //     text: entity.properties.id._value,
