@@ -4,6 +4,8 @@ import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testDa
 // import CesiumHeatmap from "../../../public/js/CesiumHeatmap";
 // const CesiumHeatmap = require('./component/CesiumHeatmap');
 // import roadImage from "../../assets/image/road.jpg";
+import testPoint from "../../assets/image/point3.png";
+// import julei from "../../assets/image/point1.png";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
@@ -153,20 +155,28 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     if (isAddBuilding) {
 
         // 添加测试蓝色的底图
-        addTestDarkImg(viewer);
+        // addTestDarkImg(viewer);
 
         // 缩放到深圳
         setExtent(viewer);
 
-        // 添加测试道路数据
-        addTestRroadGeoJsonData(viewer);
+        // 添加不同的地图底图
+        addDiffBaseMap(viewer, "arcgis");
+
+        // 添加聚类点
+        addClusterPoint(viewer);
+        
 
 
         // 添加测试南山区建筑3dtile数据
-        addTestBlueBuilding(viewer);
+        // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
-        addGeoJsonData(viewer);
+        // addGeoJsonData(viewer);
+
+
+        // 添加测试道路数据
+        // addTestRroadGeoJsonData(viewer);
 
       
 
@@ -199,6 +209,226 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
     return viewer;
 }
+
+// 2021-04-09 粉刷匠 添加不同的底图
+export const addDiffBaseMap = (viewer: any, type?: string) => {
+    if (type === "gd") {
+        viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
+            url: 'http://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+            tilingScheme: new Cesium.WebMercatorTilingScheme()
+        }));
+    } else if (type === "tdt") {
+        //影像
+        viewer.imageryLayers.addImageryProvider(
+            new Cesium.WebMapTileServiceImageryProvider({
+                url: "http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=077b9a921d8b7e0fa268c3e9146eb373",
+                layer: "tdtBasicLayer",
+                style: "default",
+                format: "image/jpeg",
+                // url: 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
+                // layer: 'USGSShadedReliefOnly',
+                // style: 'default',
+                // format: 'image/jpeg',
+                tileMatrixSetID: 'GoogleMapsCompatible',
+                // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
+                // maximumLevel: 19,
+                // credit: new Cesium.Credit('U. S. Geological Survey')
+            }),
+        );
+        // 注记
+        viewer.imageryLayers.addImageryProvider(
+            new Cesium.WebMapTileServiceImageryProvider({
+                url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=077b9a921d8b7e0fa268c3e9146eb373",
+                layer: "tdtAnnoLayer",
+                style: "default",
+                format: "image/jpeg",
+                tileMatrixSetID: 'GoogleMapsCompatible',
+            })
+        );
+    } else if (type === "arcgis") {
+        viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
+            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+        }))
+    } else if (type === "geoserver") {
+        // wms地图服务
+        viewer.imageryLayers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
+            url: 'http://localhost:8080/geoserver/fs/wms',
+            layers: 'fs:county3',//图层
+            parameters: {
+                transparent: true,
+                format: 'image/png',
+                srs: 'EPSG:4490',
+                styles: ''
+            }
+        }));
+        // wmts服务
+        viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+            url: 'http://localhost:8080/geoserver/gwc/service/wmts/rest/topp:states/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png',
+            layer: 'topp:states',//图层名称
+            style: '',
+            format: 'image/png',
+            tileMatrixSetID: 'EPSG:4326',
+            tileMatrixLabels: ['EPSG:4326:0', 'EPSG:4326:1', 'EPSG:4326:2', 'EPSG:4326:3', 'EPSG:4326:4', 'EPSG:4326:5', 'EPSG:4326:6', 'EPSG:4326:7', 'EPSG:4326:8', 'EPSG:4326:9', 'EPSG:4326:10', 'EPSG:4326:11', 'EPSG:4326:12', 'EPSG:4326:13', 'EPSG:4326:14', 'EPSG:4326:15', 'EPSG:4326:16', 'EPSG:4326:17', 'EPSG:4326:18', 'EPSG:4326:19', 'EPSG:4326:20', 'EPSG:4326:21'],
+            tilingScheme: new Cesium.GeographicTilingScheme({
+                numberOfLevelZeroTilesX: 2,
+                numberOfLevelZeroTilesY: 1
+            })
+        }))
+    }
+}
+
+// 2021-04-09 粉刷匠 添加聚类点
+export const addClusterPoint = (viewer: any) => {
+    // viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/clusterPoint.geojson'));
+    Cesium.GeoJsonDataSource.load('./Models/json/clusterPoint.geojson').then(function (dataSource: any) {
+        viewer.dataSources.add(dataSource);
+        const entities = dataSource.entities.values;
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+            // 普通点
+            // entity.billboard = undefined;
+            // entity.point = new Cesium.PointGraphics({
+            //     color: Cesium.Color.RED,
+            //     pixelSize: 10
+            // });
+            // 对单个实体进行设置
+            // entity.billboard = undefined;
+            entity.billboard.image = testPoint;
+            entity.billboard.width = 30;
+            entity.billboard.height = 30;
+            // todo:添加注记,下面的报错，有时间再修改，垃圾玩意
+            // entity.label = new Cesium.LabelGraphics({
+            //     text: entity.properties.id._value,
+            //     // font: '12px sans-serif',
+            //     // pixelOffset: new Cesium.Cartesian2(0.0, 10)
+            // });    
+        }
+
+        // todo:点聚类练习
+        dataSource.clustering.enabled = true;
+        dataSource.clustering.pixelRange = 15;
+        dataSource.clustering.minimumClusterSize = 3;
+
+        dataSource.clustering.clusterEvent.addEventListener(function (entities: any, cluster: any) {
+         
+            cluster.billboard.id = cluster.label.id;
+            const simpleImg = makeClusterImg(entities.length.toLocaleString());
+            // cluster.billboard.image = julei;
+            cluster.billboard.image = simpleImg;
+            cluster.billboard.width = 60;
+            cluster.billboard.height = 60;
+            cluster.billboard.show = true;
+
+            cluster.label.show = false;
+            // cluster.label.text = entities.length.toLocaleString();
+            // cluster.label.pixelOffset = new Cesium.Cartesian2(-10, 10)
+        });
+
+    })
+}
+
+// 构造聚类图标
+export const makeClusterImg = (number: string) => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 200;
+    ramp.height = 200;
+    const ctx: any = ramp.getContext('2d');
+    ctx.beginPath();
+
+    // todo: 加载聚类的图标,粉刷匠 加不上去，谢特    
+    // const img = new Image();    
+    // img.onload = () => {
+    //     // 将图片画到canvas上面上去！
+    //     ctx.drawImage(img, 0, 0, 100, 100);
+    // }
+    // img.src = julei;
+    // img.src = "./point2.png";
+    // ctx.fillRect(0, 0, 100, 100);
+
+    // 惨绝人寰 画一个扩散图
+    ctx.fillStyle = 'rgba(255, 160, 122,0.3)';
+    const panR = 110;
+    const panL = (360 - (panR * 3)) / 3;
+    const panStart = (90 - panR / 2) - panL;
+
+    ctx.beginPath();
+    ctx.moveTo(100, 100); 
+    ctx.arc(100, 100, 90, panStart * Math.PI / 180, (panStart + panR) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 90, (panStart + panR + panL) * Math.PI / 180, (panStart + panR * 2 + panL) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 90, (panStart + panR * 2 + panL * 2) * Math.PI / 180, (panStart + panR * 3 + panL * 2) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 127, 80,0.5)';
+    ctx.beginPath();
+    ctx.moveTo(100, 100); 
+    ctx.arc(100, 100, 70, panStart * Math.PI / 180, (panStart + panR) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 70, (panStart + panR + panL) * Math.PI / 180, (panStart + panR * 2 + panL) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 70, (panStart + panR * 2 + panL * 2) * Math.PI / 180, (panStart + panR * 3 + panL * 2) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 69, 0,0.8)';
+    ctx.beginPath();
+    ctx.moveTo(100, 100); 
+    ctx.arc(100, 100, 50, panStart * Math.PI / 180, (panStart + panR) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 50, (panStart + panR + panL) * Math.PI / 180, (panStart + panR * 2 + panL) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 50, (panStart + panR * 2 + panL * 2) * Math.PI / 180, (panStart + panR * 3 + panL * 2) * Math.PI / 180, false);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fill();
+
+    ctx.fillStyle = '#fff';   // 文字填充颜色
+    ctx.font = '64px Adobe Ming Std';
+    ctx.textAlign = 'center';
+    ctx.fillText(number, 100, 120);
+    ctx.stroke();
+
+
+    
+    return ramp.toDataURL();
+}
+
+
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
@@ -377,54 +607,54 @@ export const addTestBlueBuilding = (viewer: any) => {
     tmpTileset.readyPromise.then(function (tileset: any) {
         viewer.scene.primitives.add(tmpTileset);
 
-        // tileset.style = new Cesium.Cesium3DTileStyle({
-        //     color: {
-        //         conditions: [
-        //             ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-        //         ]
-        //     }
-        // });
+        tileset.style = new Cesium.Cesium3DTileStyle({
+            color: {
+                conditions: [
+                    ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+                ]
+            }
+        });
 
-        // tileset.tileVisible.addEventListener(function (tile: any) {
-        //     const content = tile.content;
-        //     const featuresLength = content.featuresLength;
-        //     for (let i = 0; i < featuresLength; i += 2) {
-        //         let feature = content.getFeature(i)
-        //         let model = feature.content._model
+        tileset.tileVisible.addEventListener(function (tile: any) {
+            const content = tile.content;
+            const featuresLength = content.featuresLength;
+            for (let i = 0; i < featuresLength; i += 2) {
+                let feature = content.getFeature(i)
+                let model = feature.content._model
 
-        //         if (model && model._sourcePrograms && model._rendererResources) {
-        //             Object.keys(model._sourcePrograms).forEach(key => {
-        //                 let program = model._sourcePrograms[key]
-        //                 let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-        //                 let v_position = "";
-        //                 if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-        //                     v_position = "v_positionEC";
-        //                 } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-        //                     v_position = "v_pos";
-        //                 }
-        //                 const color = `vec4(${feature.color.toString()})`;
+                if (model && model._sourcePrograms && model._rendererResources) {
+                    Object.keys(model._sourcePrograms).forEach(key => {
+                        let program = model._sourcePrograms[key]
+                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+                        let v_position = "";
+                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+                            v_position = "v_positionEC";
+                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+                            v_position = "v_pos";
+                        }
+                        const color = `vec4(${feature.color.toString()})`;
 
-        //                 model._rendererResources.sourceShaders[program.fragmentShader] =
-        //                     "varying vec3 " + v_position + ";\n" +
-        //                     "void main(void){\n" +
-        //                     "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-        //                     "    float glowRange = 120.0;\n" +
-        //                     "    gl_FragColor = " + color + ";\n" +
-        //                     // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-        //                     "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
-        //                     "    float time = fract(czm_frameNumber / 120.0);\n" +
-        //                     "    time = abs(time - 0.5) * 2.0;\n" +
-        //                     "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-        //                     "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-        //                     "}\n"
-        //             })
-        //             model._shouldRegenerateShaders = true
-        //         }
-        //     }
-        // });
+                        model._rendererResources.sourceShaders[program.fragmentShader] =
+                            "varying vec3 " + v_position + ";\n" +
+                            "void main(void){\n" +
+                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+                            "    float glowRange = 120.0;\n" +
+                            "    gl_FragColor = " + color + ";\n" +
+                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
+                            "    float time = fract(czm_frameNumber / 120.0);\n" +
+                            "    time = abs(time - 0.5) * 2.0;\n" +
+                            "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+                            "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+                            "}\n"
+                    })
+                    model._shouldRegenerateShaders = true
+                }
+            }
+        });
 
         // 设置3dTiles贴地
-        set3DtilesHeight(5, tileset);
+        set3DtilesHeight(1, tileset);
        
 
     })
@@ -568,12 +798,23 @@ export const addTestFlightLine = (viewer: any) => {
 }
 
 export const addTestRroadGeoJsonData = (viewer: any) => {
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/line.json', {
+    const tmpDataSource = Cesium.GeoJsonDataSource.load('./Models/json/line2.json', {
         clampToGround: true,
         stroke: Cesium.Color.CHOCOLATE,
         strokeWidth: 1,
         markerSymbol: '?'
-    }));
+    })
+
+    tmpDataSource.then(function (dataSource: any) {
+        viewer.dataSources.add(dataSource);
+        
+        const entities = dataSource.entities.values;
+        for (let i = 0; i < entities.length; i++) {
+            entities[i].polyline.classificationType = Cesium.ClassificationType.TERRAIN;
+        }
+
+    })
+    
 }
 
 // 添加一个圆扫描--测试

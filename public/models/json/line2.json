@@ -1,0 +1,47 @@
+{
+    "type": "FeatureCollection",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "EPSG:4326"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "id": 0,
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        113.883409,
+                        22.543046499999999,
+                        0
+                    ],                    
+                    [
+                        113.8943466,
+                        22.5298433,
+                        0
+                    ],                
+                    [
+                        113.8619661,
+                        22.5145205,
+                        0
+                    ]
+                ]
+            },
+            "properties": {
+                "FID": 0,
+                "osm_id": "9770901",
+                "name": " ",
+                "highway": " ",
+                "waterway": " ",
+                "aerialway": " ",
+                "barrier": " ",
+                "man_made": " ",
+                "z_order": 0,
+                "other_tags": "\"natural\"=\u003e\"coastline\""
+            }
+        }
+    ]
+}

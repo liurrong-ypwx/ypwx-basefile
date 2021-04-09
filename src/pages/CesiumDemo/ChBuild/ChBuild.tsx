@@ -13,11 +13,8 @@ function ChBuild(): JSX.Element {
         setOrgView(tmpView);
     }, [])
 
-    useEffect(()=>{
-
-        if(!orgView) return
-    
-
+    useEffect(() => {
+        if (!orgView) return;
     }, [orgView])
 
     // 添加点线面
