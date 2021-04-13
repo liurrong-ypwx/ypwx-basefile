@@ -7,13 +7,14 @@ import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testDa
 import testPoint from "../../assets/image/point5.png";
 // import julei from "../../assets/image/point1.png";
 import testgif from "../../assets/image/testgif.gif";
+import kuang1 from "../../assets/image/box.png";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
 // const locationJDY = { lng: 104.06, lat: 30.78, height: 13000.0 };
 const location = locationSZ;
-
+// const kuang = [kuang1, kuang2, kuang3, kuang4, kuang5, kuang6];
 
 
 // 初始化地图
@@ -169,6 +170,14 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 添加billboard gif
         // addBillBoardGif(viewer);
+
+        // 添加闪烁点
+        // addFlashPoint(viewer);
+
+        // 添加文字标签点
+        addNewBeerPoint(viewer);
+
+
         
 
 
@@ -339,16 +348,6 @@ export const makeClusterImg = (number: string) => {
     const ctx: any = ramp.getContext('2d');
     ctx.beginPath();
 
-    // todo: 加载聚类的图标,粉刷匠 加不上去，谢特    
-    // const img = new Image();    
-    // img.onload = () => {
-    //     // 将图片画到canvas上面上去！
-    //     ctx.drawImage(img, 0, 0, 100, 100);
-    // }
-    // img.src = julei;
-    // img.src = "./point2.png";
-    // ctx.fillRect(0, 0, 100, 100);
-
     // 惨绝人寰 画一个扩散图
     ctx.fillStyle = 'rgba(255, 160, 122,0.3)';
     const panR = 110;
@@ -461,6 +460,117 @@ export const addBillBoardGif = (viewer: any) => {
     }
 
 
+}
+
+// 2021-04-09 粉刷匠 添加闪烁点
+export const addFlashPoint = (viewer: any) => {   
+    Cesium.GeoJsonDataSource.load('./Models/json/clusterPoint.geojson').then(function (dataSource: any) {
+        viewer.dataSources.add(dataSource);
+        const entities = dataSource.entities.values;
+
+        const data = {
+            minR: 100,
+            maxR: 200,
+            deviationR: 20,// 差值 差值也大 速度越快
+        }
+        // let r1 = data.minR;
+        let r2 = data.minR;
+    
+        // function changeR1() { // 这是callback，参数不能内传
+        //     r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
+        //     if (r1 >= data.maxR) {
+        //         r1 = data.minR;
+        //     }
+        //     return r1;
+        // }
+    
+        // function changeR2() {
+        //     r2 = r2 + data.deviationR;
+        //     if (r2 >= data.maxR) {
+        //         r2 = data.minR;
+        //     }
+        //     return r2;
+        // }
+
+        // const startTime = Cesium.JulianDate.now();
+
+        // 2021-04-10 粉刷匠 暂时没有办法控制回调函数的时间频率，希望有人解答
+        function changeColor() {
+            r2 = r2 + 0.05;
+            if (r2 >= data.maxR) {
+                r2 = data.minR;
+            }
+            return r2 > 150 ? Cesium.Color.GREEN : Cesium.Color.GREENYELLOW;
+        }
+
+
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+            // 普通点
+            entity.billboard = undefined;
+            entity.ellipse = new Cesium.EllipseGraphics({
+                // semiMinorAxis: new Cesium.CallbackProperty(changeR1, false),
+                // semiMajorAxis: new Cesium.CallbackProperty(changeR2, false),
+                semiMinorAxis: 150,
+                semiMajorAxis: 150,
+                // height: 200,
+                //颜色回调
+                // material: new Cesium.ImageMaterialProperty({
+                //     image: getColorCircle2("()", true),
+                //     transparent: true,
+                // }),
+                material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(changeColor, false)),
+                // rotation: new Cesium.CallbackProperty(getRotationValue, false),
+                // stRotation: new Cesium.CallbackProperty(getRotationValue, false),
+                outline: false, // height must be set for outline to display
+                numberOfVerticalLines: 100
+            });          
+        }   
+
+    })
+}
+
+// 2021-04-10 粉刷匠 目标是：添加一个科技感的标签
+export const addNewBeerPoint = (viewer: any) => {
+    Cesium.GeoJsonDataSource.load('./Models/json/clusterPoint.geojson').then(function (dataSource: any) {
+        viewer.dataSources.add(dataSource);
+        const entities = dataSource.entities.values;
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+
+            const simpleImg = makeBillBoardImg("23");
+            entity.billboard.image = simpleImg;
+            entity.billboard.width = 50;
+            entity.billboard.height = 50;
+        }
+    })
+}
+
+// 2021-04-10 粉刷匠 目标是：添加一个科技感的标签 billboard 
+export const makeBillBoardImg = (number: string) => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 320;
+    ramp.height = 230;
+    const ctx: any = ramp.getContext('2d');
+    ctx.beginPath();
+    const img = new Image();   
+    img.src = kuang1;
+    img.onload = function () {
+        // 将图片画到canvas上面上去！
+        ctx.drawImage(img, 40, 0, 280, 190);
+        ctx.fillStyle = '#fff';   // 文字填充颜色
+        ctx.font = '64px Adobe Ming Std';
+        ctx.textAlign = 'center';
+        ctx.fillText(number, 100, 120);
+
+        // 画一条斜线
+        ctx.moveTo(0, 230);
+        ctx.lineTo(40, 190);
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+    }    
+    return ramp;
 }
 
 
