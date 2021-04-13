@@ -177,7 +177,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 添加文字标签点canvas
         // addNewBeerPoint(viewer);
 
-        // 添加div文字标签
+        // 添加div文字标签 详细参见chbuild.tsx文件夹，里面是完整的用法样例
         // addDivTxtBoard(viewer);
 
 
@@ -615,7 +615,7 @@ export const addDivTxtBoard = (viewer: any, eventPro?: any) => {
     // 鼠标点击 获取当前坐标
     handler.setInputAction(function (movement: any) {
 
-        console.log("屏幕坐标:",movement.position);
+        // console.log("屏幕坐标:",movement.position);
 
         // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
         const windowPosition = viewer.camera.getPickRay(movement.position);
@@ -655,7 +655,30 @@ export const addDivTxtBoard = (viewer: any, eventPro?: any) => {
         } else {
             entity.label.show = false;
         }
+
+        // 每一帧都需要重新计算位置
+        viewer.scene.postRender.addEventListener(function () {
+            // 从经纬度坐标转化为世界坐标
+            // const tmpCor1 = Cesium.Cartesian3.fromDegrees(Number(longitude), Number(latitude));
+            const tmpCor1 = cartesianCoordinates;
+            // 从世界坐标转化为屏幕坐标
+            const tmpCor2 = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, tmpCor1);
+            if (eventPro.update) {
+                eventPro.update(tmpCor2);
+            }
+        })
+
+
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    /* 滚轮事件 监听高度值 */
+    handler.setInputAction(function (wheelment) {
+        const height = Math.ceil(viewer.camera.positionCartographic.height);
+        if (eventPro.wheel) {
+            eventPro.wheel(height);
+        }
+    }, Cesium.ScreenSpaceEventType.WHEEL)
+
 
 
 }

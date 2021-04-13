@@ -3,7 +3,9 @@ import "./ChBuild.less";
 import * as CesiumApi from "../../../utils/CesiumApi/CesiumApi";
 import { titleList } from "./TuCao";
 
-
+let cordX: any = null;
+let cordY: any = null;
+let cordShow: boolean = false;
 function ChBuild(): JSX.Element {
 
     const [orgView, setOrgView] = useState<any>(null);
@@ -53,18 +55,41 @@ function ChBuild(): JSX.Element {
     // 2021-04-13 粉刷匠 关于 cesium 与实际数据联动
     useEffect(() => {
         if (orgView) {
-            CesiumApi.addDivTxtBoard(orgView, eventPro);
+            const showThisCase = false;
+            if (showThisCase) {
+                CesiumApi.addDivTxtBoard(orgView, eventPro);
+            }
         }
-
         // eslint-disable-next-line
     }, [orgView])
 
     const eventPro = {
         click: (e: any) => {
-            console.log("地址：", e);
+            // console.log("地址：", e);
             setTpShow(true);
             setTpX(e.x * 0.01);
             setTpY(e.y * 0.01)
+            cordX = e.x;
+            cordY = e.y;
+            cordShow = true;
+        },
+        // todo:注意，可优化
+        wheel: (e: any) => {
+            if (+e > 30000) {
+                setTpShow(false);
+                cordShow = false;
+            }
+        },
+        update: (e: any) => {
+            console.log("地址：", e);
+            const diffZ = 1;
+            const diffx = Math.abs(e.x - cordX);
+            const diffy = Math.abs(e.y - cordY);
+            const isShowNess = (diffx > diffZ) || (diffy > diffZ);
+            if (cordShow && isShowNess) {
+                setTpX(Math.ceil(e.x) * 0.01);
+                setTpY(Math.ceil(e.y) * 0.01)
+            }
         }
     }
 
