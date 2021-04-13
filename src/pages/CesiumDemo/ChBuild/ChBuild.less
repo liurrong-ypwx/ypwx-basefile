@@ -1,6 +1,7 @@
 .main-map-container{
     width:100%;
     height: 100%;
+    position: relative;
     .cesium-widget-credits{
         display: none;
     }
@@ -25,6 +26,55 @@
                 border: 1px solid  rgb(255, 127, 39);
             }
         }
+    }
+
+    .map-tooltip-lrr{
+        // display: none;
+        position: absolute;
+        padding: .2rem;
+        // top: 0;
+        // left: 0;
+        z-index: 999;
+        // background-image: url("../../../assets/image/box.png");
+        // background-size: 100%;
+        // background-color: rgba(91, 213, 222, 0.1);
+        background-image: linear-gradient(90deg, rgba(0, 13, 15, 0.8) 2%, rgba(0, 13, 15, 0.92) 100%);
+
+        .mtl-title{
+            color: #FFFFFF;
+        }
+        .mtl-pair{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            .mtl-pair-1{
+                color: rgba(255, 255, 255, 0.7);
+            }
+            .mtl-pair-2{
+                color: #FFFFFF;
+            }
+            .mtl-btn{
+                display: flex;
+                flex-direction: row;
+                div{
+                    margin-right: .05rem;
+                    width: .9rem;
+                    height: .3rem;
+                    background-color: aquamarine;
+                    cursor: pointer;
+                    line-height: .3rem;
+                    text-align: center;
+
+                    &:hover{
+                        background-color: rgba(127, 255, 212,0.7);
+                    }
+                }
+
+               
+            }
+        }
+
+
     }
 
 }

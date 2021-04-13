@@ -174,8 +174,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 添加闪烁点
         // addFlashPoint(viewer);
 
-        // 添加文字标签点
-        addNewBeerPoint(viewer);
+        // 添加文字标签点canvas
+        // addNewBeerPoint(viewer);
+
+        // 添加div文字标签
+        // addDivTxtBoard(viewer);
 
 
         
@@ -571,6 +574,90 @@ export const makeBillBoardImg = (number: string) => {
         ctx.stroke();
     }    
     return ramp;
+}
+
+// 2021-04-13 粉刷匠 添加一个div文字标签
+export const addDivTxtBoard = (viewer: any, eventPro?: any) => {
+    // 一个实体
+    const entity = viewer.entities.add({
+        label: {
+            show: false,
+            showBackground: true,
+            font: "14px monospace",
+            horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+            verticalOrigin: Cesium.VerticalOrigin.TOP,
+            pixelOffset: new Cesium.Cartesian2(15, 0),
+        },
+    });
+    // 鼠标移动 获取当前位置坐标
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    // handler.setInputAction(function (movement: any) {
+    //     const cartesian = viewer.camera.pickEllipsoid(movement.endPosition, viewer.scene.globe.ellipsoid);
+    //     if (cartesian) {
+    //         const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+    //         const longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
+    //         const latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
+
+    //         entity.position = cartesian;
+    //         entity.label.show = true;
+    //         entity.label.text =
+    //             "Lon: " +
+    //             ("   " + longitudeString).slice(-7) +
+    //             "\u00B0" +
+    //             "\nLat: " +
+    //             ("   " + latitudeString).slice(-7) +
+    //             "\u00B0";
+    //     } else {
+    //         entity.label.show = false;
+    //     }
+    // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    // 鼠标点击 获取当前坐标
+    handler.setInputAction(function (movement: any) {
+
+        console.log("屏幕坐标:",movement.position);
+
+        // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
+        const windowPosition = viewer.camera.getPickRay(movement.position);
+        const cartesianCoordinates = viewer.scene.globe.pick(windowPosition, viewer.scene);
+        const cartoCoordinates = viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesianCoordinates);
+        const latitude = (cartoCoordinates.latitude * 180 / Math.PI).toFixed(2);
+        const longitude = (cartoCoordinates.longitude * 180 / Math.PI).toFixed(2);
+
+        // 获取世界坐标 Cartesian3（pickEllipsoid参数：屏幕坐标，椭球体），二维的方法
+        // WGS84经纬度坐标系（没有实际的对象）、WGS84弧度坐标系（Cartographic）、笛卡尔空间直角坐标系（Cartesian3）、平面坐标系（Cartesian2），4D笛卡尔坐标系（Cartesian4）
+        // const cartesian2 = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+        // const carto2 = viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian2);
+        // const latitude = carto2.latitude * 180 / Math.PI;
+        // const longitude = carto2.longitude * 180 / Math.PI;
+
+        // 获取场景坐标 Cartesian3 （pickPosition）
+        // const cartesian = viewer.scene.pickPosition(movement.position);
+
+        if (cartoCoordinates) {
+            // const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            // const longitudeString = Cesium.Math.toDegrees(carto2.longitude).toFixed(2);
+            // const latitudeString = Cesium.Math.toDegrees(carto2.latitude).toFixed(2);
+
+            if (eventPro.click) {
+                eventPro.click(movement.position)
+            }
+
+            entity.position = cartesianCoordinates;
+            entity.label.show = true;
+            entity.label.text =
+                "Lon: " +
+                ("   " + longitude).slice(-7) +
+                "\u00B0" +
+                "\nLat: " +
+                ("   " + latitude).slice(-7) +
+                "\u00B0";
+        } else {
+            entity.label.show = false;
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+
 }
 
 
