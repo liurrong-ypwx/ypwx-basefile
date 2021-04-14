@@ -8,6 +8,11 @@ import testPoint from "../../assets/image/point5.png";
 // import julei from "../../assets/image/point1.png";
 import testgif from "../../assets/image/testgif.gif";
 import kuang1 from "../../assets/image/box.png";
+import circleGif from "../../assets/image/circle2.gif";
+// import kuanggif from "../../assets/image/kuang1.gif";
+// import jt from "../../assets/image/JT1.png";
+import jt2 from "../../assets/image/JT2.png";
+// import yr1 from "../../assets/image/yr1.png";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
@@ -180,6 +185,15 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 添加div文字标签 详细参见chbuild.tsx文件夹，里面是完整的用法样例
         // addDivTxtBoard(viewer);
 
+        // 添加动态效果点+动态效果墙
+        // addDynamicPoint(viewer);
+
+        // 各类点样式集合 有点意思
+        addMulTypePoint(viewer);
+
+        // 各类线样式集合
+        addMutTypeLine(viewer);
+
 
         
 
@@ -191,7 +205,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addGeoJsonData(viewer);
 
 
-        // 添加测试道路数据
+        // 添加测试道路数据: 光晕染线 或者 发光线 我能想到最简单的办法是修改图片
         // addTestRroadGeoJsonData(viewer);
 
       
@@ -683,6 +697,390 @@ export const addDivTxtBoard = (viewer: any, eventPro?: any) => {
 
 }
 
+// 2021-04-14 粉刷匠 添加动态效果点+动态墙
+export const addDynamicPoint = (viewer: any) => {
+    // 添加动态点，是使用的gif,粉刷匠 不想使用canva去绘图
+    viewer.scene.fxaa = false; // todo:去掉锯齿，并没有成功，待解决
+    const div = document.createElement("div");
+    const img = document.createElement("img");
+    div.appendChild(img);
+    img.src = circleGif;
+
+    img.onload = () => {
+        const superGif = new window.SuperGif({
+            gif: img
+        });
+
+        superGif.load(() => {
+            const pointArr = [[113.91, 22.52, 100], [113.92, 22.53, 100], [113.93, 22.54, 100]];
+            for (let i = 0; i < pointArr.length; i++) {
+                viewer.entities.add({
+                    position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
+                    billboard: {
+                        image: new Cesium.CallbackProperty(() => superGif.get_canvas().toDataURL("image/png"), false),
+                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                        scaleByDistance: new Cesium.NearFarScalar(10000, 0.4, 20001, 0.3)
+                    }
+                });
+            }
+         
+        });
+
+    }
+
+    const data = {
+        minR: 100,
+        maxR: 1000,
+        deviationR: 10,// 差值 差值也大 速度越快
+    }
+    let r1 = data.minR;
+
+    function changeR1() { // 这是callback，参数不能内传
+        r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
+        if (r1 >= data.maxR) {
+            r1 = data.minR;
+        }
+        return [r1, r1];
+    }
+
+
+    // 添加动态墙
+    viewer.entities.add({
+        name: "test wall",
+        wall: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                113.89, 22.50, 0.0,
+                113.94, 22.50, 0.0,
+            ]),
+            minimumHeights: [10.0, 10.0],
+            // maximumHeights: [1000.0, 1000.0],
+            maximumHeights: new Cesium.CallbackProperty(changeR1, false),
+            material: new Cesium.ImageMaterialProperty({
+                image: getColorRamp([0, 0, 0, 0, 0, 0.54, 1.0], true),
+                transparent: true
+            })
+            // outline: true,
+        }
+    })
+
+}
+
+// 2021-04-14 粉刷匠 添加各类点集合
+export const addMulTypePoint = (viewer: any) => {
+    // 1:图标点+文字 entities方法
+    // viewer.entities.add({
+    //     position: Cesium.Cartesian3.fromDegrees(113.91, 22.52, 100),
+    //     billboard: {
+    //         image: './Models/image/testPoint.png', // default: undefined
+    //         show: true, // default
+    //         // pixelOffset: new Cesium.Cartesian2(0, -50), // default: (0, 0)
+    //         // eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
+    //         // horizontalOrigin: Cesium.HorizontalOrigin.CENTER, // default
+    //         // verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // default: CENTER
+    //         scale: 0.15, // default: 1.0
+    //         // color: Cesium.Color.LIME, // default: WHITE
+    //         // rotation: Cesium.Math.PI_OVER_FOUR, // default: 0.0
+    //         // alignedAxis: Cesium.Cartesian3.ZERO, // default
+    //         // width: 100, // default: undefined
+    //         // height: 25, // default: undefined
+    //     },
+    //     label: {
+    //         text: 'A label'
+    //     },
+    // });
+
+    // 2：图标点+文字 primitive方法
+    // const instance=new Cesium.GeometryInstance({
+    //     id: "instance1",
+    //     geometry: new Cesium.EllipseGeometry({
+    //         center: Cesium.Cartesian3.fromDegrees(113.91, 22.52, 100),
+    //         semiMajorAxis: 1000,
+    //         semiMinorAxis: 1000
+    //     })
+    // })
+    // viewer.scene.primitives.add(new Cesium.Primitive({
+    //     geometryInstances: instance,
+    //     appearance: new Cesium.EllipsoidSurfaceAppearance({
+    //         material: Cesium.Material.fromType('Checkerboard')
+    //     })
+    // }));
+    // const labels = viewer.scene.primitives.add(new Cesium.LabelCollection())
+    // labels.add({
+    //     position: Cesium.Cartesian3.fromDegrees(113.91, 22.52, 100),
+    //     text: 'test label',
+    //     font: '12px Helvetica',
+    //     horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+    //     verticalOrigin: Cesium.VerticalOrigin.CENTER,
+    //     // distanceDisplayCondition: new Cesium.DistanceDisplayCondition(1000, 500000),
+    //     // eyeOffset: Cesium.Cartesian3(100.0, 0.0, 0.0),
+    //     // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+    // })
+    // const billboards = viewer.scene.primitives.add(new Cesium.BillboardCollection());
+    // billboards.add({
+    //     position: Cesium.Cartesian3.fromDegrees(113.91, 22.52, 100),
+    //     image: './Models/image/testPoint.png',
+    //     scale: 0.15,
+    //     pixelOffset: new Cesium.Cartesian2(0, -20),
+    // });
+
+    // 3:动态文本标记 同理 使用的是gif图，canvas太难了
+    // const div = document.createElement("div");
+    // const img = document.createElement("img");
+    // div.appendChild(img);
+    // img.src = kuanggif;
+
+    // img.onload = () => {
+    //     const superGif = new window.SuperGif({
+    //         gif: img
+    //     });
+
+    //     superGif.load(() => {
+    //         viewer.entities.add({
+    //             position: Cesium.Cartesian3.fromDegrees(113.87, 22.59, 0),
+    //             label: {
+    //                 text: 'A label'
+    //             },
+    //             billboard: {
+    //                 image: new Cesium.CallbackProperty(() => {
+    //                     return superGif.get_canvas().toDataURL("image/png");
+    //                 }, false),
+    //                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+    //                 heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+    //                 scaleByDistance: new Cesium.NearFarScalar(500000, 0.2, 500001, 0.0)
+    //             }
+    //         });
+    //     });
+
+    // }
+
+    // 4: 竖立文字标注 用到canvas了，谢特
+    const pointArr = [[113.91, 22.52, 100], [113.89, 22.50, 100], [113.95, 22.57, 100]]
+    for (let i = 0; i < pointArr.length; i++) {
+        viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
+            billboard: {
+                image: makeVirticelLine(), // default: undefined  
+                width: 50,
+                height: 50
+            },
+            label: {
+                // 竖直的文字
+                text: '测\n试\n文\n字',
+                // font: '30px sans-serif',
+                // fillColor : Cesium.Color.RED,
+                fillColor: new Cesium.Color(0.22, 0.89, 0.94),
+                pixelOffset: new Cesium.Cartesian2(0, -30),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        });
+    }
+
+    // 5:弹跳点  粉刷匠 不想写了，应该是运用回调函数，设置高度；或者是回调函数设置背景的高度（此方法略猥琐）
+    // const pointArr2 = [[113.91, 22.59, 100], [113.89, 22.60, 100], [113.95, 22.63, 100]]
+    // for (let i = 0; i < pointArr2.length; i++) {
+    //     viewer.entities.add({
+    //         position: Cesium.Cartesian3.fromDegrees(pointArr2[i][0], pointArr2[i][1], pointArr2[i][2]),
+    //         billboard: {
+    //             image: makeVirticelLine(), // default: undefined  
+    //             width: 50,
+    //             height: 50
+    //         },
+    //         label: {
+    //             // 竖直的文字
+    //             text: '测\n试\n文\n字',
+    //             // font: '30px sans-serif',
+    //             // fillColor : Cesium.Color.RED,
+    //             fillColor: new Cesium.Color(0.22, 0.89, 0.94),
+    //             pixelOffset: new Cesium.Cartesian2(0, -30),
+    //             verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+    //         },
+    //     });
+    // }
+
+}
+
+// 2021-04-14 粉刷匠 添加各类点集合 ---子函数---创建竖直线
+export const makeVirticelLine = () => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 100;
+    ramp.height = 100;
+    const ctx: any = ramp.getContext('2d');
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.arc(50, 90, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = "#5BD5DE";// 设置填充颜色
+    ctx.fill();//开始填充
+    ctx.strokeStyle = "#5BD5DE";//将线条颜色设置为蓝色
+    ctx.stroke();//stroke() 方法默认颜色是黑色（如果没有上面一行，则会是黑色）。
+
+    ctx.moveTo(50, 80);
+    ctx.lineTo(50, 0);
+    ctx.stroke();
+
+    return ramp;
+
+}
+
+// 2021-04-14 粉刷匠 添加各类线集合
+export const addMutTypeLine = (viewer: any) => {
+
+    // 基础线
+    // viewer.entities.add({
+    //     name: "Red line on terrain",
+    //     polyline: {
+    //         positions: Cesium.Cartesian3.fromDegreesArray([113.90, 22.50, 114.39, 22.77]),
+    //         width: 5,
+    //         material: new Cesium.Color(0.22, 0.89, 0.94),
+    //         clampToGround: true,
+    //     },
+    // });
+
+   
+
+    // 1: 流动箭头线
+    // const data = {
+    //     minR: 0,
+    //     maxR: 1536,
+    //     deviationR: 10,// 差值 差值也大 速度越快
+    // }
+    // let r1 = data.minR;
+    // // let r2 = data.minR;
+
+    // function makeJT() { // 这是callback，参数不能内传
+    //     r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
+    //     if (r1 >= data.maxR) {
+    //         r1 = data.minR;
+    //     }
+    //     // return r1;
+    //     const ramp = document.createElement('canvas');
+    //     ramp.width = 1536;
+    //     ramp.height = 293;
+    //     const ctx: any = ramp.getContext('2d');
+    //     ctx.beginPath();
+    //     const img = new Image();
+    //     img.src = jt;
+    //     img.onload = function () {
+    //         // 将图片画到canvas上面上去！
+    //         ctx.drawImage(img, r1, 0);
+    //         ctx.drawImage(img, 1536 - r1, 0, r1, 293, 0, 0, r1, 293);
+
+    //     }
+    //     return ramp;
+    // }
+
+    // viewer.entities.add({
+    //     name: "Red line on terrain",
+    //     polyline: {
+    //         positions: Cesium.Cartesian3.fromDegreesArray([113.90, 22.50, 114.39, 22.77]),
+    //         width: 7,
+    //         // material: new Cesium.Color(0.22, 0.89, 0.94),
+    //         clampToGround: true,
+    //         // 流动纹理
+    //         material: new Cesium.ImageMaterialProperty({
+    //             image: new Cesium.CallbackProperty(makeJT, false),
+    //             // image: './Models/image/JT1.png',
+    //             repeat: new Cesium.Cartesian2(15.0, 1.0),
+    //             transparent: true,
+    //         })
+    //     },
+    // });
+
+    // 2: 绘制弧线  动态流动线，本质上就去更换背景图片吧，拿走不谢
+    const data = {
+        minR: 0,
+        maxR: 1660,
+        deviationR: 30,// 差值 差值也大 速度越快
+    }
+    let r1 = data.minR;
+    // let r2 = data.minR;
+
+    function makeJT() { // 这是callback，参数不能内传
+        const imgWidth = 1660;
+        const imgHeight = 257;
+        r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
+        if (r1 >= data.maxR) {
+            r1 = data.minR;
+        }
+        // return r1;
+        const ramp = document.createElement('canvas');
+        ramp.width = imgWidth;
+        ramp.height = imgHeight;
+        const ctx: any = ramp.getContext('2d');
+        ctx.beginPath();
+        const img = new Image();
+        img.src = jt2;
+        img.onload = function () {
+            // 将图片画到canvas上面上去！
+            ctx.drawImage(img, r1, 0);
+            ctx.drawImage(img, imgWidth - r1, 0, r1, imgHeight, 0, 0, r1, imgHeight);
+
+        }
+        return ramp;
+    }
+    const allPoint = animatedParabola([113.90, 22.50, 114.39, 22.77]);
+    viewer.entities.add({  //添加静态线
+        polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights(allPoint),
+            width: 7,
+            // clampToGround: true,
+            // 流动纹理
+            material: new Cesium.ImageMaterialProperty({
+                image: new Cesium.CallbackProperty(makeJT, false),
+                // image: './Models/image/JT1.png',
+                repeat: new Cesium.Cartesian2(3.0, 1.0),
+                transparent: true,
+            })
+
+        },
+    });
+
+    // 3: 光晕线
+    // 详细参考：addTestRroadGeoJsonData
+
+
+
+}
+
+// 两点之间计算抛物线 点 参数[lon1,lat1,lon2,lat2]
+export const animatedParabola = (twoPoints: any) => {
+    
+    let startPoint = [twoPoints[0], twoPoints[1], 0]; // 起点的经度、纬度
+    let step = 80;  // 线的数量，越多则越平滑
+    let heightProportion = 0.125; // 最高点和总距离的比值(即图中H比上AB的值)
+    let dLon = (twoPoints[2] - startPoint[0]) / step;  // 经度差值
+    let dLat = (twoPoints[3] - startPoint[1]) / step;  // 纬度差值
+    let deltaLon = dLon * Math.abs(111000 * Math.cos(twoPoints[1]));  // 经度差(米级)
+    let deltaLat = dLat * 111000;  // 纬度差(米),1纬度相差约111000米
+    let endPoint: any = [0, 0, 0];  // 定义一个端点（后面将进行startPoint和endPoint两点画线）
+    let heigh = (step * Math.sqrt(deltaLon * deltaLon + deltaLat * deltaLat) * heightProportion).toFixed(0);
+    let x2 = (10000 * Math.sqrt(dLon * dLon + dLat * dLat)); // 小数点扩大10000倍，提高精确度
+    let a = (Number(heigh) / (x2 * x2));  // 抛物线函数中的a
+    function y(x: any, height: any) {  //  模拟抛物线函数求高度
+        // 此处模拟的函数为y = H - a*x^2  (H为高度常数)
+        return height - a * x * x;
+    }
+
+    let allPointArr = [twoPoints[0], twoPoints[1], 0];
+    for (let i = 1; i <= step; i++) {  // 逐“帧”画线
+        endPoint[0] = Number(startPoint[0]) + dLon; // 更新end点经度
+        endPoint[1] = Number(startPoint[1]) + dLat; // 更新end点纬度
+        let x = x2 * (2 * i / step - 1);  // 求抛物线函数x
+        endPoint[2] = Number((y(x, heigh)).toFixed(0));  // 求end点高度
+        allPointArr = allPointArr.concat(endPoint);
+
+        // end点变为start点
+        startPoint[0] = endPoint[0];
+        startPoint[1] = endPoint[1];
+        startPoint[2] = endPoint[2];
+    }
+
+    return allPointArr;
+
+
+
+}
+
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
@@ -1052,11 +1450,12 @@ export const addTestFlightLine = (viewer: any) => {
 }
 
 export const addTestRroadGeoJsonData = (viewer: any) => {
-    const tmpDataSource = Cesium.GeoJsonDataSource.load('./Models/json/line2.json', {
+    const tmpDataSource = Cesium.GeoJsonDataSource.load('./Models/json/line.json', {
         clampToGround: true,
         stroke: Cesium.Color.CHOCOLATE,
-        strokeWidth: 1,
-        markerSymbol: '?'
+        strokeWidth: 7,
+        markerSymbol: '?',
+        
     })
 
     tmpDataSource.then(function (dataSource: any) {
@@ -1065,6 +1464,11 @@ export const addTestRroadGeoJsonData = (viewer: any) => {
         const entities = dataSource.entities.values;
         for (let i = 0; i < entities.length; i++) {
             entities[i].polyline.classificationType = Cesium.ClassificationType.TERRAIN;
+            entities[i].polyline.material = new Cesium.ImageMaterialProperty({
+                image: './Models/image/yr1.png',
+                // repeat: new Cesium.Cartesian2(3.0, 1.0),
+                transparent: true,                
+            })
         }
 
     })
@@ -2285,11 +2689,11 @@ const getColorRamp = (elevationRamp: any, isTransparent?: boolean) => {
 
     const values = elevationRamp;
     const grd = ctx.createLinearGradient(0, 0, 0, 100);
-    grd.addColorStop(values[0], '#000000'); //black
-    grd.addColorStop(values[1], '#2747E0'); //blue
-    grd.addColorStop(values[2], '#D33B7D'); //pink
-    grd.addColorStop(values[3], '#D33038'); //red
-    grd.addColorStop(values[4], '#FF9742'); //orange
+    // grd.addColorStop(values[0], '#000000'); //black
+    // grd.addColorStop(values[1], '#2747E0'); //blue
+    // grd.addColorStop(values[2], '#D33B7D'); //pink
+    // grd.addColorStop(values[3], '#D33038'); //red
+    // grd.addColorStop(values[4], '#FF9742'); //orange
     // grd.addColorStop(values[5], '#ffd700'); //yellow
     grd.addColorStop(values[5], 'transparent'); //yellow
     grd.addColorStop(values[6], '#ffffff'); //white
