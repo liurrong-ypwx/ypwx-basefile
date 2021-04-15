@@ -194,12 +194,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 各类线样式集合 有点意思
         // addMutTypeLine(viewer);
 
-
         // 添加倾斜摄影三维模型
         addQxsyModel(viewer);
 
 
-        // 添加测试南山区建筑3dtile数据
+        // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
         // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
@@ -209,7 +208,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 添加测试道路数据: 光晕染线 或者 发光线 我能想到最简单的办法是修改图片
         // addTestRroadGeoJsonData(viewer);
 
-      
+
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -341,7 +340,7 @@ export const addClusterPoint = (viewer: any) => {
         dataSource.clustering.minimumClusterSize = 3;
 
         dataSource.clustering.clusterEvent.addEventListener(function (entities: any, cluster: any) {
-         
+
             cluster.billboard.id = cluster.label.id;
             const simpleImg = makeClusterImg(entities.length.toLocaleString());
             // cluster.billboard.image = julei;
@@ -373,7 +372,7 @@ export const makeClusterImg = (number: string) => {
     const panStart = (90 - panR / 2) - panL;
 
     ctx.beginPath();
-    ctx.moveTo(100, 100); 
+    ctx.moveTo(100, 100);
     ctx.arc(100, 100, 90, panStart * Math.PI / 180, (panStart + panR) * Math.PI / 180, false);
     ctx.closePath();
     ctx.restore();
@@ -395,7 +394,7 @@ export const makeClusterImg = (number: string) => {
 
     ctx.fillStyle = 'rgba(255, 127, 80,0.5)';
     ctx.beginPath();
-    ctx.moveTo(100, 100); 
+    ctx.moveTo(100, 100);
     ctx.arc(100, 100, 70, panStart * Math.PI / 180, (panStart + panR) * Math.PI / 180, false);
     ctx.closePath();
     ctx.restore();
@@ -418,7 +417,7 @@ export const makeClusterImg = (number: string) => {
 
     ctx.fillStyle = 'rgba(255, 69, 0,0.8)';
     ctx.beginPath();
-    ctx.moveTo(100, 100); 
+    ctx.moveTo(100, 100);
     ctx.arc(100, 100, 50, panStart * Math.PI / 180, (panStart + panR) * Math.PI / 180, false);
     ctx.closePath();
     ctx.restore();
@@ -445,7 +444,7 @@ export const makeClusterImg = (number: string) => {
     ctx.stroke();
 
 
-    
+
     return ramp.toDataURL();
 }
 
@@ -481,7 +480,7 @@ export const addBillBoardGif = (viewer: any) => {
 }
 
 // 2021-04-09 粉刷匠 添加闪烁点
-export const addFlashPoint = (viewer: any) => {   
+export const addFlashPoint = (viewer: any) => {
     Cesium.GeoJsonDataSource.load('./Models/json/clusterPoint.geojson').then(function (dataSource: any) {
         viewer.dataSources.add(dataSource);
         const entities = dataSource.entities.values;
@@ -493,7 +492,7 @@ export const addFlashPoint = (viewer: any) => {
         }
         // let r1 = data.minR;
         let r2 = data.minR;
-    
+
         // function changeR1() { // 这是callback，参数不能内传
         //     r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
         //     if (r1 >= data.maxR) {
@@ -501,7 +500,7 @@ export const addFlashPoint = (viewer: any) => {
         //     }
         //     return r1;
         // }
-    
+
         // function changeR2() {
         //     r2 = r2 + data.deviationR;
         //     if (r2 >= data.maxR) {
@@ -542,8 +541,8 @@ export const addFlashPoint = (viewer: any) => {
                 // stRotation: new Cesium.CallbackProperty(getRotationValue, false),
                 outline: false, // height must be set for outline to display
                 numberOfVerticalLines: 100
-            });          
-        }   
+            });
+        }
 
     })
 }
@@ -571,7 +570,7 @@ export const makeBillBoardImg = (number: string) => {
     ramp.height = 230;
     const ctx: any = ramp.getContext('2d');
     ctx.beginPath();
-    const img = new Image();   
+    const img = new Image();
     img.src = kuang1;
     img.onload = function () {
         // 将图片画到canvas上面上去！
@@ -587,7 +586,7 @@ export const makeBillBoardImg = (number: string) => {
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 6;
         ctx.stroke();
-    }    
+    }
     return ramp;
 }
 
@@ -725,7 +724,7 @@ export const addDynamicPoint = (viewer: any) => {
                     }
                 });
             }
-         
+
         });
 
     }
@@ -937,7 +936,7 @@ export const addMutTypeLine = (viewer: any) => {
     //     },
     // });
 
-   
+
 
     // 1: 流动箭头线
     // const data = {
@@ -1045,7 +1044,7 @@ export const addMutTypeLine = (viewer: any) => {
 
 // 两点之间计算抛物线 点 参数[lon1,lat1,lon2,lat2]
 export const animatedParabola = (twoPoints: any) => {
-    
+
     let startPoint = [twoPoints[0], twoPoints[1], 0]; // 起点的经度、纬度
     let step = 80;  // 线的数量，越多则越平滑
     let heightProportion = 0.125; // 最高点和总距离的比值(即图中H比上AB的值)
@@ -1100,7 +1099,122 @@ export const addQxsyModel = (viewer: any) => {
         viewer.zoomTo(ttileset);
         // 设置3dTiles贴地
         set3DtilesHeight(-410, ttileset);
+
+        // 设置倾斜模型的单体化
+        addQxsyDth(ttileset, viewer);
     })
+
+}
+
+// 2021-04-15 粉刷匠 倾斜摄影模型的单体化
+export const addQxsyDth = (tileset: any, viewer: any) => {
+    // 箱子纹理: 为了找位置
+    // const boxEntity = new Cesium.Entity({
+    //     id: "boxID01",
+    //     name: 'Red box with black outline',
+    //     position: Cesium.Cartesian3.fromDegrees(108.9594, 34.2198, 30),
+    //     box: {
+    //         dimensions: new Cesium.Cartesian3(50, 50, 100),
+    //         // 渐变纹理
+    //         material: new Cesium.ImageMaterialProperty({
+    //             image: getColorRamp([0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0], true),
+    //             transparent: true,
+    //         }),
+    //         outline: true,
+    //         outlineColor: Cesium.Color.BLACK
+    //     }
+    // });
+    // viewer.entities.add(boxEntity);
+
+    // 首先添加primite模型    
+    const center = Cesium.Cartesian3.fromDegrees(108.9594, 34.2198, 30)
+    const dimensions = new Cesium.Cartesian3(50, 50, 100)// 盒子的长、宽、高
+    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+    const hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
+        new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0.0, 0.0)// 中心点水平旋转90度
+    );
+    const hpr = Cesium.Matrix4.fromRotationTranslation(
+        hprRotation,
+        new Cesium.Cartesian3(0.0, 0.0, 0.0)// 不平移
+    );
+    Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+    viewer.scene.primitives.add(
+        new Cesium.ClassificationPrimitive({
+            geometryInstances: new Cesium.GeometryInstance({
+                geometry: Cesium.BoxGeometry.fromDimensions({
+                    vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+                    dimensions: dimensions
+                    // maximum: Cesium.Cartesian3.fromDegrees(108.9598, 34.2202, 130),
+                    // minimum: Cesium.Cartesian3.fromDegrees(108.9585, 34.2190, 30)
+                }),
+                modelMatrix: modelMatrix, // 提供位置与姿态参数
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        Cesium.Color.fromCssColorString("#F26419").withAlpha(0)
+                    ),
+                    show: new Cesium.ShowGeometryInstanceAttribute(true),
+                },
+                id: "dayanta",
+            }),
+            classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+        })
+    );
+    let currentObjectId: any = null;
+    let currentPrimitive: any = null;
+    let currentColor: any = null;
+    let currentShow: any = null;
+    let attributes: any = null;
+
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function (movement) {
+        const pickedObject = viewer.scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+            if (pickedObject.id === currentObjectId) {
+                return;
+            }
+
+            if (Cesium.defined(currentObjectId)) {
+                attributes = currentPrimitive.getGeometryInstanceAttributes(
+                    currentObjectId
+                );
+                attributes.color = currentColor;
+                attributes.show = currentShow;
+                currentObjectId = undefined;
+                currentPrimitive = undefined;
+                currentColor = undefined;
+                currentShow = undefined;
+            }
+        }
+
+        if (
+            Cesium.defined(pickedObject) &&
+            Cesium.defined(pickedObject.primitive) &&
+            Cesium.defined(pickedObject.id) &&
+            Cesium.defined(pickedObject.primitive.getGeometryInstanceAttributes)
+        ) {
+            currentObjectId = pickedObject.id;
+            currentPrimitive = pickedObject.primitive;
+            attributes = currentPrimitive.getGeometryInstanceAttributes(
+                currentObjectId
+            );
+            currentColor = attributes.color;
+            currentShow = attributes.show;
+            if (!viewer.scene.invertClassification) {
+                attributes.color = [255, 0, 255, 128];
+            }
+            attributes.show = [1];
+        } else if (Cesium.defined(currentObjectId)) {
+            attributes = currentPrimitive.getGeometryInstanceAttributes(
+                currentObjectId
+            );
+            attributes.color = currentColor;
+            attributes.show = currentShow;
+            currentObjectId = undefined;
+            currentPrimitive = undefined;
+            currentColor = undefined;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
 
 }
 
@@ -1130,7 +1244,7 @@ export const addTestDarkImg = (viewer: any) => {
 
 // 获取相机参数
 export const getTestCameraPara = (viewer: any) => {
-    
+
     console.log("参数postion", viewer.camera.position);
     console.log("参数postion", viewer.camera.heading);
     console.log("参数postion", viewer.camera.pitch);
@@ -1187,7 +1301,7 @@ export const addImageLine = (viewer: any, lineArr: any) => {
             width: 60,
             // 流动纹理
             material: new Cesium.ImageMaterialProperty({
-                image:'./Models/image/road.jpg'
+                image: './Models/image/road.jpg'
             })
         }
     });
@@ -1271,12 +1385,12 @@ export const addTestBox = (viewer: any) => {
 
 }
 
+// 添加建筑切片3dtiles
 export const addTestBlueBuilding = (viewer: any) => {
 
     const tmpTileset = new Cesium.Cesium3DTileset({
         url: "./Models/szNanshan/tileset.json"
     })
-    
 
     // 给建筑物添加shader
     tmpTileset.readyPromise.then(function (tileset: any) {
@@ -1330,14 +1444,11 @@ export const addTestBlueBuilding = (viewer: any) => {
 
         // 设置3dTiles贴地
         set3DtilesHeight(1, tileset);
-       
+
+        // 设置hover事件
+        addHoverAction(tileset, viewer);
 
     })
-
-    
-
-
-   
 }
 
 // 设置建筑物贴地
@@ -1362,6 +1473,236 @@ export const set3DtilesHeight = (height: number, tileset: any) => {
         new Cesium.Cartesian3()
     );
     tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+}
+
+// 2021-04-15 粉刷匠 3dtiles单体化练习1, todo:可以自己搭配弹窗(粉刷匠 不想写了，谢谢，自行搭配)
+export const addHoverAction = (tileset: any, viewer: any) => {
+
+    // 创建html元素，鼠标移动以及点击模型高亮作用,todo:粉刷匠有话说，自己写
+    // HTML overlay for showing feature name on mouseover
+    // const nameOverlay = document.createElement("div");
+    // viewer.container.appendChild(nameOverlay);
+    // nameOverlay.className = "backdrop";
+    // nameOverlay.style.display = "none";
+    // nameOverlay.style.position = "absolute";
+    // nameOverlay.style.bottom = "0";
+    // nameOverlay.style.left = "0";
+    // nameOverlay.style.pointerEvents = "none";
+    // nameOverlay.style.padding = "4px";
+    // nameOverlay.style.backgroundColor = "black";
+
+    // 设置选中要素的样式以及创建选中模型
+    // Information about the currently selected feature
+    const selected: any = {
+        feature: undefined,
+        originalColor: new Cesium.Color(),
+    };
+    // An entity object which will hold info about the currently selected feature for infobox display
+    const selectedEntity: any = new Cesium.Entity();
+
+    // 鼠标响应事件交互
+    // Get default left click handler for when a feature is not picked on left click
+    const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_CLICK
+    );
+
+    // 如果支持剪影，则鼠标上方的剪影功能为蓝色，鼠标单击的剪影功能为绿色
+    // 如果不支持轮廓，请将特征颜色更改为鼠标悬停时为黄色，单击鼠标时为绿色
+    // If silhouettes are supported, silhouette features in blue on mouse over and silhouette green on mouse click.
+    // If silhouettes are not supported, change the feature color to yellow on mouse over and green on mouse click.
+    if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
+        // Silhouettes are supported
+        const silhouetteBlue: any = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+        silhouetteBlue.uniforms.color = Cesium.Color.BLUE;
+        silhouetteBlue.uniforms.length = 0.01;
+        silhouetteBlue.selected = [];
+
+        const silhouetteGreen: any = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+        silhouetteGreen.uniforms.color = Cesium.Color.LIME;
+        silhouetteGreen.uniforms.length = 0.01;
+        silhouetteGreen.selected = [];
+
+        viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage([
+            silhouetteBlue,
+            silhouetteGreen,
+        ]));
+
+        // Silhouette a feature blue on hover.
+        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement: any) {
+            // If a feature was previously highlighted, undo the highlight
+            silhouetteBlue.selected = [];
+
+            // Pick a new feature
+            const pickedFeature = viewer.scene.pick(movement.endPosition);
+            if (!Cesium.defined(pickedFeature)) {
+                // nameOverlay.style.display = "none";
+                return;
+            }
+
+            // A feature was picked, so show it's overlay content
+            // nameOverlay.style.display = "block";
+            // nameOverlay.style.bottom = viewer.canvas.clientHeight - movement.endPosition.y + "px";
+            // nameOverlay.style.left = movement.endPosition.x + "px";
+            // const name = pickedFeature.getProperty("BIN");
+            // nameOverlay.textContent = name;
+
+            // Highlight the feature if it's not already selected.
+            if (pickedFeature !== selected.feature) {
+                silhouetteBlue.selected = [pickedFeature];
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // Silhouette a feature on selection and show metadata in the InfoBox.
+        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement: any) {
+            // If a feature was previously selected, undo the highlight
+            silhouetteGreen.selected = [];
+
+            // Pick a new feature
+            const pickedFeature = viewer.scene.pick(movement.position);
+            if (!Cesium.defined(pickedFeature)) {
+                clickHandler(movement);
+                return;
+            }
+
+            // Select the feature if it's not already selected
+            if (silhouetteGreen.selected[0] === pickedFeature) {
+                return;
+            }
+
+            // Save the selected feature's original color
+            const highlightedFeature = silhouetteBlue.selected[0];
+            if (pickedFeature === highlightedFeature) {
+                silhouetteBlue.selected = [];
+            }
+
+            // Highlight newly selected feature
+            silhouetteGreen.selected = [pickedFeature];
+
+            // Set feature infobox description
+            const featureName = pickedFeature.getProperty("name");
+            selectedEntity.name = featureName;
+            selectedEntity.description =
+                'Loading <div class="cesium-infoBox-loading"></div>';
+            viewer.selectedEntity = selectedEntity;
+            selectedEntity.description =
+                '<table class="cesium-infoBox-defaultTable"><tbody>' +
+                "<tr><th>BIN</th><td>" +
+                pickedFeature.getProperty("BIN") +
+                "</td></tr>" +
+                "<tr><th>DOITT ID</th><td>" +
+                pickedFeature.getProperty("DOITT_ID") +
+                "</td></tr>" +
+                "<tr><th>SOURCE ID</th><td>" +
+                pickedFeature.getProperty("SOURCE_ID") +
+                "</td></tr>" +
+                "</tbody></table>";
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    } else {
+        // Silhouettes are not supported. Instead, change the feature color.
+
+        // Information about the currently highlighted feature
+        const highlighted: any = {
+            feature: undefined,
+            originalColor: new Cesium.Color(),
+        };
+
+        // Color a feature yellow on hover.
+        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement: any) {
+            // If a feature was previously highlighted, undo the highlight
+            if (Cesium.defined(highlighted.feature)) {
+                highlighted.feature.color = highlighted.originalColor;
+                highlighted.feature = undefined;
+            }
+            // Pick a new feature
+            const pickedFeature = viewer.scene.pick(movement.endPosition);
+            if (!Cesium.defined(pickedFeature)) {
+                // nameOverlay.style.display = "none";
+                return;
+            }
+            // A feature was picked, so show it's overlay content
+            // nameOverlay.style.display = "block";
+            // nameOverlay.style.bottom = viewer.canvas.clientHeight - movement.endPosition.y + "px";
+            // nameOverlay.style.left = movement.endPosition.x + "px";
+            let name = pickedFeature.getProperty("name");
+            if (!Cesium.defined(name)) {
+                name = pickedFeature.getProperty("id");
+            }
+            // nameOverlay.textContent = name;
+            // Highlight the feature if it's not already selected.
+            if (pickedFeature !== selected.feature) {
+                highlighted.feature = pickedFeature;
+                Cesium.Color.clone(
+                    pickedFeature.color,
+                    highlighted.originalColor
+                );
+                pickedFeature.color = Cesium.Color.YELLOW;
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // Color a feature on selection and show metadata in the InfoBox.
+        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement: any) {
+            // If a feature was previously selected, undo the highlight
+            if (Cesium.defined(selected.feature)) {
+                selected.feature.color = selected.originalColor;
+                selected.feature = undefined;
+            }
+            // Pick a new feature
+            const pickedFeature = viewer.scene.pick(movement.position);
+            if (!Cesium.defined(pickedFeature)) {
+                clickHandler(movement);
+                return;
+            }
+            // Select the feature if it's not already selected
+            if (selected.feature === pickedFeature) {
+                return;
+            }
+            selected.feature = pickedFeature;
+            // Save the selected feature's original color
+            if (pickedFeature === highlighted.feature) {
+                Cesium.Color.clone(
+                    highlighted.originalColor,
+                    selected.originalColor
+                );
+                highlighted.feature = undefined;
+            } else {
+                Cesium.Color.clone(pickedFeature.color, selected.originalColor);
+            }
+            // Highlight newly selected feature
+            pickedFeature.color = Cesium.Color.LIME;
+            // Set feature infobox description
+            const featureName = pickedFeature.getProperty("name");
+            selectedEntity.name = featureName;
+            selectedEntity.description =
+                'Loading <div class="cesium-infoBox-loading"></div>';
+            viewer.selectedEntity = selectedEntity;
+            selectedEntity.description =
+                '<table class="cesium-infoBox-defaultTable"><tbody>' +
+                "<tr><th>BIN</th><td>" +
+                pickedFeature.getProperty("BIN") +
+                "</td></tr>" +
+                "<tr><th>DOITT ID</th><td>" +
+                pickedFeature.getProperty("DOITT_ID") +
+                "</td></tr>" +
+                "<tr><th>SOURCE ID</th><td>" +
+                pickedFeature.getProperty("SOURCE_ID") +
+                "</td></tr>" +
+                "<tr><th>Longitude</th><td>" +
+                pickedFeature.getProperty("longitude") +
+                "</td></tr>" +
+                "<tr><th>Latitude</th><td>" +
+                pickedFeature.getProperty("latitude") +
+                "</td></tr>" +
+                "<tr><th>Height</th><td>" +
+                pickedFeature.getProperty("height") +
+                "</td></tr>" +
+                "<tr><th>Terrain Height (Ellipsoid)</th><td>" +
+                pickedFeature.getProperty("TerrainHeight") +
+                "</td></tr>" +
+                "</tbody></table>";
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    }
+
+
 }
 
 export const addTestGlbLabel = (viewer: any) => {
@@ -1418,19 +1759,19 @@ export const addTestFlightLine = (viewer: any) => {
     const positionList = [
         {
             direction: { x: 0.21737389927048856, y: -0.35625827851488445, z: 0.0005457635106811409 },
-            position: {x: -2391675.894952625, y: 5388787.412965841, z: 2426462.2897910792}
+            position: { x: -2391675.894952625, y: 5388787.412965841, z: 2426462.2897910792 }
         },
         {
             direction: { x: 0.29263695515353305, y: -0.40838371225120706, z: 0.0007456844237099247 },
-            position:  {x: -2391483.00669378, y: 5388427.905450816, z: 2427118.8780692583}
+            position: { x: -2391483.00669378, y: 5388427.905450816, z: 2427118.8780692583 }
         },
         {
             direction: { x: 0.3335510891862299, y: 0.060774701476857595, z: 0.0007774323957603357 },
-            position:{x: -2391466.8883185615, y: 5388021.038587686, z: 2427348.174456691}
+            position: { x: -2391466.8883185615, y: 5388021.038587686, z: 2427348.174456691 }
         },
         {
             direction: { x: 0.32721424136304833, y: 0.10707579115246624, z: 0.0007227711996984354 },
-            position: {x: -2391790.5365237165, y: 5387942.510425894, z: 2427250.5374713736}
+            position: { x: -2391790.5365237165, y: 5387942.510425894, z: 2427250.5374713736 }
         }
     ]
     let count = 0;
@@ -1456,7 +1797,7 @@ export const addTestFlightLine = (viewer: any) => {
                 pitch: position.direction.y,
                 roll: position.direction.z
             },
-        
+
             // orientation: {
             //     heading: Cesium.Math.toRadians(0.0),
             //     pitch: Cesium.Math.toRadians(-90.0),
@@ -1478,24 +1819,24 @@ export const addTestRroadGeoJsonData = (viewer: any) => {
         stroke: Cesium.Color.CHOCOLATE,
         strokeWidth: 7,
         markerSymbol: '?',
-        
+
     })
 
     tmpDataSource.then(function (dataSource: any) {
         viewer.dataSources.add(dataSource);
-        
+
         const entities = dataSource.entities.values;
         for (let i = 0; i < entities.length; i++) {
             entities[i].polyline.classificationType = Cesium.ClassificationType.TERRAIN;
             entities[i].polyline.material = new Cesium.ImageMaterialProperty({
                 image: './Models/image/yr1.png',
                 // repeat: new Cesium.Cartesian2(3.0, 1.0),
-                transparent: true,                
+                transparent: true,
             })
         }
 
     })
-    
+
 }
 
 // 添加一个圆扫描--测试
