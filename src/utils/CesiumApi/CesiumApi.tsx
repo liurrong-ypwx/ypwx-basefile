@@ -165,10 +165,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        setExtent(viewer);
+        // setExtent(viewer);
 
         // 添加不同的地图底图
-        addDiffBaseMap(viewer, "arcgis");
+        // addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -189,13 +189,14 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addDynamicPoint(viewer);
 
         // 各类点样式集合 有点意思
-        addMulTypePoint(viewer);
+        // addMulTypePoint(viewer);
 
-        // 各类线样式集合
-        addMutTypeLine(viewer);
+        // 各类线样式集合 有点意思
+        // addMutTypeLine(viewer);
 
 
-        
+        // 添加倾斜摄影三维模型
+        addQxsyModel(viewer);
 
 
         // 添加测试南山区建筑3dtile数据
@@ -1028,7 +1029,7 @@ export const addMutTypeLine = (viewer: any) => {
             material: new Cesium.ImageMaterialProperty({
                 image: new Cesium.CallbackProperty(makeJT, false),
                 // image: './Models/image/JT1.png',
-                repeat: new Cesium.Cartesian2(3.0, 1.0),
+                repeat: new Cesium.Cartesian2(1.0, 1.0),
                 transparent: true,
             })
 
@@ -1078,6 +1079,28 @@ export const animatedParabola = (twoPoints: any) => {
     return allPointArr;
 
 
+
+}
+
+// 2021-04-15 粉刷匠 添加倾斜摄影模型
+export const addQxsyModel = (viewer: any) => {
+
+    // 加载的倾斜模型需要进行矩阵变换
+    const translation = Cesium.Cartesian3.fromArray([0, 0, -1000]);
+    const m = Cesium.Matrix4.fromTranslation(translation);
+
+    // 加载模型
+    const tileset = new Cesium.Cesium3DTileset({
+        url: './Models/qxsy/dayanta/tileset.json',
+        modelMatrix: m, // 转移矩阵
+        // maximumScreenSpaceError: 2, // 最大屏幕空间误差
+    });
+    tileset.readyPromise.then(function (ttileset: any) {
+        viewer.scene.primitives.add(ttileset);
+        viewer.zoomTo(ttileset);
+        // 设置3dTiles贴地
+        set3DtilesHeight(-410, ttileset);
+    })
 
 }
 
