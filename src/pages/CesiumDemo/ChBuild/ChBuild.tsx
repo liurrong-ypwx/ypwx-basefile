@@ -93,6 +93,12 @@ function ChBuild(): JSX.Element {
         }
     }
 
+    // 2021-04-16 粉刷匠 绘制函数 有高度的绘制
+    const draw = (type: string) => {
+        if (!orgView) return;
+        CesiumApi.drawReal(orgView, type);
+    }
+
     return (
         <div className="main-map-container">
             {/* 初始化一个框来放置场景 */}
@@ -108,6 +114,20 @@ function ChBuild(): JSX.Element {
                 <div className="sig-btn" onClick={() => { handleMeasure("area") }} >测面积</div>
                 <div className="sig-btn" onClick={() => { getPara() }} >获取相机参数</div>
                 <div className="sig-btn" onClick={() => { testFly() }} title={titleList.testFly} >飞行</div>
+
+                {/* 绘制 */}
+                <div className="sig-btn sig-btn-row">
+                    <span className="sig-draw-btn sig-draw-btn-title">绘制</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Point") }}>点</span>
+                    <span className="sig-draw-btn">线</span>
+                    <span className="sig-draw-btn">面</span>
+                    <span className="sig-draw-btn">文字</span>
+                    <span className="sig-draw-btn">圆</span>
+                    <span className="sig-draw-btn">矩形</span>
+                    <span className="sig-draw-btn">清空</span>
+                    <span className="sig-draw-btn">保存</span>
+                </div>
+
             </div>
         
             {/* 地图提示区 */}

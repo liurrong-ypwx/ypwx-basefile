@@ -66,6 +66,24 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     // 额外设置之显示帧速
     viewer.scene.debugShowFramesPerSecond = true;
 
+    const isShowFxaa = false;
+    if (!isShowFxaa) {
+        // 关闭抗锯齿
+        viewer.scene.postProcessStages.fxaa.enabled = false;
+
+        // 调整分辨率
+        // const supportsImageRenderingPixelated: any = viewer.cesiumWidget._supportsImageRenderingPixelated;
+        // if (supportsImageRenderingPixelated) {
+        //     var vtxf_dpr = window.devicePixelRatio;
+        //     while (vtxf_dpr >= 2.0) {
+        //         vtxf_dpr /= 2.0;
+        //     }
+        //     viewer.resolutionScale = vtxf_dpr;
+        // }
+    }
+ 
+
+
 
     // 假如添加建筑物3dtile
     // if (isAddBuilding) {
@@ -993,16 +1011,14 @@ export const addMutTypeLine = (viewer: any) => {
         deviationR: 30,// 差值 差值也大 速度越快
     }
     let r1 = data.minR;
-    // let r2 = data.minR;
+    const imgWidth = 1660;
+    const imgHeight = 257;
 
-    function makeJT() { // 这是callback，参数不能内传
-        const imgWidth = 1660;
-        const imgHeight = 257;
+    function makeJT() { // 这是callback，参数不能内传  
         r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
         if (r1 >= data.maxR) {
             r1 = data.minR;
         }
-        // return r1;
         const ramp = document.createElement('canvas');
         ramp.width = imgWidth;
         ramp.height = imgHeight;
@@ -1014,12 +1030,11 @@ export const addMutTypeLine = (viewer: any) => {
             // 将图片画到canvas上面上去！
             ctx.drawImage(img, r1, 0);
             ctx.drawImage(img, imgWidth - r1, 0, r1, imgHeight, 0, 0, r1, imgHeight);
-
         }
         return ramp;
     }
     const allPoint = animatedParabola([113.90, 22.50, 114.39, 22.77]);
-    viewer.entities.add({  //添加静态线
+    viewer.entities.add({  
         polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights(allPoint),
             width: 7,
@@ -1028,7 +1043,7 @@ export const addMutTypeLine = (viewer: any) => {
             material: new Cesium.ImageMaterialProperty({
                 image: new Cesium.CallbackProperty(makeJT, false),
                 // image: './Models/image/JT1.png',
-                repeat: new Cesium.Cartesian2(1.0, 1.0),
+                repeat: new Cesium.Cartesian2(3.0, 1.0),
                 transparent: true,
             })
 
@@ -1105,7 +1120,7 @@ export const addQxsyModel = (viewer: any) => {
         // 设置倾斜模型-楼层-的单体化
         // addQxsyDthCeng(ttileset, viewer);
         // 设置倾斜模型的单体化 -- 单击，出现分层分户的效果
-        addQxsyDthFenhu(ttileset, viewer);
+        // addQxsyDthFenhu(ttileset, viewer);
     })
 
 }
@@ -1447,7 +1462,7 @@ export const addQxsyDthFenhu = (tileset: any, viewer: any) => {
 
 }
 
-// 清除一栋四层的效果
+// 2021-04-16 粉刷匠 清除一栋四层的效果
 export const clearEntity = (viewer: any) => {
     const preId = "boxCengId";
     for (let i = 0; i < 4; i++) {
@@ -1457,7 +1472,7 @@ export const clearEntity = (viewer: any) => {
     }
 }
 
-// 绘制一个一栋四层的分层的效果
+// 2021-04-16 粉刷匠 绘制一个一栋四层的分层的效果
 export const yiDongSiCeng = (viewer: any) => {
 
 
@@ -1477,6 +1492,73 @@ export const yiDongSiCeng = (viewer: any) => {
             }
         });
         viewer.entities.add(boxEntity);
+    }
+}
+
+// 2021-04-16 粉刷匠 绘制函数 带有高度的绘制函数
+export const drawReal = (viewer: any, type: string) => {
+    if (type === "Point") {    
+
+        // 鼠标点击 获取当前坐标
+        const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
+            Cesium.ScreenSpaceEventType.LEFT_CLICK
+        );
+
+        // const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        // handler.setInputAction(function (movement: any) {
+        //     const position = viewer.scene.pickPosition(movement.position);
+        //     // 添加地面点
+        //     viewer.entities.add({
+        //         position: position,
+        //         billboard: {
+        //             image: './Models/image/sxt.png',
+        //             verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        //             scaleByDistance: new Cesium.NearFarScalar(500, 0.5, 2000, 0.1)
+        //         }
+        //     });
+          
+        // }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (movement: any) {         
+
+            // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
+            const windowPosition = viewer.camera.getPickRay(movement.position);
+            let cartesianCoordinates = viewer.scene.globe.pick(windowPosition, viewer.scene);
+            // 获取场景坐标 Cartesian3 （pickPosition）
+            const position = viewer.scene.pickPosition(movement.position);
+
+
+            // 区分位置
+            const pickedFeature = viewer.scene.pick(movement.position);
+            if (!Cesium.defined(pickedFeature) && cartesianCoordinates) {
+                clickHandler(movement);
+                // 添加地面点
+                viewer.entities.add({
+                    position: cartesianCoordinates,
+                    billboard: {
+                        image: './Models/image/sxt.png',
+                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                        scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 2000, 0.1)
+                    }
+                });
+            } else {               
+                // 添加建筑物上点
+                viewer.entities.add({
+                    position: position,
+                    billboard: {
+                        image: './Models/image/sxt.png',
+                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                        scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 2000, 0.1)
+                    }
+                });
+
+            }
+
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
     }
 }
 
