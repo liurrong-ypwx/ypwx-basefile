@@ -165,10 +165,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        // setExtent(viewer);
+        setExtent(viewer);
 
         // 添加不同的地图底图
-        // addDiffBaseMap(viewer, "arcgis");
+        addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -195,11 +195,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addMutTypeLine(viewer);
 
         // 添加倾斜摄影三维模型
-        addQxsyModel(viewer);
+        // addQxsyModel(viewer);
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -1101,7 +1101,11 @@ export const addQxsyModel = (viewer: any) => {
         set3DtilesHeight(-410, ttileset);
 
         // 设置倾斜模型的单体化
-        addQxsyDth(ttileset, viewer);
+        // addQxsyDth(ttileset, viewer);
+        // 设置倾斜模型-楼层-的单体化
+        // addQxsyDthCeng(ttileset, viewer);
+        // 设置倾斜模型的单体化 -- 单击，出现分层分户的效果
+        addQxsyDthFenhu(ttileset, viewer);
     })
 
 }
@@ -1216,6 +1220,264 @@ export const addQxsyDth = (tileset: any, viewer: any) => {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 
+}
+
+// 2021-04-16 粉刷匠 倾斜摄影模型楼层的单体化，初步预测是与整栋楼的单体化一致
+export const addQxsyDthCeng = (tileset: any, viewer: any) => {
+    // 粉刷匠的猜测非常的对
+    // 首先添加primite模型    
+    const heightArr: any = [40, 50, 60];
+    const colorArr = ["#4AA6EC", "#54E668", "#FFBD28"];
+    for (let i = 0; i < heightArr.length; i++) {
+
+        const center = Cesium.Cartesian3.fromDegrees(108.9594, 34.2198, heightArr[i])
+        const dimensions = new Cesium.Cartesian3(50, 50, 10)// 盒子的长、宽、高
+        const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        const hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
+            new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0.0, 0.0)// 中心点水平旋转90度
+        );
+        const hpr = Cesium.Matrix4.fromRotationTranslation(
+            hprRotation,
+            new Cesium.Cartesian3(0.0, 0.0, 0.0)// 不平移
+        );
+        Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+        viewer.scene.primitives.add(
+            new Cesium.ClassificationPrimitive({
+                geometryInstances: new Cesium.GeometryInstance({
+                    geometry: Cesium.BoxGeometry.fromDimensions({
+                        vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+                        dimensions: dimensions
+                        // maximum: Cesium.Cartesian3.fromDegrees(108.9598, 34.2202, 130),
+                        // minimum: Cesium.Cartesian3.fromDegrees(108.9585, 34.2190, 30)
+                    }),
+                    modelMatrix: modelMatrix, // 提供位置与姿态参数
+                    attributes: {
+                        color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                            Cesium.Color.fromCssColorString(colorArr[i]).withAlpha(0.5)
+                        ),
+                        show: new Cesium.ShowGeometryInstanceAttribute(true),
+                    },
+                    id: "dayantaceng" + i,
+                }),
+                classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+            })
+        );
+    }
+
+    let currentObjectId: any = null;
+    let currentPrimitive: any = null;
+    let currentColor: any = null;
+    let currentShow: any = null;
+    let attributes: any = null;
+
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function (movement) {
+        const pickedObject = viewer.scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+            if (pickedObject.id === currentObjectId) {
+                return;
+            }
+
+            if (Cesium.defined(currentObjectId)) {
+                attributes = currentPrimitive.getGeometryInstanceAttributes(
+                    currentObjectId
+                );
+                attributes.color = currentColor;
+                attributes.show = currentShow;
+                currentObjectId = undefined;
+                currentPrimitive = undefined;
+                currentColor = undefined;
+                currentShow = undefined;
+            }
+        }
+
+        if (
+            Cesium.defined(pickedObject) &&
+            Cesium.defined(pickedObject.primitive) &&
+            Cesium.defined(pickedObject.id) &&
+            Cesium.defined(pickedObject.primitive.getGeometryInstanceAttributes)
+        ) {
+            currentObjectId = pickedObject.id;
+            currentPrimitive = pickedObject.primitive;
+            attributes = currentPrimitive.getGeometryInstanceAttributes(
+                currentObjectId
+            );
+            currentColor = attributes.color;
+            currentShow = attributes.show;
+            if (!viewer.scene.invertClassification) {
+                attributes.color = [255, 0, 255, 128];
+            }
+            attributes.show = [1];
+        } else if (Cesium.defined(currentObjectId)) {
+            attributes = currentPrimitive.getGeometryInstanceAttributes(
+                currentObjectId
+            );
+            attributes.color = currentColor;
+            attributes.show = currentShow;
+            currentObjectId = undefined;
+            currentPrimitive = undefined;
+            currentColor = undefined;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+
+}
+
+// 2021-04-16 粉刷匠 终极目标是点击一个单体化楼层，出现分层分户的效果 todo: 回调函数不能回调postition, 寻求其他办法
+export const addQxsyDthFenhu = (tileset: any, viewer: any) => {
+    // 首先添加primite模型    
+    const center = Cesium.Cartesian3.fromDegrees(108.9594, 34.2198, 30)
+    const dimensions = new Cesium.Cartesian3(50, 50, 100)// 盒子的长、宽、高
+    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+    const hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
+        new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0.0, 0.0)// 中心点水平旋转90度
+    );
+    const hpr = Cesium.Matrix4.fromRotationTranslation(
+        hprRotation,
+        new Cesium.Cartesian3(0.0, 0.0, 0.0)// 不平移
+    );
+    Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+    viewer.scene.primitives.add(
+        new Cesium.ClassificationPrimitive({
+            geometryInstances: new Cesium.GeometryInstance({
+                geometry: Cesium.BoxGeometry.fromDimensions({
+                    vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+                    dimensions: dimensions
+                    // maximum: Cesium.Cartesian3.fromDegrees(108.9598, 34.2202, 130),
+                    // minimum: Cesium.Cartesian3.fromDegrees(108.9585, 34.2190, 30)
+                }),
+                modelMatrix: modelMatrix, // 提供位置与姿态参数
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        Cesium.Color.fromCssColorString("#F26419").withAlpha(0.5)
+                    ),
+                    show: new Cesium.ShowGeometryInstanceAttribute(true),
+                },
+                id: "dayanta",
+            }),
+            classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+        })
+    );
+    // let currentObjectId: any = null;
+    // let currentPrimitive: any = null;
+    // let currentColor: any = null;
+    // let currentShow: any = null;
+    // let attributes: any = null;
+
+    // const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    // 鼠标移入的效果
+    // handler.setInputAction(function (movement) {
+    //     const pickedObject = viewer.scene.pick(movement.endPosition);
+    //     if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+    //         if (pickedObject.id === currentObjectId) {
+    //             return;
+    //         }
+
+    //         if (Cesium.defined(currentObjectId)) {
+    //             attributes = currentPrimitive.getGeometryInstanceAttributes(
+    //                 currentObjectId
+    //             );
+    //             attributes.color = currentColor;
+    //             attributes.show = currentShow;
+    //             currentObjectId = undefined;
+    //             currentPrimitive = undefined;
+    //             currentColor = undefined;
+    //             currentShow = undefined;
+    //         }
+    //     }
+
+    //     if (
+    //         Cesium.defined(pickedObject) &&
+    //         Cesium.defined(pickedObject.primitive) &&
+    //         Cesium.defined(pickedObject.id) &&
+    //         Cesium.defined(pickedObject.primitive.getGeometryInstanceAttributes)
+    //     ) {
+    //         currentObjectId = pickedObject.id;
+    //         currentPrimitive = pickedObject.primitive;
+    //         attributes = currentPrimitive.getGeometryInstanceAttributes(
+    //             currentObjectId
+    //         );
+    //         currentColor = attributes.color;
+    //         currentShow = attributes.show;
+    //         if (!viewer.scene.invertClassification) {
+    //             attributes.color = [255, 0, 255, 128];
+    //         }
+    //         attributes.show = [1];
+    //     } else if (Cesium.defined(currentObjectId)) {
+    //         attributes = currentPrimitive.getGeometryInstanceAttributes(
+    //             currentObjectId
+    //         );
+    //         attributes.color = currentColor;
+    //         attributes.show = currentShow;
+    //         currentObjectId = undefined;
+    //         currentPrimitive = undefined;
+    //         currentColor = undefined;
+    //     }
+    // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    // ---------------------------------------------鼠标点击的效果-------------------------------------
+    let currentClickObjectId: any = null;
+    const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_CLICK
+    );
+    viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement: any) {
+        // Pick a new feature
+        const pickedObject = viewer.scene.pick(movement.position);
+        if (!Cesium.defined(pickedObject)) {
+            clickHandler(movement);
+            return;
+        }
+
+        if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+            if (pickedObject.id === currentClickObjectId) {
+                return;
+            } else {
+                currentClickObjectId = pickedObject.id;
+                yiDongSiCeng(viewer);
+            }
+        } else {
+            // todo,清空现有的分层显示
+            currentClickObjectId = null;
+            clearEntity(viewer);
+        }
+
+
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+
+}
+
+// 清除一栋四层的效果
+export const clearEntity = (viewer: any) => {
+    const preId = "boxCengId";
+    for (let i = 0; i < 4; i++) {
+        const sigId = preId + i;
+        const sigEntity = viewer.entities.getById(sigId);
+        if (sigEntity) viewer.entities.remove(sigEntity);
+    }
+}
+
+// 绘制一个一栋四层的分层的效果
+export const yiDongSiCeng = (viewer: any) => {
+
+
+    const boxHeight = [110, 120, 130];
+    const colorArr = ["#4AA6EC", "#54E668", "#FFBD28"];
+    for (let i = 0; i < boxHeight.length; i++) {
+        const boxEntity = new Cesium.Entity({
+            id: "boxCengId" + i,
+            name: 'sig-box',
+            position: Cesium.Cartesian3.fromDegrees(108.9594, 34.2198, boxHeight[i]),           
+            box: {
+                dimensions: new Cesium.Cartesian3(50, 50, 10),
+                // 渐变纹理
+                material: Cesium.Color.fromCssColorString(colorArr[i]).withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.BLACK
+            }
+        });
+        viewer.entities.add(boxEntity);
+    }
 }
 
 
@@ -1446,7 +1708,7 @@ export const addTestBlueBuilding = (viewer: any) => {
         set3DtilesHeight(1, tileset);
 
         // 设置hover事件
-        addHoverAction(tileset, viewer);
+        // addHoverAction(tileset, viewer);
 
     })
 }
