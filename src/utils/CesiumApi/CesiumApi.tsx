@@ -1657,6 +1657,207 @@ export const drawReal = (viewer: any, type: string) => {
 
     }
 
+    if (type === "Area") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handlerDraw = handler;
+
+        let positions: any = [];
+        let tempPoints: any = [];
+        let polygon: any = null;
+        let polyline: any = null;
+        let cartesian: any = null;
+        let floatingPoint: any = []; // 浮动点
+
+        // 注册鼠标移动事件
+        handler.setInputAction((movement: any) => {
+            let ray = viewer.camera.getPickRay(movement.endPosition);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            if (positions.length === 2) {
+                if (!Cesium.defined(polyline)) {
+                    polyline = new PolyLinePrimitive(positions);
+                } else {
+                    positions.pop();
+                    positions.push(cartesian);
+                }
+            }
+            if (positions.length > 2) {
+                if (!Cesium.defined(polygon)) {
+                    polygon = new PolygonPrimitive(positions);
+                } else {
+                    positions.pop();
+                    positions.push(cartesian);
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // 注册鼠标左击效果
+        handler.setInputAction(function (movement: any) {
+
+            let ray = viewer.camera.getPickRay(movement.position);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            if (positions.length === 0) {
+                positions.push(cartesian.clone());
+            }
+            positions.push(cartesian);
+            // 在三维场景中添加点
+            let cartographic = Cesium.Cartographic.fromCartesian(positions[positions.length - 1]);
+            let longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
+            let latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
+            let heightString = cartographic.height;
+            tempPoints.push({ lon: longitudeString, lat: latitudeString, hei: heightString });
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            floatingPoint = viewer.entities.add({
+                id: "draw_Area_Point" + tmpId,
+                position: positions[positions.length - 1],
+                point: {
+                    pixelSize: 5,
+                    color: Cesium.Color.RED,
+                    outlineColor: Cesium.Color.WHITE,
+                    outlineWidth: 2,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+            if (floatingPoint) {
+                entityDrawArr.push(floatingPoint);
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // 注册鼠标右击效果
+        handler.setInputAction(function (movement: any) {
+            // handler.destroy();
+            positions.pop();
+            positions = [];
+            tempPoints = [];
+            polygon = null;
+            cartesian = null;
+            floatingPoint = []; // 浮动点
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+        const PolygonPrimitive: any = (function () {
+            function _(this: any, positions: any) {
+                const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+                this.options = {
+                    id: "draw_Area" + tmpId,
+                    name: '多边形',
+                    polygon: {
+                        hierarchy: [],
+                        material: Cesium.Color.GREEN.withAlpha(0.5),
+                    }
+                };
+
+                this.hierarchy = { positions };
+                this._init();
+            }
+
+            _.prototype._init = function () {
+                var _self = this;
+                var _update = function () {
+                    return _self.hierarchy;
+                };
+                // 实时更新polygon.hierarchy
+                this.options.polygon.hierarchy = new Cesium.CallbackProperty(_update, false);
+                const tmpEntity = viewer.entities.add(this.options);
+                if (tmpEntity) {
+                    entityDrawArr.push(tmpEntity);
+                }
+            };
+
+            return _;
+        })();
+
+        const PolyLinePrimitive: any = (function () {
+            function _(this: any, positions: any) {
+                const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+                // console.log(tmpId);
+                this.options = {
+                    id: "draw_Area_Line" + tmpId,
+                    name: '直线',
+                    polyline: {
+                        show: true,
+                        positions: [],
+                        material: Cesium.Color.CHARTREUSE,
+                        width: 7,
+                        clampToGround: true
+                    }
+                };
+                this.positions = positions;
+                this._init();
+            }
+
+            _.prototype._init = function () {
+                var _self = this;
+                // 当可以画矩形的时候，把线的postion设置为 undefined
+                var _update = function () {
+                    return _self.positions.length > 2 ? undefined : _self.positions;
+                };
+                // 实时更新polyline.positions
+                this.options.polyline.positions = new Cesium.CallbackProperty(_update, false);
+                const tmpEntity = viewer.entities.add(this.options);
+                if (tmpEntity) {
+                    entityDrawArr.push(tmpEntity);
+                }
+            };
+
+            return _;
+        })();
+    }
+
+    // 2021-04-19 粉刷匠 添加文字点，todo: 添加任何你喜欢的点样式即可
+    if (type === "Text") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handlerDraw = handler;
+        handler.setInputAction(function (movement: any) {
+
+            // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
+            const windowPosition = viewer.camera.getPickRay(movement.position);
+            let cartesianCoordinates = viewer.scene.globe.pick(windowPosition, viewer.scene);
+            // 获取场景坐标 Cartesian3 （pickPosition）
+            const position = viewer.scene.pickPosition(movement.position);
+
+            // 区分位置
+            const pickedFeature = viewer.scene.pick(movement.position);
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            // console.log(tmpId);
+
+            if (!Cesium.defined(pickedFeature) && cartesianCoordinates) {
+                clickHandler(movement);
+                // 添加地面点              
+                const tmpEntity = viewer.entities.add({
+                    id: "draw_Text" + tmpId,
+                    position: cartesianCoordinates,
+                    label: {
+                        // 竖直的文字
+                        text: '测\n试\n文\n字',
+                        fillColor: new Cesium.Color(0.22, 0.89, 0.94),
+                        pixelOffset: new Cesium.Cartesian2(0, -30),
+                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+                    },
+                });
+                entityDrawArr.push(tmpEntity);
+
+            } else {
+                // 添加建筑物上点
+                const tmpEntity = viewer.entities.add({
+                    id: "draw_Text" + tmpId,
+                    position: position,
+                    label: {
+                        // 竖直的文字
+                        text: '测\n试\n文\n字',
+                        fillColor: new Cesium.Color(0.22, 0.89, 0.94),
+                        pixelOffset: new Cesium.Cartesian2(0, -30),
+                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+                    },
+                });
+                entityDrawArr.push(tmpEntity);
+
+            }
+
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    }
+
+    
 
     if (type === "Clear") {
         if (handlerDraw) { handlerDraw.destroy(); }
