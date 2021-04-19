@@ -2107,15 +2107,77 @@ export const drawReal = (viewer: any, type: string) => {
         })
     }
 
+    // 编辑
+    if (type === "Edit") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handlerDraw = handler;
+        let selEntitity: any = null;
+
+        handler.setInputAction(function (movement: any) {
+            // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
+            const windowPosition = viewer.camera.getPickRay(movement.position);
+            let cartesianCoordinates = viewer.scene.globe.pick(windowPosition, viewer.scene);
+            const pickedFeature = viewer.scene.pick(movement.position);
+
+            if (!Cesium.defined(pickedFeature) && cartesianCoordinates) {
+                clickHandler(movement);
+            } else {
+                if (Cesium.defined(pickedFeature)) {
+                    const entityId: any = pickedFeature.id._id;
+                    // todo: 仅针对我画的图形
+                    if (entityId.indexOf("draw") === 0) {
+                        console.log(entityId);
+                        if (selEntitity === pickedFeature) {
+                            selEntitity = null;
+                        } else {
+                            selEntitity = pickedFeature;
+                        }
+                    }
+                }
+            }
+
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // handler.setInputAction(function (movement: any) {
+        //     // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
+        //     const windowPosition = viewer.camera.getPickRay(movement.position);
+        //     let cartesianCoordinates = viewer.scene.globe.pick(windowPosition, viewer.scene);
+        //     // 获取场景坐标 Cartesian3 （pickPosition）
+        //     const position = viewer.scene.pickPosition(movement.position);
+        //     // 区分位置
+        //     const pickedFeature = viewer.scene.pick(movement.position);
+
+        //     if (!Cesium.defined(pickedFeature) && cartesianCoordinates) {
+        //         clickHandler(movement);
+        //         if (selEntitity) {
+        //             // 针对点
+        //             const entityId: any = selEntitity.id._id;
+        //             if (entityId.indexOf("draw_Point") === 0) {
+        //                 console.log(selEntitity);
+        //             }
+        //         }
+        //     } else {
+        //         if (Cesium.defined(pickedFeature)) {
+        //             console.log(selEntitity);
+        //         }
+        //     }
+
+        // }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+    }
+
 }
 
+// 2021-04-16 粉刷匠 保存输出为json
 export const isMSbrowser = () => {
     const userAgent = window.navigator.userAgent
     return userAgent.indexOf('Edge') !== -1 || userAgent.indexOf('Trident') !== -1
 }
 
+// 2021-04-16 粉刷匠 保存输出为json
 export const saveJSON = (title: any, data: any) => {
-    let reTitle = title + '.json';  
+    let reTitle = title + '.json';
     let dataStr = data ? JSON.stringify(data) : '';
 
 
