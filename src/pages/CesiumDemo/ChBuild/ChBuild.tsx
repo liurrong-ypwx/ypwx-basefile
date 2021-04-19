@@ -102,7 +102,9 @@ function ChBuild(): JSX.Element {
     return (
         <div className="main-map-container">
             {/* 初始化一个框来放置场景 */}
-            <div id='cesiumContainer' />
+            <div id='cesiumContainer' >
+                {/* <div id="slider"></div> */}
+            </div>
 
             {/* 按钮区 */}
             <div className="test-btn-group">

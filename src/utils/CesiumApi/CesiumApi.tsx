@@ -41,6 +41,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
+        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+        }),
 
         // 演示1：三维地形图
         // terrainProvider: Cesium.createWorldTerrain({
@@ -176,6 +179,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     //     viewer.scene.primitives.add(tmpTileset);
     // }
 
+    // 2021-04-19 粉刷匠 添加分帘遮罩
+    // 注意：打开ChBuild 中的slider  <div id="slider"></div> 
+    // addFenLian(viewer);
+
 
     // 演示2：添加各类智慧城市的动效图，等等等等
     if (isAddBuilding) {
@@ -187,7 +194,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         setExtent(viewer);
 
         // 添加不同的地图底图
-        addDiffBaseMap(viewer, "arcgis");
+        // addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -218,7 +225,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        addTestBlueBuilding(viewer);
+        // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -2251,6 +2258,58 @@ export const calDistance = (Point1: any, Point2: any) => {
     // h2 = (3 * r + 1) / 2 / s;
 
     // return d * (1 + fl * (h1 * sf * (1 - sg) - h2 * (1 - sf) * sg));
+}
+
+// 2021-04-19 粉刷匠 添加分帘遮罩
+export const addFenLian = (viewer: any) => {
+    const layers = viewer.imageryLayers;
+    const earthAtNight = layers.addImageryProvider(
+        new Cesium.WebMapTileServiceImageryProvider({
+            url: "http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=077b9a921d8b7e0fa268c3e9146eb373",
+            layer: "tdtBasicLayer",
+            style: "default",
+            format: "image/jpeg",
+            tileMatrixSetID: 'GoogleMapsCompatible',
+        }),
+    );
+    earthAtNight.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
+    const slider: any = document.getElementById("slider");
+    viewer.scene.imagerySplitPosition = slider.offsetLeft / slider.parentElement.offsetWidth;
+
+    if (handlerDraw) { handlerDraw.destroy(); }
+    const handler = new Cesium.ScreenSpaceEventHandler(slider);
+    let moveActive = false;
+
+    function move(movement: any) {
+        if (!moveActive) {
+            return;
+        }
+
+        var relativeOffset = movement.endPosition.x;
+        var splitPosition =
+            (slider.offsetLeft + relativeOffset) /
+            slider.parentElement.offsetWidth;
+        slider.style.left = 100.0 * splitPosition + "%";
+        viewer.scene.imagerySplitPosition = splitPosition;
+    }
+
+    handler.setInputAction(function () {
+        moveActive = true;
+    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+    handler.setInputAction(function () {
+        moveActive = true;
+    }, Cesium.ScreenSpaceEventType.PINCH_START);
+
+    handler.setInputAction(move, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    handler.setInputAction(move, Cesium.ScreenSpaceEventType.PINCH_MOVE);
+
+    handler.setInputAction(function () {
+        moveActive = false;
+    }, Cesium.ScreenSpaceEventType.LEFT_UP);
+    handler.setInputAction(function () {
+        moveActive = false;
+    }, Cesium.ScreenSpaceEventType.PINCH_END);
+
 }
 
 
