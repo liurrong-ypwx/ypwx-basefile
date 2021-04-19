@@ -2075,12 +2075,63 @@ export const drawReal = (viewer: any, type: string) => {
 
     }
 
+    // 清除
     if (type === "Clear") {
         if (handlerDraw) { handlerDraw.destroy(); }
         for (let i = 0; i < entityDrawArr.length; i++) {
             viewer.entities.remove(entityDrawArr[i]);
         }
     }
+
+    // 保存
+    if (type === "Save") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+
+        // todo:需要后端的配合，从entity集合中，重新组织
+        const tmpTestData: any = [];
+        for (let i = 0; i < entityDrawArr.length; i++) {
+            const sigEntity = entityDrawArr[i];
+            tmpTestData.push({
+                id: sigEntity.id,     
+            })
+        }
+
+        const title = "Entity" + moment().format('YYYYMMDDHHmmss') + moment().get('milliseconds');
+        let tmpJson = {};
+        tmpJson = {
+            "type": "FeatureCollection",
+            "features": tmpTestData
+        }
+        saveJSON(title, tmpJson).then(() => {
+            console.log('保存成功')
+        })
+    }
+
+}
+
+export const isMSbrowser = () => {
+    const userAgent = window.navigator.userAgent
+    return userAgent.indexOf('Edge') !== -1 || userAgent.indexOf('Trident') !== -1
+}
+
+export const saveJSON = (title: any, data: any) => {
+    let reTitle = title + '.json';  
+    let dataStr = data ? JSON.stringify(data) : '';
+
+
+    return isMSbrowser()
+        ? new Promise((resolve: any) => { // Edge、IE11
+            let blob = new Blob([dataStr], { type: 'text/plain;charset=utf-8' })
+            window.navigator.msSaveBlob(blob, reTitle)
+            resolve();
+        })
+        : new Promise((resolve: any) => { // Chrome、Firefox
+            let a = document.createElement('a')
+            a.href = 'data:text/json;charset=utf-8,' + dataStr
+            a.download = reTitle
+            a.click();
+            resolve();
+        })
 }
 
 // 2021-04-19 粉刷匠 计算两点之间的距离, cartesian坐标
