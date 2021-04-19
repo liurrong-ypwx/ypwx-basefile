@@ -119,13 +119,13 @@ function ChBuild(): JSX.Element {
                 <div className="sig-btn sig-btn-row">
                     <span className="sig-draw-btn sig-draw-btn-title">绘制</span>
                     <span className="sig-draw-btn" onClick={() => { draw("Point") }}>点</span>
-                    <span className="sig-draw-btn">线</span>
-                    <span className="sig-draw-btn">面</span>
-                    <span className="sig-draw-btn">文字</span>
-                    <span className="sig-draw-btn">圆</span>
-                    <span className="sig-draw-btn">矩形</span>
-                    <span className="sig-draw-btn">清空</span>
-                    <span className="sig-draw-btn">保存</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Line") }}>线</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Area") }}>面</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Text") }}>文字</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Circle") }}>圆</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Square") }}>矩形</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Clear") }}>清空</span>
+                    <span className="sig-draw-btn" onClick={() => { draw("Save") }}>保存</span>
                 </div>
 
             </div>

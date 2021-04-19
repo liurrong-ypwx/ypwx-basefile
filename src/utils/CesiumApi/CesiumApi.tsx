@@ -1496,31 +1496,21 @@ export const yiDongSiCeng = (viewer: any) => {
 }
 
 // 2021-04-16 粉刷匠 绘制函数 带有高度的绘制函数
+let handlerDraw: any = null;
+let entityDrawArr: any = [];
 export const drawReal = (viewer: any, type: string) => {
-    if (type === "Point") {    
 
+    if (type === "Point") {
         // 鼠标点击 获取当前坐标
         const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
             Cesium.ScreenSpaceEventType.LEFT_CLICK
         );
 
-        // const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        // handler.setInputAction(function (movement: any) {
-        //     const position = viewer.scene.pickPosition(movement.position);
-        //     // 添加地面点
-        //     viewer.entities.add({
-        //         position: position,
-        //         billboard: {
-        //             image: './Models/image/sxt.png',
-        //             verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        //             scaleByDistance: new Cesium.NearFarScalar(500, 0.5, 2000, 0.1)
-        //         }
-        //     });
-          
-        // }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        if (handlerDraw) { handlerDraw.destroy(); }
 
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        handler.setInputAction(function (movement: any) {         
+        handlerDraw = handler;
+        handler.setInputAction(function (movement: any) {
 
             // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
             const windowPosition = viewer.camera.getPickRay(movement.position);
@@ -1528,13 +1518,12 @@ export const drawReal = (viewer: any, type: string) => {
             // 获取场景坐标 Cartesian3 （pickPosition）
             const position = viewer.scene.pickPosition(movement.position);
 
-
             // 区分位置
             const pickedFeature = viewer.scene.pick(movement.position);
             if (!Cesium.defined(pickedFeature) && cartesianCoordinates) {
                 clickHandler(movement);
                 // 添加地面点
-                viewer.entities.add({
+                const tmpEntity = viewer.entities.add({
                     position: cartesianCoordinates,
                     billboard: {
                         image: './Models/image/sxt.png',
@@ -1543,9 +1532,11 @@ export const drawReal = (viewer: any, type: string) => {
                         scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 2000, 0.1)
                     }
                 });
-            } else {               
+                entityDrawArr.push(tmpEntity);
+
+            } else {
                 // 添加建筑物上点
-                viewer.entities.add({
+                const tmpEntity = viewer.entities.add({
                     position: position,
                     billboard: {
                         image: './Models/image/sxt.png',
@@ -1554,11 +1545,18 @@ export const drawReal = (viewer: any, type: string) => {
                         scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 2000, 0.1)
                     }
                 });
+                entityDrawArr.push(tmpEntity);
 
             }
 
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+    }
+    if (type === "Clear") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+        for (let i = 0; i < entityDrawArr.length; i++) {
+            viewer.entities.remove(entityDrawArr[i]);
+        }
     }
 }
 
