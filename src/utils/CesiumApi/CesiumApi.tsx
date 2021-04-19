@@ -14,6 +14,7 @@ import circleGif from "../../assets/image/circle2.gif";
 import jt2 from "../../assets/image/JT2.png";
 // import yr1 from "../../assets/image/yr1.png";
 import moment from "moment";
+import {  WuShader } from './MulShader';
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
@@ -41,9 +42,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
-        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
-        }),
+        // imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+        //     url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+        // }),
         // 导出为图片时，需要设置
         contextOptions: {
             webgl: {
@@ -204,10 +205,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        setExtent(viewer);
+        // setExtent(viewer);
 
         // 添加不同的地图底图
-        // addDiffBaseMap(viewer, "arcgis");
+        addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -233,7 +234,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 各类线样式集合 有点意思
         // addMutTypeLine(viewer);
 
-        // 添加倾斜摄影三维模型
+        // 添加倾斜摄影三维模型+ 附带贴地 + 附带普通建筑物3dTiles单体化
         // addQxsyModel(viewer);
 
 
@@ -246,6 +247,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 添加测试道路数据: 光晕染线 或者 发光线 我能想到最简单的办法是修改图片
         // addTestRroadGeoJsonData(viewer);
+
+        // 添加雨、雾、雪天气渲染, 注意打开倾斜摄影模型，更加方便看到效果
+        // addWeatherCondition(viewer);
 
 
 
@@ -2347,6 +2351,19 @@ export const exportPng = (viewer: any) => {
         }
         return new Blob([u8arr], { type: mime });
     }
+}
+
+let weatherCondition: any = null;
+// 2021-04-19 粉刷匠 添加天气效果
+export const addWeatherCondition = (viewer: any) => {
+    // 雾效果
+    if (weatherCondition) viewer.scene.postProcessStages.remove(weatherCondition);
+    const tmpCondition = new Cesium.PostProcessStage({
+        name: 'weather_snow',
+        fragmentShader: WuShader
+    })
+    viewer.scene.postProcessStages.add(tmpCondition);
+    weatherCondition = tmpCondition;
 }
 
 
