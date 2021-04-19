@@ -99,6 +99,12 @@ function ChBuild(): JSX.Element {
         CesiumApi.drawReal(orgView, type);
     }
 
+    // 2021-04-19 粉刷匠 导出图片
+    const exportPng = () => {
+        if (!orgView) return;
+        CesiumApi.exportPng(orgView);
+    }
+
     return (
         <div className="main-map-container">
             {/* 初始化一个框来放置场景 */}
@@ -116,6 +122,7 @@ function ChBuild(): JSX.Element {
                 <div className="sig-btn" onClick={() => { handleMeasure("area") }} >测面积</div>
                 <div className="sig-btn" onClick={() => { getPara() }} >获取相机参数</div>
                 <div className="sig-btn" onClick={() => { testFly() }} title={titleList.testFly} >飞行</div>
+                <div className="sig-btn" onClick={() => { exportPng() }}  >导出</div>
 
                 {/* 绘制 */}
                 <div className="sig-btn sig-btn-row">

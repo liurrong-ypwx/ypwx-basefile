@@ -44,6 +44,19 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
             url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
         }),
+        // 导出为图片时，需要设置
+        contextOptions: {
+            webgl: {
+                alpha: true,
+                depth: true,
+                stencil: true,
+                antialias: true,
+                premultipliedAlpha: true,
+                // 通过canvas.toDataURL()实现截图需要将该项设置为true
+                preserveDrawingBuffer: true,
+                failIfMajorPerformanceCaveat: true
+            }
+        },
 
         // 演示1：三维地形图
         // terrainProvider: Cesium.createWorldTerrain({
@@ -2312,6 +2325,29 @@ export const addFenLian = (viewer: any) => {
 
 }
 
+// 2021-04-19 粉刷匠 导出图片
+export const exportPng = (viewer: any) => {
+    const canvas = viewer.scene.canvas;
+    const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+
+    const link = document.createElement("a");
+    // const strDataURI = image.substr(22, image.length);
+    const blob = dataURLtoBlob(image);
+    const objurl = URL.createObjectURL(blob);
+    const tmpTime = moment().format('YYYYMMDDHHmmss') + moment().get("milliseconds");
+    link.download = "Image" + tmpTime + ".png";
+    link.href = objurl;
+    link.click();
+
+    function dataURLtoBlob(dataurl: any) {
+        let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    }
+}
 
 
 // 添加geoserver发布的wmts服务
