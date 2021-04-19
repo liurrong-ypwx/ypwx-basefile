@@ -13,13 +13,14 @@ import circleGif from "../../assets/image/circle2.gif";
 // import jt from "../../assets/image/JT1.png";
 import jt2 from "../../assets/image/JT2.png";
 // import yr1 from "../../assets/image/yr1.png";
+import moment from "moment";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
 // const locationJDY = { lng: 104.06, lat: 30.78, height: 13000.0 };
 const location = locationSZ;
-// const kuang = [kuang1, kuang2, kuang3, kuang4, kuang5, kuang6];
+
 
 
 // 初始化地图
@@ -1500,14 +1501,16 @@ let handlerDraw: any = null;
 let entityDrawArr: any = [];
 export const drawReal = (viewer: any, type: string) => {
 
+
+    if (!viewer) return;
+
+    // 鼠标点击 获取当前坐标
+    const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_CLICK
+    );
+
     if (type === "Point") {
-        // 鼠标点击 获取当前坐标
-        const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
-            Cesium.ScreenSpaceEventType.LEFT_CLICK
-        );
-
         if (handlerDraw) { handlerDraw.destroy(); }
-
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         handlerDraw = handler;
         handler.setInputAction(function (movement: any) {
@@ -1520,10 +1523,14 @@ export const drawReal = (viewer: any, type: string) => {
 
             // 区分位置
             const pickedFeature = viewer.scene.pick(movement.position);
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            // console.log(tmpId);
+
             if (!Cesium.defined(pickedFeature) && cartesianCoordinates) {
                 clickHandler(movement);
-                // 添加地面点
-                const tmpEntity = viewer.entities.add({
+                // 添加地面点              
+                const tmpEntity = viewer.entities.add({         
+                    id: "draw_Point" + tmpId,
                     position: cartesianCoordinates,
                     billboard: {
                         image: './Models/image/sxt.png',
@@ -1537,6 +1544,7 @@ export const drawReal = (viewer: any, type: string) => {
             } else {
                 // 添加建筑物上点
                 const tmpEntity = viewer.entities.add({
+                    id: "draw_Point" + tmpId,
                     position: position,
                     billboard: {
                         image: './Models/image/sxt.png',
@@ -1550,8 +1558,106 @@ export const drawReal = (viewer: any, type: string) => {
             }
 
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    }
+
+    if (type === "Line") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handlerDraw = handler;
+
+        let positions: any = [];
+        let poly: any = null;
+        let cartesian: any = null;
+        let floatingPoint: any = null;
+
+
+        // 注册鼠标移动事件 
+        handler.setInputAction((movement: any) => {
+            let ray = viewer.camera.getPickRay(movement.endPosition);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            if (positions.length >= 2) {
+                if (!Cesium.defined(poly)) {
+                    poly = new PolyLinePrimitive(positions);
+                } else {
+                    positions.pop();
+                    positions.push(cartesian);
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // 注册鼠标左击事件
+        handler.setInputAction((movement: any) => {
+            let ray = viewer.camera.getPickRay(movement.position);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            if (positions.length === 0) {
+                positions.push(cartesian.clone());
+            }
+            positions.push(cartesian);
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            floatingPoint = viewer.entities.add({
+                id: "draw_Line_Point" + tmpId,
+                position: positions[positions.length - 1],
+                point: {
+                    pixelSize: 5,
+                    color: Cesium.Color.RED,
+                    outlineColor: Cesium.Color.WHITE,
+                    outlineWidth: 2,
+                }
+            });
+            if(floatingPoint){
+                entityDrawArr.push(floatingPoint);
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // 注册鼠标右击--取消操作
+        handler.setInputAction((movement: any) => {
+            // handler && handler.destroy();
+            positions.pop(); // 最后一个点无效
+            positions = [];
+            poly = null;
+            cartesian = null;
+            floatingPoint = null;
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+
+        const PolyLinePrimitive: any = (function () {
+            function _(this: any, positions: any) {
+                const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+                // console.log(tmpId);
+                this.options = {
+                    id: "draw_Line" + tmpId,
+                    name: '直线',
+                    polyline: {
+                        show: true,
+                        positions: [],
+                        material: Cesium.Color.CHARTREUSE,
+                        width: 7,
+                        clampToGround: true
+                    }
+                };
+                this.positions = positions;
+                this._init();
+            }
+
+            _.prototype._init = function () {
+                var _self = this;
+                var _update = function () {
+                    return _self.positions;
+                };
+                // 实时更新polyline.positions
+                this.options.polyline.positions = new Cesium.CallbackProperty(_update, false);
+                const tmpEntity = viewer.entities.add(this.options);
+                if (tmpEntity) {
+                    entityDrawArr.push(tmpEntity);
+                }
+            };
+
+            return _;
+        })();
 
     }
+
+
     if (type === "Clear") {
         if (handlerDraw) { handlerDraw.destroy(); }
         for (let i = 0; i < entityDrawArr.length; i++) {
