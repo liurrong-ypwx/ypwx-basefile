@@ -1857,7 +1857,223 @@ export const drawReal = (viewer: any, type: string) => {
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 
-    
+    // 2021-04-19 粉刷匠 添加 圆
+    if (type === "Circle") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handlerDraw = handler;
+
+        let positions: any = [];
+        let poly: any = null;
+        let cartesian: any = null;
+        let floatingPoint: any = null;
+
+
+        // 注册鼠标移动事件 
+        handler.setInputAction((movement: any) => {
+            let ray = viewer.camera.getPickRay(movement.endPosition);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            if (positions.length >= 2) {
+                if (!Cesium.defined(poly)) {
+                    poly = new PolyCirclePrimitive(positions);
+                } else {
+                    positions.pop();
+                    positions.push(cartesian);
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // 注册鼠标左击事件
+        handler.setInputAction((movement: any) => {
+            let ray = viewer.camera.getPickRay(movement.position);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            if (positions.length === 0) {
+                positions.push(cartesian.clone());
+            }
+            positions.push(cartesian);
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+
+            if (positions.length === 2) {
+                floatingPoint = viewer.entities.add({
+                    id: "draw_Circle_Point" + tmpId,
+                    position: positions[positions.length - 1],
+                    point: {
+                        pixelSize: 5,
+                        color: Cesium.Color.RED,
+                        outlineColor: Cesium.Color.WHITE,
+                        outlineWidth: 2,
+                    }
+                });
+                if (floatingPoint) {
+                    entityDrawArr.push(floatingPoint);
+                }
+            } else {
+                positions = [];
+                poly = null;
+                cartesian = null;
+                floatingPoint = null;
+            }
+
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  
+
+
+        const PolyCirclePrimitive: any = (function () {
+            function _(this: any, positions: any) {
+                const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+                this.options = {
+                    id: "draw_Circle" + tmpId,
+                    name: '圆',
+                    position: [],
+                    ellipse: {
+                        semiMinorAxis: 0,
+                        semiMajorAxis: 0,
+                        material: Cesium.Color.BLUE.withAlpha(0.5),
+                        outline: true,
+                    },
+                };
+                this.positions = positions;
+                this._init();
+            }
+
+            // todo: 最短为1，请优化
+            _.prototype._init = function () {
+                var _self = this;
+                var _update = function () {
+                    if (!_self.positions[0] || !_self.positions[1]) return 1;
+                    const Point1 = _self.positions[0];
+                    const Point2 = _self.positions[1];
+                    const tmpDistance = calDistance(Point1, Point2);
+                    return tmpDistance ? tmpDistance : 1;
+                };
+                var _update_2 = function () {
+                    if (!_self.positions[0] || !_self.positions[1]) return 1;
+                    const Point1 = _self.positions[0];
+                    const Point2 = _self.positions[1];
+                    const tmpDistance = calDistance(Point1, Point2);
+                    return tmpDistance ? tmpDistance : 1;
+                };
+                // 实时更新polyline.positions
+                this.options.position = _self.positions[0] ? _self.positions[0] : undefined;
+                this.options.ellipse.semiMinorAxis = new Cesium.CallbackProperty(_update, false);
+                this.options.ellipse.semiMajorAxis = new Cesium.CallbackProperty(_update_2, false);
+
+                const tmpEntity = viewer.entities.add(this.options);
+                if (tmpEntity) {
+                    entityDrawArr.push(tmpEntity);
+                }
+            };
+
+            return _;
+        })();
+
+    }
+
+    // 2021-04-19 粉刷匠 添加 矩形
+    if (type === "Square") {
+        if (handlerDraw) { handlerDraw.destroy(); }
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handlerDraw = handler;
+
+        let positions: any = [];
+        let poly: any = null;
+        let cartesian: any = null;
+        let floatingPoint: any = null;
+
+
+        // 注册鼠标移动事件 
+        handler.setInputAction((movement: any) => {
+            let ray = viewer.camera.getPickRay(movement.endPosition);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            if (positions.length >= 2) {
+                if (!Cesium.defined(poly)) {
+                    poly = new PolySquarePrimitive(positions);
+                } else {
+                    positions.pop();
+                    positions.push(cartesian);
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // 注册鼠标左击事件
+        handler.setInputAction((movement: any) => {
+            let ray = viewer.camera.getPickRay(movement.position);
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);            
+            if (positions.length === 0) {
+                positions.push(cartesian.clone());
+            }
+            positions.push(cartesian);
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+
+            if (positions.length === 2) {
+                floatingPoint = viewer.entities.add({
+                    id: "draw_Square_Point" + tmpId,
+                    position: positions[positions.length - 1],
+                    point: {
+                        pixelSize: 5,
+                        color: Cesium.Color.RED,
+                        outlineColor: Cesium.Color.WHITE,
+                        outlineWidth: 2,
+                    }
+                });
+                if (floatingPoint) {
+                    entityDrawArr.push(floatingPoint);
+                }
+            } else {
+                positions = [];
+                poly = null;
+                cartesian = null;
+                floatingPoint = null;
+            }
+
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  
+        const PolySquarePrimitive: any = (function () {
+            function _(this: any, positions: any) {
+                const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+                this.options = {
+                    id: "draw_Square" + tmpId,
+                    name: '矩形',
+                    position: [],
+                    rectangle: {
+                        coordinates: [],
+                        material : Cesium.Color.BLACK.withAlpha(0.4),
+                        outline : true,
+                        classificationType: Cesium.ClassificationType.TERRAIN,
+                    },
+                };
+                this.positions = positions;
+                this._init();
+            }
+
+            // todo: 最短为1，请优化
+            _.prototype._init = function () {
+                var _self = this;
+                var _update = function () {
+                    if (!_self.positions[0] || !_self.positions[1]) return [];
+                    const Point1 = _self.positions[0];
+                    const Point2 = _self.positions[1];
+                    const Point1Cart = viewer.scene.globe.ellipsoid.cartesianToCartographic(Point1);
+                    const Point2Cart = viewer.scene.globe.ellipsoid.cartesianToCartographic(Point2);
+                    const rect = Cesium.Rectangle.fromCartographicArray([Point1Cart, Point2Cart]);       
+                    return rect ? rect : [];
+                };
+
+                // 实时更新
+                this.options.rectangle.coordinates = new Cesium.CallbackProperty(_update, false);
+
+                const tmpEntity = viewer.entities.add(this.options);
+                if (tmpEntity) {
+                    entityDrawArr.push(tmpEntity);
+                }
+            };
+
+            return _;
+        })();
+
+    }
 
     if (type === "Clear") {
         if (handlerDraw) { handlerDraw.destroy(); }
@@ -1866,6 +2082,64 @@ export const drawReal = (viewer: any, type: string) => {
         }
     }
 }
+
+// 2021-04-19 粉刷匠 计算两点之间的距离, cartesian坐标
+export const calDistance = (Point1: any, Point2: any) => {
+
+    if (!Point1 || !Point2) return 1.0;
+    if (Point1.x === Point2.x && Point1.y === Point2.y && Point1.z === Point2.z) return 1.0;
+
+    const point1Cartographic = Cesium.Cartographic.fromCartesian(Point1);
+    const point2Cartographic = Cesium.Cartographic.fromCartesian(Point2);
+    const geodesic = new Cesium.EllipsoidGeodesic();
+    geodesic.setEndPoints(point1Cartographic, point2Cartographic);
+    let s = geodesic.surfaceDistance;
+    //返回两点之间的距离
+    // s = Math.sqrt(Math.pow(s, 2) + Math.pow(point2cartographic.height - point1cartographic.height, 2));
+    // s = Math.abs(point2cartographic.height - point1cartographic.height);
+    // distance = distance + s;
+    return Number(s);
+
+    // let heightString = point1Cartographic.height;
+    // const lng1 = Cesium.Math.toDegrees(point1Cartographic.longitude);
+    // const lat1 = Cesium.Math.toDegrees(point1Cartographic.latitude);
+    // const lng2 = Cesium.Math.toDegrees(point2Cartographic.longitude);
+    // const lat2 = Cesium.Math.toDegrees(point2Cartographic.latitude);
+
+    // const EARTH_RADIUS = 6378137.0;    //单位M
+    // const PI = Math.PI;
+
+    // function getRad(d: any) {
+    //     return d * PI / 180.0;
+    // }
+    // const f = getRad((lat1 + lat2) / 2);
+    // const g = getRad((lat1 - lat2) / 2);
+    // const l = getRad((lng1 - lng2) / 2);
+
+    // let sg = Math.sin(g);
+    // let sl = Math.sin(l);
+    // let sf = Math.sin(f);
+
+    // let s, c, w, r, d, h1, h2;
+    // let a = EARTH_RADIUS;
+    // let fl = 1 / 298.257;
+
+    // sg = sg * sg;
+    // sl = sl * sl;
+    // sf = sf * sf;
+
+    // s = sg * (1 - sl) + (1 - sf) * sl;
+    // c = (1 - sg) * (1 - sl) + sf * sl;
+
+    // w = Math.atan(Math.sqrt(s / c));
+    // r = Math.sqrt(s * c) / w;
+    // d = 2 * w * a;
+    // h1 = (3 * r - 1) / 2 / c;
+    // h2 = (3 * r + 1) / 2 / s;
+
+    // return d * (1 + fl * (h1 * sf * (1 - sg) - h2 * (1 - sf) * sg));
+}
+
 
 
 // 添加geoserver发布的wmts服务
