@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./ChBuild.less";
 import * as CesiumApi from "../../../utils/CesiumApi/CesiumApi";
 import { titleList } from "./TuCao";
+import { message, Popover } from "antd";
 
 let cordX: any = null;
 let cordY: any = null;
@@ -12,6 +13,8 @@ function ChBuild(): JSX.Element {
     const [tpShow, setTpShow] = useState(false);
     const [tpX, setTpX] = useState(0);
     const [tpY, setTpY] = useState(0);
+    // 场景书签
+    const [bookMark, setBookMark] = useState<any>([]);
 
     useEffect(() => {
         const tmpView = CesiumApi.initMap("cesiumContainer", true);
@@ -23,10 +26,10 @@ function ChBuild(): JSX.Element {
     }, [orgView])
 
     // 添加点线面
-    const handleAddGeometry = (type: string) => {
-        if (!orgView) return;
-        CesiumApi.addCustomGeometry(orgView, type);
-    }
+    // const handleAddGeometry = (type: string) => {
+    //     if (!orgView) return;
+    //     CesiumApi.addCustomGeometry(orgView, type);
+    // }
 
     // 测量距离 or 面积
     const handleMeasure = (type: string) => {
@@ -105,6 +108,51 @@ function ChBuild(): JSX.Element {
         CesiumApi.exportPng(orgView);
     }
 
+    const goToBookMark = (id: any) => {
+        for (let i = 0; i < bookMark.length; i++) {
+            if (bookMark[i].id === id) {
+                CesiumApi.goToBookMark(orgView, bookMark[i].cameraInfo)
+            }
+        }
+    }
+
+    const addBookMark = () => {
+        if (orgView) {
+            // todo:获取当前相机参数
+            const cameraInfo: any = CesiumApi.getCurrentCameraInfo(orgView);
+
+            let tmpArr: any = bookMark.slice();
+            const tmpTitle = "书签" + (bookMark.length + 1);
+            tmpArr.push({
+                "id": bookMark + 1,
+                "name": tmpTitle,
+                "cameraInfo": cameraInfo
+            })
+
+            setBookMark(tmpArr);
+
+        } else {
+            message.info('添加书签失败');
+        }
+    }
+
+
+    const content = (
+        <div className="book-mark-container">
+            {
+                bookMark && bookMark.length ? (
+                    bookMark.map((item: any, index: any) => {
+                        return (
+                            <div key={index} className="sig-book-mark" onClick={() => { goToBookMark(item.id) }}>
+                                {item.name}
+                            </div>
+                        )
+                    })
+                ) : "暂无标签"
+            }
+        </div>
+      );
+
     return (
         <div className="main-map-container">
             {/* 初始化一个框来放置场景 */}
@@ -115,14 +163,18 @@ function ChBuild(): JSX.Element {
             {/* 按钮区 */}
             <div className="test-btn-group">
                 <div className="sig-btn" onClick={() => { setDedaultExtent() }} >重置</div>
-                <div className="sig-btn" onClick={() => { handleAddGeometry("Point") }} >添加标注</div>
+                {/* <div className="sig-btn" onClick={() => { handleAddGeometry("Point") }} >添加标注</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polyline") }} >添加Polyline</div>
-                <div className="sig-btn" onClick={() => { handleAddGeometry("Polygon") }} >添加Polygon</div>
+                <div className="sig-btn" onClick={() => { handleAddGeometry("Polygon") }} >添加Polygon</div> */}
                 <div className="sig-btn" onClick={() => { handleMeasure("distance") }} >测距</div>
                 <div className="sig-btn" onClick={() => { handleMeasure("area") }} >测面积</div>
                 <div className="sig-btn" onClick={() => { getPara() }} >获取相机参数</div>
                 <div className="sig-btn" onClick={() => { testFly() }} title={titleList.testFly} >飞行</div>
-                <div className="sig-btn" onClick={() => { exportPng() }}  >导出</div>
+                <div className="sig-btn" onClick={() => { exportPng() }} title={`导出为png`} >导出</div>
+
+                <Popover content={content} title="Title" trigger="hover">
+                    <div className="sig-btn" onClick={() => { addBookMark() }}  >书签</div>
+                </Popover>
 
                 {/* 绘制 */}
                 <div className="sig-btn sig-btn-row">

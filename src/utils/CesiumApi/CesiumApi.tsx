@@ -221,7 +221,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        // setExtent(viewer);
+        setExtent(viewer);
 
         // 添加不同的地图底图
         addDiffBaseMap(viewer, "arcgis");
@@ -268,7 +268,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addWeatherCondition(viewer);
 
         // 2021-04-20 粉刷匠 添加热力图
-        addTestHeatmap(viewer);
+        // addTestHeatmap(viewer);
 
 
 
@@ -2383,6 +2383,115 @@ export const addWeatherCondition = (viewer: any) => {
     })
     viewer.scene.postProcessStages.add(tmpCondition);
     weatherCondition = tmpCondition;
+}
+
+// 2021-04-20 粉刷匠 获取当前场景经纬度范围
+export const getCurrentCameraInfo = (viewer: any) => {
+
+    // 经纬度范围
+    let params: any = {};
+    let extend = viewer.camera.computeViewRectangle();
+    if (typeof extend === "undefined") {
+        //2D下会可能拾取不到坐标，extend返回undefined,所以做以下转换
+        let canvas = viewer.scene.canvas;
+        let upperLeft = new Cesium.Cartesian2(0, 0);//canvas左上角坐标转2d坐标
+        let lowerRight = new Cesium.Cartesian2(
+            canvas.clientWidth,
+            canvas.clientHeight
+        );// canvas右下角坐标转2d坐标
+
+        let ellipsoid = viewer.scene.globe.ellipsoid;
+        let upperLeft3 = viewer.camera.pickEllipsoid(
+            upperLeft,
+            ellipsoid
+        );// 2D转3D世界坐标
+
+        let lowerRight3 = viewer.camera.pickEllipsoid(
+            lowerRight,
+            ellipsoid
+        );// 2D转3D世界坐标
+
+        let upperLeftCartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(
+            upperLeft3
+        );// 3D世界坐标转弧度
+        let lowerRightCartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(
+            lowerRight3
+        );// 3D世界坐标转弧度
+
+        let minx = Cesium.Math.toDegrees(upperLeftCartographic.longitude);//弧度转经纬度
+        let maxx = Cesium.Math.toDegrees(lowerRightCartographic.longitude);//弧度转经纬度
+
+        let miny = Cesium.Math.toDegrees(lowerRightCartographic.latitude);//弧度转经纬度
+        let maxy = Cesium.Math.toDegrees(upperLeftCartographic.latitude);//弧度转经纬度
+
+        // console.log("经度：" + minx + "----" + maxx);
+        // console.log("纬度：" + miny + "----" + maxy);
+
+        params.minx = minx;
+        params.maxx = maxx;
+        params.miny = miny;
+        params.maxy = maxy;
+    } else {
+        //3D获取方式
+        params.maxx = Cesium.Math.toDegrees(extend.east);
+        params.maxy = Cesium.Math.toDegrees(extend.north);
+
+        params.minx = Cesium.Math.toDegrees(extend.west);
+        params.miny = Cesium.Math.toDegrees(extend.south);
+    }
+
+    // 相机参数
+    const camera = viewer.camera;
+    const heading = Cesium.Math.toDegrees(camera.heading)
+    const pitch = Cesium.Math.toDegrees(camera.pitch)//Cesium.Math.toDegrees作用是把弧度转换成度数
+    const roll = Cesium.Math.toDegrees(camera.roll)
+    params["cameraHPR"] = {
+        heading,
+        pitch,
+        roll
+    }
+
+    // 获取中心点坐标与相机高度
+    const result = viewer.camera.pickEllipsoid(new Cesium.Cartesian2(viewer.canvas.clientWidth / 2, viewer.canvas.clientHeight / 2));
+    const curPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(result);
+    const lon = curPosition.longitude * 180 / Math.PI;
+    const lat = curPosition.latitude * 180 / Math.PI;
+
+    const scene = viewer.scene;
+    const ellipsoid = scene.globe.ellipsoid;
+    const height = ellipsoid.cartesianToCartographic(viewer.camera.position).height;
+    const clongitude = Number(viewer.camera.positionCartographic.longitude);
+    const clatitude = Number(viewer.camera.positionCartographic.latitude);
+    params["midLocation"] = {
+        "lon": lon,
+        "lat": lat,
+    }
+    params["cameraHeight"] = {
+        "longitude": clongitude,
+        "latitude": clatitude,
+        "height": height
+    }
+
+    
+
+
+
+    return params;// 返回屏幕所在经纬度范围
+}
+
+// 2021-04-20 粉刷匠 当前场景跳转, 血与泪的尝试，具体的尝试次数参考上面函数
+export const goToBookMark = (viewer: any, cameraInfo: any) => {
+    if (!viewer) return;
+
+    viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromRadians(cameraInfo.cameraHeight.longitude, cameraInfo.cameraHeight.latitude, cameraInfo.cameraHeight.height),
+        orientation: {
+            heading: Cesium.Math.toRadians(cameraInfo.cameraHPR.heading),
+            pitch: Cesium.Math.toRadians(cameraInfo.cameraHPR.pitch),
+            roll: Cesium.Math.toRadians(cameraInfo.cameraHPR.roll)
+        }
+    });
+
 }
 
 
