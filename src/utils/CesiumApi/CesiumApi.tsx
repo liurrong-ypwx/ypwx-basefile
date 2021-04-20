@@ -1,8 +1,6 @@
 import * as Cesium from 'cesium';
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testData';
-// import CesiumHeatmap from "../../../public/js/CesiumHeatmap";
-// const CesiumHeatmap = require('./component/CesiumHeatmap');
 // import roadImage from "../../assets/image/road.jpg";
 import testPoint from "../../assets/image/point5.png";
 // import julei from "../../assets/image/point1.png";
@@ -268,6 +266,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 添加雨、雾、雪天气渲染, 注意打开倾斜摄影模型，更加方便看到效果
         // addWeatherCondition(viewer);
+
+        // 2021-04-20 粉刷匠 添加热力图
+        addTestHeatmap(viewer);
 
 
 
@@ -2422,10 +2423,69 @@ export const addTestHeatmap = (viewer: any) => {
     // 矩形坐标 xmin ymin xmax ymax
     // let bounds = {
     //     west: 113.779,
-    //     east: 114.142,
     //     south: 22.564,
+    //     east: 114.142,
     //     north:22.774
     // };
+    const points = [];
+    const width = 600;
+    const height = 400;
+    const max = 100;
+
+    // 热力图经纬度范围
+    const latMin = 22.5;
+    const latMax = 23.5;
+    const lonMin = 113.5;
+    const lonMax = 114.5;
+    // 根据热力图图片范围，生成随机热力点和强度值
+    for (let i = 0; i < 300; i++) {
+        const lon = lonMin + Math.random() * (lonMax - lonMin);
+        const lat = latMin + Math.random() * (latMax - latMin);
+        const value = Math.floor(Math.random() * max);
+        const point = {
+            x: Math.floor((lat - latMin) / (latMax - latMin) * width),
+            y: Math.floor((lon - lonMin) / (lonMax - lonMin) * height),
+            value: value
+        };
+        points.push(point);
+    }
+
+    if (!window.h337) {
+        console.log("lrr err");
+        return;
+    }
+
+    // const tmpDiv = document.createElement('div');
+    // tmpDiv.setAttribute('width', "600px");
+    // tmpDiv.setAttribute('height', "400px");
+
+    // 创建热力图
+    const heatmapInstance = window.h337.create({
+        container: document.querySelector('.div-heatmap')
+        // container:tmpDiv
+    });
+
+    const data = {
+        max: max,
+        data: points
+    };
+    heatmapInstance.setData(data);
+
+    // 将热力图添加到球体上(生成的热力图canvas元素类名为heatmap-canvas)
+    const canvas: any = document.getElementsByClassName('heatmap-canvas');
+
+    viewer.entities.add({
+        name: 'heatmap',
+        rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(lonMin, latMin, lonMax, latMax),
+            material: new Cesium.ImageMaterialProperty({
+                image: canvas[0],
+                transparent: true
+            })
+        }
+    });
+
+
 
     // let heatMap = CesiumHeatmap.create(
     //     viewer, // your cesium viewer

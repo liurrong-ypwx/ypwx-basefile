@@ -140,7 +140,12 @@ function ChBuild(): JSX.Element {
 
 
             </div>
-        
+
+
+            {/* 热力图容器 */}
+            <div className="div-heatmap" />
+
+
             {/* 地图提示区 */}
             <div className="map-tooltip-lrr" style={{ display: tpShow ? "" : "none", left: `${tpX}rem`, top: `${tpY}rem` }} >
                 <div className="mtl-title">测绘案例分析</div>
