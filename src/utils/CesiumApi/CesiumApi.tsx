@@ -15,6 +15,8 @@ import jt2 from "../../assets/image/JT2.png";
 // import yr1 from "../../assets/image/yr1.png";
 import moment from "moment";
 import {  WuShader } from './MulShader';
+import CesiumNavigation from "cesium-navigation-es6";
+
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
@@ -78,8 +80,24 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     // 演示1：添加免费的osm 建筑物图层
     // viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
-    // 导航插件
-    // viewer.extend(Cesium.viewerCesiumNavigationMixin, {});
+    // 2021-04-20 粉刷匠 导航插件
+    const isShowNavigation = false;
+    if (isShowNavigation) {
+        let options: any = {};
+        // 用于在使用重置导航重置地图视图时设置默认视图控制。接受的值是Cesium.Cartographic 和 Cesium.Rectangle.
+        options.defaultResetView = Cesium.Rectangle.fromDegrees(80, 22, 130, 50);
+        // 用于启用或禁用罗盘。true是启用罗盘，false是禁用罗盘。默认值为true。如果将选项设置为false，则罗盘将不会添加到地图中。
+        options.enableCompass = true;
+        // 用于启用或禁用缩放控件。true是启用，false是禁用。默认值为true。如果将选项设置为false，则缩放控件将不会添加到地图中。
+        options.enableZoomControls = true;
+        // 用于启用或禁用距离图例。true是启用，false是禁用。默认值为true。如果将选项设置为false，距离图例将不会添加到地图中。
+        options.enableDistanceLegend = true;
+        // 用于启用或禁用指南针外环。true是启用，false是禁用。默认值为true。如果将选项设置为false，则该环将可见但无效。
+        options.enableCompassOuterRing = true;
+        CesiumNavigation(viewer, options);
+    }
+
+    
 
     // 额外设置之显示帧速
     viewer.scene.debugShowFramesPerSecond = true;
