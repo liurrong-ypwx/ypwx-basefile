@@ -17,12 +17,13 @@ import CesiumNavigation from "cesium-navigation-es6";
 
 
 window.CESIUM_BASE_URL = './cesium/';
+Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
 // const locationJDY = { lng: 104.06, lat: 30.78, height: 13000.0 };
 const location = locationSZ;
 
-
+let rotateClock: any = null;
 
 // 初始化地图
 export const initMap = (domID: string, isAddBuilding: boolean) => {
@@ -95,7 +96,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         CesiumNavigation(viewer, options);
     }
 
-    
+
 
     // 额外设置之显示帧速
     viewer.scene.debugShowFramesPerSecond = true;
@@ -221,10 +222,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        setExtent(viewer);
+        // setExtent(viewer);
 
         // 添加不同的地图底图
-        addDiffBaseMap(viewer, "arcgis");
+        // addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -271,6 +272,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestHeatmap(viewer);
 
 
+        // 2021-04-22 粉刷匠 添加一个旋转的地球
+        // addRotateEarth(viewer);
+
+        // 2021-04-22 粉刷匠 绕点旋转
+        // addRotatePoint(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -2494,6 +2500,58 @@ export const goToBookMark = (viewer: any, cameraInfo: any) => {
 
 }
 
+// 2021-04-22 粉刷匠 添加一个旋转的地球
+export const addRotateEarth = (viewer: any) => {
+
+    if (rotateClock) { clearInterval(rotateClock); }
+    rotateClock = setInterval(() => {
+        const angle = Math.PI * 0.5 / 180.0;
+        viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, angle);
+    }, 100);
+
+
+    // 点击停止
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function (click) {
+        if (rotateClock) {
+            clearInterval(rotateClock);
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+
+}
+
+// 2021-04-22 粉刷匠 绕点旋转
+let rotePointClock: any = null;
+export const addRotatePoint = (viewer: any) => {
+
+    const entity = viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(113.88, 22.564),
+        point: {
+            color: Cesium.Color.RED,
+            pixelSize: 10
+        }
+    });
+
+    let heading = 180; // 朝向
+    rotePointClock = setInterval(() => {
+        heading -= 0.05;
+        if (heading < -179) {
+            heading = 180;
+        }
+        const offset = new Cesium.HeadingPitchRange(Cesium.Math.toRadians(heading), -Cesium.Math.toRadians(30), 1000);
+        viewer.zoomTo(entity, offset)
+    }, 100);
+
+    // 点击停止
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function (click) {
+        if (rotePointClock) {
+            clearInterval(rotePointClock);
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+}
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
