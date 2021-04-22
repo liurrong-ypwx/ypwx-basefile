@@ -222,10 +222,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        // setExtent(viewer);
+        setExtent(viewer);
 
         // 添加不同的地图底图
-        // addDiffBaseMap(viewer, "arcgis");
+        addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -256,7 +256,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -283,6 +283,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-04-22 粉刷匠 添加视频投影 中级 todo:未完成
         // addVideoLevel1(viewer);
+
+        // 2021-04-22 粉刷匠 建筑物限高分析
+        // addLimiteHeight(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -2654,6 +2657,44 @@ export const addVideoLevel1 = (viewer: any) => {
     // // 锁定实体对象（这句可有可无）
     // viewer.trackedEntity = rectangle;
 
+}
+
+// 2021-04-22 粉刷匠 建筑物限高分析，todo；搭配弹窗 说明现有高度及超出高度
+export const addLimiteHeight = (viewer: any) => {
+
+    // 我想的解决思路是 添加一个物体，底部高度为限制高度，设置 classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+    const limiteheight = 700; // 这个高度实际上是箱子的一半+实际限高  600=500+100
+    const center = Cesium.Cartesian3.fromDegrees(113.94, 22.52, limiteheight);
+    const dimensions = new Cesium.Cartesian3(5000, 5000, 1000)// 盒子的长、宽、高
+    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+    const hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
+        new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0.0, 0.0)// 中心点水平旋转90度
+    );
+    const hpr = Cesium.Matrix4.fromRotationTranslation(
+        hprRotation,
+        new Cesium.Cartesian3(0.0, 0.0, 0.0)// 不平移
+    );
+    Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+    viewer.scene.primitives.add(
+        new Cesium.ClassificationPrimitive({
+            geometryInstances: new Cesium.GeometryInstance({
+                geometry: Cesium.BoxGeometry.fromDimensions({
+                    vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+                    dimensions: dimensions
+                }),
+                modelMatrix: modelMatrix, // 提供位置与姿态参数
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        // Cesium.Color.fromCssColorString("#F26419").withAlpha(0.5)
+                        Cesium.Color.fromCssColorString("#E82821")
+                    ),
+                    show: new Cesium.ShowGeometryInstanceAttribute(true),
+                },
+                id: "limiteHeightPrimitive",
+            }),
+            // classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+        })
+    );
 }
 
 
