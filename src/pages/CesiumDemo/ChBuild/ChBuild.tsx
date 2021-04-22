@@ -137,6 +137,7 @@ function ChBuild(): JSX.Element {
     }
 
 
+    // 书签
     const content = (
         <div className="book-mark-container">
             {
@@ -197,6 +198,13 @@ function ChBuild(): JSX.Element {
             {/* 热力图容器 */}
             <div className="div-heatmap" />
 
+            {/* 视频投影 */}
+            <video id="trailer" muted={true} autoPlay={true} loop={true} crossOrigin="" controls={true}>
+                <source src="https://cesium.com/public/SandcastleSampleData/big-buck-bunny_trailer.webm" type="video/webm" />
+                <source src="https://cesium.com/public/SandcastleSampleData/big-buck-bunny_trailer.mp4" type="video/mp4" />
+                <source src="https://cesium.com/public/SandcastleSampleData/big-buck-bunny_trailer.mov" type="video/quicktime" />
+                Your browser does not support the <code>video</code> element.
+            </video>
 
             {/* 地图提示区 */}
             <div className="map-tooltip-lrr" style={{ display: tpShow ? "" : "none", left: `${tpX}rem`, top: `${tpY}rem` }} >

@@ -278,6 +278,12 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-04-22 粉刷匠 绕点旋转
         // addRotatePoint(viewer);
 
+        // 2021-04-22 粉刷匠 添加视频投影 初级 : 平铺视频和视频墙
+        // addVideoLevel0(viewer);
+
+        // 2021-04-22 粉刷匠 添加视频投影 中级 todo:未完成
+        // addVideoLevel1(viewer);
+
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
 
@@ -2552,6 +2558,105 @@ export const addRotatePoint = (viewer: any) => {
     }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 
 }
+
+// 2021-04-22 粉刷匠 添加视频投影 初级  平铺视频和视频墙
+export const addVideoLevel0 = (viewer: any) => {
+    // 获取视频元素
+    const videoElement: any = document.getElementById("trailer");
+    // 创建实体对象-- 平铺视频
+    // const rectangle = viewer.entities.add({
+    //     rectangle: {
+    //         coordinates: Cesium.Rectangle.fromDegrees(113.92, 22.53, 114.12, 22.69),
+    //         material: videoElement
+    //     },
+    //     // 或创建多边形
+    //     // polygon: {
+    //     //    hierarchy: new PolygonHierarchy(positions),
+    //     //    material: videoElement
+    //     // },
+    // });
+
+    // 创建实体对象-- 视频墙
+    const pArray = [
+        113.92,
+        22.53,
+        6000,
+        114.12,
+        22.69,
+        6000,
+    ]; 
+    const instance = new Cesium.GeometryInstance({
+        geometry: new Cesium.WallGeometry({
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights(pArray),
+            minimumHeights: [150.5, 150.5], //最低位置。单位米
+        }),
+    });
+    //将该材质设置为视频，并给与模型
+    const material = Cesium.Material.fromType("Image");
+    material.uniforms.image = videoElement;
+
+    const tileset = viewer.scene.primitives.add(
+        new Cesium.Primitive({
+            geometryInstances: instance,
+            appearance: new Cesium.MaterialAppearance({
+                closed: false,
+                material: material,
+            }),
+        })
+    );
+
+    if (tileset) {
+        // 
+    }
+
+
+    let synchronizer = new Cesium.VideoSynchronizer({
+        clock: viewer.clock,
+        element: videoElement
+    })
+
+    if(synchronizer){
+        // 
+    }
+
+    viewer.clock.shouldAnimate = true;
+    // 锁定实体对象（这句可有可无）
+    // viewer.trackedEntity = rectangle;
+
+}
+
+export const addVideoLevel1 = (viewer: any) => {
+    // 获取视频元素
+    // const videoElement: any = document.getElementById("trailer");
+    // // 创建实体对象
+    // const rectangle = viewer.entities.add({
+    //     rectangle: {
+    //         coordinates: Cesium.Rectangle.fromDegrees(113.92, 22.53, 114.12, 22.69),
+    //         material: videoElement
+    //     },
+    //     // 或创建多边形
+    //     // polygon: {
+    //     //    hierarchy: new PolygonHierarchy(positions),
+    //     //    material: videoElement
+    //     // },
+    // });
+
+    // let synchronizer = new Cesium.VideoSynchronizer({
+    //     clock: viewer.clock,
+    //     element: videoElement
+    // })
+
+    // if(synchronizer){
+    //     // 
+    // }
+
+    // viewer.clock.shouldAnimate = true;
+    // // 锁定实体对象（这句可有可无）
+    // viewer.trackedEntity = rectangle;
+
+}
+
+
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
