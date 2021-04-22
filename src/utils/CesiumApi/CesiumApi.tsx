@@ -283,13 +283,13 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addVideoLevel0(viewer);
 
         // 2021-04-22 粉刷匠 添加视频投影 中级 todo:未完成
-        // addVideoLevel1(viewer);
+        addVideoLevel1(viewer);
 
         // 2021-04-22 粉刷匠 建筑物限高分析
         // addLimiteHeight(viewer);
 
         // 2021-04-22 粉刷匠 淹没分析  自己画一个矩形 打开terrien
-        addFlood(viewer);
+        // addFlood(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
