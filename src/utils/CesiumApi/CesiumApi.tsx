@@ -97,8 +97,6 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         CesiumNavigation(viewer, options);
     }
 
-
-
     // 额外设置之显示帧速
     viewer.scene.debugShowFramesPerSecond = true;
 
@@ -119,97 +117,26 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     }
  
 
-
-
-    // 假如添加建筑物3dtile
-    // if (isAddBuilding) {
-
-    //     const tmpTileset = new Cesium.Cesium3DTileset({
-    //         url: "./Models/building2/tileset.json"
-    //     })
-
-    //     // 给建筑物添加shader
-    //     tmpTileset.readyPromise.then(function (tileset: any) {
-
-    //         // 摄像机移动到建筑群
-    //         const boundingSphere = tileset.boundingSphere;
-    //         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
-    //         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-
-
-    //         tileset.style = new Cesium.Cesium3DTileStyle({
-    //             color: {
-    //                 conditions: [
-    //                     ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-    //                 ]
-    //             }
-    //         });
-
-
-    //         tileset.tileVisible.addEventListener(function (tile: any) {
-    //             const content = tile.content;
-    //             const featuresLength = content.featuresLength;
-    //             for (let i = 0; i < featuresLength; i += 2) {
-    //                 let feature = content.getFeature(i)
-    //                 let model = feature.content._model
-
-    //                 if (model && model._sourcePrograms && model._rendererResources) {
-    //                     Object.keys(model._sourcePrograms).forEach(key => {
-    //                         let program = model._sourcePrograms[key]
-    //                         let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-    //                         let v_position = "";
-    //                         if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-    //                             v_position = "v_positionEC";
-    //                         } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-    //                             v_position = "v_pos";
-    //                         }
-    //                         const color = `vec4(${feature.color.toString()})`;
-
-    //                         model._rendererResources.sourceShaders[program.fragmentShader] =
-    //                             "varying vec3 " + v_position + ";\n" +
-    //                             "void main(void){\n" +
-    //                             "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-    //                             "    float glowRange = 360.0;\n" +
-    //                             "    gl_FragColor = " + color + ";\n" +
-    //                             // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-    //                             "    gl_FragColor *= vec4(vec3(position.z / 100.0), 1.0);\n" +
-    //                             "    float time = fract(czm_frameNumber / 360.0);\n" +
-    //                             "    time = abs(time - 0.5) * 2.0;\n" +
-    //                             "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-    //                             "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-    //                             "}\n"
-    //                     })
-    //                     model._shouldRegenerateShaders = true
-    //                 }
-    //             }
-    //         });
-    //     })
-
-
-
-    //     // 普通款制作专题图的样式
-    //     // tmpTileset.style = new Cesium.Cesium3DTileStyle({
-    //     //     color: {
-    //     //         conditions: [
-    //     //             // eslint-disable-next-line
-    //     //             ['${Height} >= 200', 'color("purple", 0.5)'],
-    //     //             // eslint-disable-next-line
-    //     //             ['${Height} >= 100', 'color("red")'],
-    //     //             ['true', 'color("blue")']
-    //     //         ]
-    //     //     },        
-    //     //     // eslint-disable-next-line
-    //     //     show: '${Height} > 0',
-    //     //     meta: {
-    //     //         // eslint-disable-next-line
-    //     //         description: '"Building id ${id} has height ${Height}."'
-    //     //     }
-    //     // });
-
-
-
-    //     viewer.scene.primitives.add(tmpTileset);
-    // }
+    // 普通款制作专题图的样式
+    // tmpTileset.style = new Cesium.Cesium3DTileStyle({
+    //     color: {
+    //         conditions: [
+    //             // eslint-disable-next-line
+    //             ['${Height} >= 200', 'color("purple", 0.5)'],
+    //             // eslint-disable-next-line
+    //             ['${Height} >= 100', 'color("red")'],
+    //             ['true', 'color("blue")']
+    //         ]
+    //     },        
+    //     // eslint-disable-next-line
+    //     show: '${Height} > 0',
+    //     meta: {
+    //         // eslint-disable-next-line
+    //         description: '"Building id ${id} has height ${Height}."'
+    //     }
+    // });
+    // viewer.scene.primitives.add(tmpTileset);
+    
 
     // 2021-04-19 粉刷匠 添加分帘遮罩
     // 注意：打开ChBuild 中的slider  <div id="slider"></div> 
@@ -290,6 +217,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-04-22 粉刷匠 淹没分析  自己画一个矩形 打开terrien
         // addFlood(viewer);
+
+        // 2021-04-23 粉刷匠 使用平面裁剪3dtiles
+        addClipTo3DTiles(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -2892,102 +2822,7 @@ export const addFlood = (viewer: any) => {
 
 }
 
-// const t=()=>{
-    
-//     const thisWidget = {
-//         extrudedHeight: null,
-//         entity: null,
-//         drawOk: function (e: any) {
-//             this.entity = e;
-//             const t = this.computePolygonHeightRange(e.polygon.hierarchy.getValue());
-//             currentHeight = t.minHeight;
-//             maxValue = t.maxHeight;
-//         },
-//         computePolygonHeightRange: function (e: any) {
-//             const t: any = []
-//             for (let i = 0; i < e.length; i++) {
-//                 t.push(e[i].clone());
-//             }
-               
-//             let a: any = null;
-//             let n: any = null;
-//             let r: any = null;
-//             let o: any = null;
-//             let s: any = null;
-//             let u: any = null;
-//             let l: any = null;
-//             let h: any = 0;
-//             let g: any = 9999;
-//             let c: any = Math.PI / Math.pow(2, 11) / 64;
-//             let m: any = Cesium.PolygonGeometry.fromPositions({
-//                 positions: t,
-//                 vertexFormat: Cesium.PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
-//                 granularity: c
-//             });
-//             let d = Cesium.PolygonGeometry.createGeometry(m);
-//             if (!d) return {
-//                 maxHeight: h,
-//                 minHeight: g
-//             }
-//             for (let i = 0; i < d.indices.length; i += 3) {
-//                 a = d.indices[i];
-//                 n = d.indices[i + 1];
-//                 r = d.indices[i + 2];
-//                 l = new Cesium.Cartesian3(d.attributes.position.values[3 * a], d.attributes.position.values[3 * a + 1], d.attributes.position.values[3 * a + 2]);
-//                 (o = viewer.scene.globe.getHeight(Cesium.Cartographic.fromCartesian(l))) < g && (g = o);
-//                 h < o && (h = o);
-//                 l = new Cesium.Cartesian3(d.attributes.position.values[3 * n], d.attributes.position.values[3 * n + 1], d.attributes.position.values[3 * n + 2]);
-//                 (s = viewer.scene.globe.getHeight(Cesium.Cartographic.fromCartesian(l))) < g && (g = s);
-//                 h < s && (h = s);
-//                 l = new Cesium.Cartesian3(d.attributes.position.values[3 * r], d.attributes.position.values[3 * r + 1], d.attributes.position.values[3 * r + 2]);
-//                 (u = viewer.scene.globe.getHeight(Cesium.Cartographic.fromCartesian(l))) < g && (g = u);
-//                 h < u && (h = u);
-//             }
-//             return {
-//                 maxHeight: h,
-//                 minHeight: g
-//             }
-//         },
-//         startFx: function (e: any) {
-//             viewer.scene.globe.depthTestAgainstTerrain = true;
-//             const t = this;
-//             this.extrudedHeight = e;
-//             this.entity.polygon.extrudedHeight = new Cesium.CallbackProperty(function (e) {
-//                 return t.extrudedHeight
-//             }, false);
-
-//             for (var i = this.entity.polygon.hierarchy.getValue(), a = [], n = 0; n < i.length; n++) {
-//                 var r = Cesium.Ellipsoid.WGS84.cartesianToCartographic(i[n]),
-//                     o = {
-//                         lon: Cesium.Math.toDegrees(r.longitude),
-//                         lat: Cesium.Math.toDegrees(r.latitude),
-//                         hgt: e
-//                     },
-//                     s = [o.lon, o.lat, o.hgt];
-//                 a = a.concat(s)
-//             }
-//             return i = Cesium.Cartesian3.fromDegreesArrayHeights(a),
-//                 this.entity.polygon.hierarchy = new Cesium.CallbackProperty(function (e: any) {
-//                     return i;
-//                 }, false),
-//                 true
-//         },
-//         clear: function () {
-//             viewer.scene.globe.depthTestAgainstTerrain = false;
-//             this.entity = null;
-//         },
-//         updateHeight: function (e: any) {
-//             this.entity.polygon.extrudedHeight = e
-//         }
-//     }
-//     function stopFX() {
-//         self.clearInterval(int);
-//     }
-//     window.flood = function () {
-//         currentHeight > maxValue ? stopFX() : (thisWidget.updateHeight(currentHeight), currentHeight += 1);
-//     };
-// }
-
+// 2021-04-22 粉刷匠 添加视频投影 中级 未完成
 export const addVideoLevel1 = (viewer: any) => {
     // 获取视频元素
     // const videoElement: any = document.getElementById("trailer");
@@ -3057,7 +2892,10 @@ export const addLimiteHeight = (viewer: any) => {
     );
 }
 
-
+// 2021-04-23 粉刷匠 3dtiles 平面裁剪
+export const addClipTo3DTiles = (viewer: any) => {
+    // 
+}
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
