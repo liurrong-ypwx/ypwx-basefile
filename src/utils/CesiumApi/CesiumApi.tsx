@@ -61,7 +61,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         },
 
         // 演示1：三维地形图
-        terrainProvider: Cesium.createWorldTerrain()
+        // terrainProvider: Cesium.createWorldTerrain()
         // terrainProvider: Cesium.createWorldTerrain({
             // requestVertexNormals:true,
             // requestWaterMask:true
@@ -153,7 +153,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         setExtent(viewer);
 
         // 添加不同的地图底图
-        // addDiffBaseMap(viewer, "arcgis");
+        addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -210,7 +210,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addVideoLevel0(viewer);
 
         // 2021-04-22 粉刷匠 添加视频投影 中级 todo:未完成
-        addVideoLevel1(viewer);
+        // addVideoLevel1(viewer);
 
         // 2021-04-22 粉刷匠 建筑物限高分析
         // addLimiteHeight(viewer);
@@ -218,8 +218,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-04-22 粉刷匠 淹没分析  自己画一个矩形 打开terrien
         // addFlood(viewer);
 
-        // 2021-04-23 粉刷匠 使用平面裁剪3dtiles
-        addClipTo3DTiles(viewer);
+        // 2021-04-23 粉刷匠 使用平面裁剪3dtiles,关掉深圳市建筑
+        // addClipTo3DTiles(viewer);
+
+        // 2021-04-23 粉刷匠 地形挖掘
+        addClipToTerrien(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -2894,7 +2897,143 @@ export const addLimiteHeight = (viewer: any) => {
 
 // 2021-04-23 粉刷匠 3dtiles 平面裁剪
 export const addClipTo3DTiles = (viewer: any) => {
-    // 
+    // 参考示例地址：https://sandcastle.cesium.com/?src=3D%20Tiles%20Clipping%20Planes.html&label=All
+    // 可以使用平面裁剪的有："BIM", "Point Cloud", "Instanced", "Model"
+    // 前两个没什么好说的，3：json 4：glb
+    let targetY: any = 0.0;
+    let planeEntities: any = [];
+    let selectedPlane: any = null;
+    let clippingPlanes: any = null;
+
+    const createPlaneUpdateFunction = (plane: any) => {
+        return function () {
+            plane.distance = targetY;
+            return plane;
+        };
+    }
+
+    clippingPlanes = new Cesium.ClippingPlaneCollection({
+        planes: [
+            new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(0.0, 0.0, -1.0),
+                0.0
+            ),
+        ],
+        // edgeWidth: viewModel.edgeStylingEnabled ? 1.0 : 0.0,
+    });
+
+    const tmpTileset = new Cesium.Cesium3DTileset({
+        url: "./Models/szNanshan/tileset.json",
+        clippingPlanes: clippingPlanes
+    })
+
+    // tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
+    tmpTileset.readyPromise.then(function (tileset: any) {
+
+        const boundingSphere = tileset.boundingSphere;
+        const radius = boundingSphere.radius;
+        viewer.zoomTo(
+            tileset,
+            new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
+        );
+
+        if (!Cesium.Matrix4.equals(tileset.root.transform, Cesium.Matrix4.IDENTITY)) {
+            // The clipping plane is initially positioned at the tileset's root transform.
+            // Apply an additional matrix to center the clipping plane on the bounding sphere center.
+            const transformCenter = Cesium.Matrix4.getTranslation(
+                tileset.root.transform,
+                new Cesium.Cartesian3()
+            );
+            const transformCartographic = Cesium.Cartographic.fromCartesian(
+                transformCenter
+            );
+            const boundingSphereCartographic = Cesium.Cartographic.fromCartesian(
+                tileset.boundingSphere.center
+            );
+            const height = boundingSphereCartographic.height - transformCartographic.height;
+            clippingPlanes.modelMatrix = Cesium.Matrix4.fromTranslation(
+                new Cesium.Cartesian3(0.0, 0.0, height)
+            );
+        }
+
+        for (var i = 0; i < clippingPlanes.length; ++i) {
+            var plane = clippingPlanes.get(i);
+            var planeEntity = viewer.entities.add({
+                position: boundingSphere.center,
+                plane: {
+                    dimensions: new Cesium.Cartesian2(
+                        radius * 2.5,
+                        radius * 2.5
+                    ),
+                    material: Cesium.Color.WHITE.withAlpha(0.1),
+                    plane: new Cesium.CallbackProperty(
+                        createPlaneUpdateFunction(plane),
+                        false
+                    ),
+                    outline: true,
+                    outlineColor: Cesium.Color.WHITE,
+                },
+            });
+
+            planeEntities.push(planeEntity);
+        }
+
+        viewer.scene.primitives.add(tileset);
+        tileset.style = new Cesium.Cesium3DTileStyle({
+            color: {
+                conditions: [
+                    ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+                ]
+            }
+        });
+        // 设置3dTiles贴地
+        set3DtilesHeight(1, tileset);
+    })
+
+
+    // ---------------------------监听事件区---------------------------------------------
+    // Select plane when mouse down
+    const downHandler = new Cesium.ScreenSpaceEventHandler(
+        viewer.scene.canvas
+    );
+    downHandler.setInputAction(function (movement) {
+        const pickedObject =  viewer.scene.pick(movement.position);
+        if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id) && Cesium.defined(pickedObject.id.plane)) {
+            selectedPlane = pickedObject.id.plane;
+            selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.05);
+            selectedPlane.outlineColor = Cesium.Color.WHITE;
+            viewer.scene.screenSpaceCameraController.enableInputs = false;
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+    // Release plane on mouse up
+    const upHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    upHandler.setInputAction(function () {
+        if (Cesium.defined(selectedPlane)) {
+            selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.1);
+            selectedPlane.outlineColor = Cesium.Color.WHITE;
+            selectedPlane = undefined;
+        }
+
+        viewer.scene.screenSpaceCameraController.enableInputs = true;
+    }, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+    // Update plane on mouse move
+    const moveHandler = new Cesium.ScreenSpaceEventHandler(
+        viewer.scene.canvas
+    );
+    moveHandler.setInputAction(function (movement) {
+        if (Cesium.defined(selectedPlane)) {
+            const deltaY = movement.startPosition.y - movement.endPosition.y;
+            targetY += deltaY;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+}
+
+// 2021-04-23 粉刷匠 地形挖掘
+export const addClipToTerrien = (viewer: any) => {
+    
 }
 
 // 添加geoserver发布的wmts服务
