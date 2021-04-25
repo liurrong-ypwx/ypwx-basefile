@@ -61,7 +61,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         },
 
         // 演示1：三维地形图
-        // terrainProvider: Cesium.createWorldTerrain()
+        terrainProvider: Cesium.createWorldTerrain()
         // terrainProvider: Cesium.createWorldTerrain({
             // requestVertexNormals:true,
             // requestWaterMask:true
@@ -153,7 +153,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         setExtent(viewer);
 
         // 添加不同的地图底图
-        addDiffBaseMap(viewer, "arcgis");
+        // addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -3033,7 +3033,377 @@ export const addClipTo3DTiles = (viewer: any) => {
 
 // 2021-04-23 粉刷匠 地形挖掘
 export const addClipToTerrien = (viewer: any) => {
-    
+
+    // 方式0：逆时针序列
+    let clippingPlanesEnabled = true;
+    let edgeStylingEnabled = true;
+    // ---------------------------------动态画贴底线-------------------------------------
+    const cord1 = [113.88, 22.56];
+    const cord2 = [114.00, 22.63];
+    const rectangle = new Cesium.Rectangle(Cesium.Math.toRadians(cord1[0]), Cesium.Math.toRadians(cord1[1]), Cesium.Math.toRadians(cord2[0]), Cesium.Math.toRadians(cord2[1]));
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    viewer.scene.camera.flyTo({ destination: rectangle });  // 定位到目标地形
+
+    if (handlerDraw) { handlerDraw.destroy(); }
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+    let positions: any = [];
+    let tempPoints: any = [];
+    let polygon: any = null;
+    let polyline: any = null;
+    let cartesian: any = null;
+    let floatingPoint: any = []; // 浮动点
+
+    // 注册鼠标移动事件
+    handler.setInputAction((movement: any) => {
+        let ray = viewer.camera.getPickRay(movement.endPosition);
+        cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        if (positions.length === 2) {
+            if (!Cesium.defined(polyline)) {
+                polyline = new PolyLinePrimitive(positions);
+            } else {
+                positions.pop();
+                positions.push(cartesian);
+            }
+        }
+        if (positions.length > 2) {
+            if (!Cesium.defined(polygon)) {
+                polygon = new PolygonPrimitive(positions);
+            } else {
+                positions.pop();
+                positions.push(cartesian);
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    // 注册鼠标左击效果
+    handler.setInputAction(function (movement: any) {
+
+        if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+            console.log('This browser does not support polylines on terrain.');
+            return;
+        }
+
+
+        // 粉刷匠 获取地形上的点
+        cartesian = viewer.scene.pickPosition(movement.position);
+        if (Cesium.defined(cartesian)) {
+            if (positions.length === 0) {
+                positions.push(cartesian.clone());
+            }
+            positions.push(cartesian);
+        }
+
+
+        // 在三维场景中添加点
+        let cartographic = Cesium.Cartographic.fromCartesian(positions[positions.length - 1]);
+        let longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
+        let latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
+        let heightString = cartographic.height;
+        tempPoints.push({ lon: longitudeString, lat: latitudeString, hei: heightString });
+        const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+        floatingPoint = viewer.entities.add({
+            id: "draw_Clip_Point" + tmpId,
+            position: positions[positions.length - 1],
+            point: {
+                pixelSize: 5,
+                color: Cesium.Color.RED,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 2,
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            }
+        });
+        if (floatingPoint) {
+            entityDrawArr.push(floatingPoint);
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    // 注册鼠标右击效果
+    handler.setInputAction(function (movement: any) {
+        positions.pop();
+        handler.destroy();
+
+        if (positions && polygon) {
+            addRealClip(positions);
+        }
+
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+    const PolygonPrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            this.options = {
+                id: "draw_Clip" + tmpId,
+                name: '多边形',
+                polygon: {
+                    hierarchy: [],
+                    material: Cesium.Color.GREEN.withAlpha(0.5),
+                }
+            };
+
+            this.hierarchy = { positions };
+            this._init();
+        }
+
+        _.prototype._init = function () {
+            var _self = this;
+            var _update = function () {
+                return _self.hierarchy;
+            };
+            // 实时更新polygon.hierarchy
+            this.options.polygon.hierarchy = new Cesium.CallbackProperty(_update, false);
+            const tmpEntity = viewer.entities.add(this.options);
+            if (tmpEntity) {
+                entityDrawArr.push(tmpEntity);
+            }
+        };
+
+        return _;
+    })();
+
+    const PolyLinePrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            // console.log(tmpId);
+            this.options = {
+                id: "draw_Clip_Line" + tmpId,
+                name: '直线',
+                polyline: {
+                    show: true,
+                    positions: [],
+                    material: Cesium.Color.CHARTREUSE,
+                    width: 7,
+                    clampToGround: true
+                }
+            };
+            this.positions = positions;
+            this._init();
+        }
+
+        _.prototype._init = function () {
+            var _self = this;
+            // 当可以画矩形的时候，把线的postion设置为 undefined
+            var _update = function () {
+                return _self.positions.length > 2 ? undefined : _self.positions;
+            };
+            // 实时更新polyline.positions
+            this.options.polyline.positions = new Cesium.CallbackProperty(_update, false);
+            const tmpEntity = viewer.entities.add(this.options);
+            if (tmpEntity) {
+                entityDrawArr.push(tmpEntity);
+            }
+        };
+
+        return _;
+    })();
+
+ 
+    // --------------------------------根据点坐标构建clippingPlans--------------------------
+    const computePolygonHeight = (e: any) => {
+        const t: any = []
+        for (let i = 0; i < e.length; i++) {
+            t.push(e[i].clone());
+        }
+
+        let c: any = Math.PI / Math.pow(2, 11) / 64;
+        let m: any = Cesium.PolygonGeometry.fromPositions({
+            positions: t,
+            vertexFormat: Cesium.PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+            granularity: c
+        });
+        let d = Cesium.PolygonGeometry.createGeometry(m);
+        const tmpAllHeight: any = [];
+        if (!d) return tmpAllHeight;
+
+        for (let i = 0; i < e.length; i++) {
+            const tmpSigHeight = viewer.scene.globe.getHeight(Cesium.Cartographic.fromCartesian(e[i]));
+            tmpAllHeight.push(tmpSigHeight);
+        }
+        return tmpAllHeight;
+    }
+
+    // 构建逆时针序列
+    const makeDataCCW = (pointArr: any) => {
+        // 原理：可以使用鞋带法或者极值法
+        const wgsData: any = [];
+        for (let i = 0; i < pointArr.length; i++) {
+            const cartographic = Cesium.Cartographic.fromCartesian(pointArr[i]);
+            let longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
+            let latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
+            wgsData.push({
+                longitude: Number(longitudeString),
+                latitude: Number(latitudeString)
+            });
+        }
+
+        let tmpMaxLonIndex: any = 0;
+        for (let i = 1; i < wgsData.length; i++) {
+            tmpMaxLonIndex = wgsData[i].longitude > wgsData[tmpMaxLonIndex].longitude ? i : tmpMaxLonIndex;
+        }
+
+        const pointNum = wgsData.length;
+        const prePoint = wgsData[((tmpMaxLonIndex - 1) + pointNum) % pointNum];
+        const curPoint = wgsData[tmpMaxLonIndex];
+        const nextPoint = wgsData[(tmpMaxLonIndex + 1) % pointNum];
+
+        const x1 = prePoint.longitude;
+        const y1 = prePoint.latitude;
+        const x2 = curPoint.longitude;
+        const y2 = curPoint.latitude;
+        const x3 = nextPoint.longitude;
+        const y3 = nextPoint.latitude;
+        const dirRes = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+        const isR = dirRes > 0;
+        return isR;
+    }
+
+    const addRealClip = (pointArr: any) => {
+        if (!pointArr) return;
+        if (!pointArr.length) return;
+        const pointsLength = pointArr.length;
+        const clippingPlanes: any = [];
+
+        // 计算各个点的高度，对于设置墙
+        const tmpAllHeight = computePolygonHeight(pointArr);
+
+        // 统一修改为逆时针
+        const isCCW = makeDataCCW(pointArr);
+        if (isCCW) {
+            // console.log("逆时针")
+        } else {
+            // console.log("顺时针");
+            const tmpPointArr: any = [];
+            for (let i = pointsLength - 1; i >= 0; i--) {
+                tmpPointArr.push(pointArr[i]);
+            }
+            pointArr = tmpPointArr;
+        }
+
+
+        // 底部
+        viewer.entities.add({
+            polygon: {
+                hierarchy: pointArr,
+                material: new Cesium.ImageMaterialProperty({
+                    image: "./Models/image/road.jpg"
+                }),
+                closeTop: false, // 这个要设置为false
+                extrudedHeight: 0,
+                perPositionHeight: true // 这个要设置true
+            }
+        });
+
+        // 墙
+        viewer.entities.add({
+            wall: {
+                positions: pointArr,
+                // minimumHeights: [.0, 10.0],
+                maximumHeights: tmpAllHeight,
+                material: new Cesium.ImageMaterialProperty({
+                    image: "./Models/image/road.jpg"
+                }),
+            
+            }
+        })
+
+
+        // 逆时针序列 计算
+        for (let i = 0; i < pointsLength; ++i) {
+            let nextIndex = (i + 1) % pointsLength;
+            let midpoint = Cesium.Cartesian3.add(pointArr[i], pointArr[nextIndex], new Cesium.Cartesian3());
+            midpoint = Cesium.Cartesian3.multiplyByScalar(midpoint, 0.5, midpoint);
+
+            let up = Cesium.Cartesian3.normalize(midpoint, new Cesium.Cartesian3());
+            let right = Cesium.Cartesian3.subtract(pointArr[nextIndex], midpoint, new Cesium.Cartesian3());
+            right = Cesium.Cartesian3.normalize(right, right);
+
+            let normal = Cesium.Cartesian3.cross(right, up, new Cesium.Cartesian3());
+            normal = Cesium.Cartesian3.normalize(normal, normal);
+
+            let originCenteredPlane = new Cesium.Plane(normal, 0.0);
+            let distance = Cesium.Plane.getPointDistance(originCenteredPlane, midpoint);
+
+            clippingPlanes.push(new Cesium.ClippingPlane(normal, distance));
+        }
+
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+        viewer.scene.globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
+            planes: clippingPlanes,
+            edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
+            edgeColor: Cesium.Color.WHITE,
+            enabled: clippingPlanesEnabled,
+        });
+        viewer.scene.globe.backFaceCulling = true;
+        viewer.scene.globe.showSkirts = true;
+
+
+    }
+
+
+    // ----------------------------------方式1--------------------------------------
+
+
+    // const position = Cesium.Cartesian3.fromDegrees(
+    //     113.91,
+    //     22.50,
+    //     140.0
+    // );
+
+    // const entity = viewer.entities.add({
+    //     position: position,
+    //     box: {
+    //         dimensions: new Cesium.Cartesian3(400.0, 400.0, 800.0),
+    //         material: Cesium.Color.WHITE.withAlpha(0.3),            
+    //         outline: true,
+    //         outlineColor: Cesium.Color.WHITE,
+    //     },
+    // });
+
+    // viewer.entities.add({
+    //     polygon: {
+    //         hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([
+    //             113.91, 22.50, 140.0,
+    //             113.91, 22.51, 140.0,
+    //             113.92, 22.51, 140.0,
+    //             113.92, 22.50, 140.0
+    //         ]),
+    //         material: new Cesium.ImageMaterialProperty({
+    //             image: "./Models/image/dark.png"
+    //         }),
+    //         closeTop: false, // 这个要设置为false
+    //         extrudedHeight: 0,
+    //         perPositionHeight: true // 这个要设置true
+    //     }
+    // });
+
+    // viewer.scene.globe.depthTestAgainstTerrain = true;
+    // viewer.scene.globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
+    //     modelMatrix: entity.computeModelMatrix(Cesium.JulianDate.now()),
+    //     planes: [
+    //         new Cesium.ClippingPlane(
+    //             new Cesium.Cartesian3(1.0, 0.0, 0.0),
+    //             -200.0
+    //         ),
+    //         new Cesium.ClippingPlane(
+    //             new Cesium.Cartesian3(-1.0, 0.0, 0.0),
+    //             -200.0
+    //         ),
+    //         new Cesium.ClippingPlane(
+    //             new Cesium.Cartesian3(0.0, 1.0, 0.0),
+    //             -200.0
+    //         ),
+    //         new Cesium.ClippingPlane(
+    //             new Cesium.Cartesian3(0.0, -1.0, 0.0),
+    //             -200.0
+    //         ),
+    //     ],
+    //     edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
+    //     edgeColor: Cesium.Color.WHITE,
+    //     enabled: clippingPlanesEnabled,
+    // });
+    // viewer.scene.globe.backFaceCulling = true;
+    // viewer.scene.globe.showSkirts = true;
+
 }
 
 // 添加geoserver发布的wmts服务
