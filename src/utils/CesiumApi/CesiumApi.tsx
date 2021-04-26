@@ -61,7 +61,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         },
 
         // 演示1：三维地形图
-        terrainProvider: Cesium.createWorldTerrain()
+        // terrainProvider: Cesium.createWorldTerrain()
         // terrainProvider: Cesium.createWorldTerrain({
             // requestVertexNormals:true,
             // requestWaterMask:true
@@ -222,7 +222,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addClipTo3DTiles(viewer);
 
         // 2021-04-23 粉刷匠 地形挖掘
-        addClipToTerrien(viewer);
+        // addClipToTerrien(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
