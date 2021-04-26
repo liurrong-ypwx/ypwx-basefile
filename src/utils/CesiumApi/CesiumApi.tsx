@@ -184,7 +184,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        addTestBlueBuilding(viewer);
+        // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -209,9 +209,6 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-04-22 粉刷匠 添加视频投影 初级 : 平铺视频+视频墙
         // addVideoLevel0(viewer);
 
-        // 2021-04-22 粉刷匠 添加视频投影 中级 todo:未完成
-        // addVideoLevel1(viewer);
-
         // 2021-04-22 粉刷匠 建筑物限高分析
         // addLimiteHeight(viewer);
 
@@ -225,7 +222,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addClipToTerrien(viewer);
 
         // 2021-04-26 粉刷匠 可视域分析
-        addViewShed(viewer);
+        // addViewShed(viewer);
+
+        // 2021-04-26 粉刷匠 添加视频投影 中级 todo:未完成
+        addVideoLevel1(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -3441,7 +3441,7 @@ const calcLandPointInter = (viewer: any, pointArr: any, tmpInterval: any) => {
 }
 
 // 2021-04-26 粉刷匠 可视域分析
-const addViewShed = (viewer: any) => {
+export const addViewShed = (viewer: any) => {
     const c3 = Cesium.Cartesian3.fromDegrees(113.91, 22.50, 140.0)
     const tmpView = new ViewShedStage(viewer, {
         viewPosition: c3,
