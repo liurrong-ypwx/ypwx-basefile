@@ -14,7 +14,7 @@ import jt2 from "../../assets/image/JT2.png";
 import moment from "moment";
 import {  WuShader } from './MulShader';
 import CesiumNavigation from "cesium-navigation-es6";
-
+import ViewShedStage from "./ViewShed.js";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
@@ -43,9 +43,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
-        // imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-        //     url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
-        // }),
+        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+        }),
         // 导出为图片时，需要设置
         contextOptions: {
             webgl: {
@@ -184,7 +184,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -223,6 +223,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-04-23 粉刷匠 地形挖掘
         // addClipToTerrien(viewer);
+
+        // 2021-04-26 粉刷匠 可视域分析
+        addViewShed(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -3437,6 +3440,17 @@ const calcLandPointInter = (viewer: any, pointArr: any, tmpInterval: any) => {
 
 }
 
+// 2021-04-26 粉刷匠 可视域分析
+const addViewShed = (viewer: any) => {
+    const c3 = Cesium.Cartesian3.fromDegrees(113.91, 22.50, 140.0)
+    const tmpView = new ViewShedStage(viewer, {
+        viewPosition: c3,
+        viewDistance: 1000
+    })
+    if(tmpView){
+        // 
+    }
+}
 
 
 // 添加geoserver发布的wmts服务
