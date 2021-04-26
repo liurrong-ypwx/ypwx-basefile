@@ -3199,29 +3199,6 @@ export const addClipToTerrien = (viewer: any) => {
 
  
     // --------------------------------根据点坐标构建clippingPlans--------------------------
-    const computePolygonHeight = (e: any) => {
-        const t: any = []
-        for (let i = 0; i < e.length; i++) {
-            t.push(e[i].clone());
-        }
-
-        let c: any = Math.PI / Math.pow(2, 11) / 64;
-        let m: any = Cesium.PolygonGeometry.fromPositions({
-            positions: t,
-            vertexFormat: Cesium.PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
-            granularity: c
-        });
-        let d = Cesium.PolygonGeometry.createGeometry(m);
-        const tmpAllHeight: any = [];
-        if (!d) return tmpAllHeight;
-
-        for (let i = 0; i < e.length; i++) {
-            const tmpSigHeight = viewer.scene.globe.getHeight(Cesium.Cartographic.fromCartesian(e[i]));
-            tmpAllHeight.push(tmpSigHeight);
-        }
-        return tmpAllHeight;
-    }
-
     // 构建逆时针序列
     const makeDataCCW = (pointArr: any) => {
         // 原理：可以使用鞋带法或者极值法
@@ -3264,7 +3241,7 @@ export const addClipToTerrien = (viewer: any) => {
         const clippingPlanes: any = [];
 
         // 计算各个点的高度，对于设置墙
-        const tmpAllHeight = computePolygonHeight(pointArr);
+        // const tmpAllHeight = computePolygonHeight(pointArr);
 
         // 统一修改为逆时针
         const isCCW = makeDataCCW(pointArr);
@@ -3279,33 +3256,27 @@ export const addClipToTerrien = (viewer: any) => {
             pointArr = tmpPointArr;
         }
 
+        // 计算地面点坐标
+        const tmpInterval = 10;
+        const landPoint = calcLandPointInter(viewer, pointArr, tmpInterval);
+  
 
         // 底部
         viewer.entities.add({
             polygon: {
-                hierarchy: pointArr,
+                // height 距离地面的高度，todo:需要计算，场景 挖方向下 10米，可以根据当前点序列坐标的最小值-10；
+                // height: 70,
+                hierarchy: landPoint,
                 material: new Cesium.ImageMaterialProperty({
                     image: "./Models/image/road.jpg"
                 }),
-                closeTop: false, // 这个要设置为false
+                // extrudedHeight: 0,
                 extrudedHeight: 0,
+                closeTop: false, // 这个要设置为false
+                // closeBottom: false,
                 perPositionHeight: true // 这个要设置true
             }
         });
-
-        // 墙
-        viewer.entities.add({
-            wall: {
-                positions: pointArr,
-                // minimumHeights: [.0, 10.0],
-                maximumHeights: tmpAllHeight,
-                material: new Cesium.ImageMaterialProperty({
-                    image: "./Models/image/road.jpg"
-                }),
-            
-            }
-        })
-
 
         // 逆时针序列 计算
         for (let i = 0; i < pointsLength; ++i) {
@@ -3405,6 +3376,68 @@ export const addClipToTerrien = (viewer: any) => {
     // viewer.scene.globe.showSkirts = true;
 
 }
+
+// 2021-04-25 粉刷匠 地形切割，地面点的插值 2021-04-26 粉刷匠 终于完成
+const calcLandPointInter = (viewer: any, pointArr: any, tmpInterval: any) => {
+
+    // wgs84坐标列
+    const wgsData: any = [];
+    for (let i = 0; i < pointArr.length; i++) {
+        const cartographic = Cesium.Cartographic.fromCartesian(pointArr[i]);
+        let longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
+        let latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
+        wgsData.push({
+            longitude: longitudeString,
+            latitude: latitudeString,
+        })
+    }
+
+    // 插值序列
+    const interpolationArr: any = [];
+    for (let i = 0; i < wgsData.length; i++) {
+        const nexIndex = (i + 1) % (wgsData.length);
+        const curLat = Number(wgsData[i].latitude);
+        const curLon = Number(wgsData[i].longitude);
+        const nextLat = Number(wgsData[nexIndex].latitude);
+        const nextLon = Number(wgsData[nexIndex].longitude);
+
+        const tmpLonInter = (nextLon - curLon) * 1.0 / tmpInterval;
+        const tmpLatInter = (nextLat - curLat) * 1.0 / tmpInterval;
+
+        interpolationArr.push(wgsData[i]);
+        for (let j = 0; j < (tmpInterval - 1); j++) {
+            interpolationArr.push({
+                longitude: curLon + (j + 1) * tmpLonInter,
+                latitude: curLat + (j + 1) * tmpLatInter,
+            })
+        }
+
+    }
+
+    // 添加高度,todo:这里的height减去XX后，就是一个地下的空隙，感觉可以做地层
+    for (let i = 0; i < interpolationArr.length; i++) {
+        const tmpHeight = viewer.scene.globe.getHeight(Cesium.Cartographic.fromDegrees(
+            interpolationArr[i].longitude,
+            interpolationArr[i].latitude
+        ))
+        interpolationArr[i]['height'] = tmpHeight;
+    }
+
+    // cart3
+    const cart3Arr: any = [];
+    for (let i = 0; i < interpolationArr.length; i++) {
+        cart3Arr.push(Cesium.Cartesian3.fromDegrees(
+            interpolationArr[i].longitude,
+            interpolationArr[i].latitude,
+            interpolationArr[i].height,            
+        ))
+    }
+
+    return cart3Arr;
+
+}
+
+
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
