@@ -3679,19 +3679,16 @@ export const adddiff2 = (viewer: any) => {
         radar.appearance.material.uniforms.u_time = u_time;
     })
 
-    // 动态修改雷达材质中的offset变量，从而实现动态效果。
-    // viewer.scene.preUpdate.addEventListener(function () {
-    //     var offset = radar.appearance.material.uniforms.offset;
-    //     offset -= 0.001;
-    //     if (offset > 1.0) {
-    //         offset = 0.0;
-    //     }
-    //     radar.appearance.material.uniforms.offset = offset;
-    // })
 }
 
-export const adddiff3=(viewer:any)=>{
-    // 
+
+export const adddiff3 = (viewer: any) => {
+    // 好像是需要关闭地形监测
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    const CartographicCenter = Cesium.Cartographic.fromDegrees(113.91, 22.50);
+    const scanColor = new Cesium.Color(1.0, 0.0, 0.0, 1);
+    // addCircleScanPostStage(viewer, CartographicCenter, 1500, scanColor, 4000);
+    addRadarScanPostStage(viewer, CartographicCenter, 1000, scanColor, 3000);
 }
 
 // 2021-04-27 粉刷匠 补充 图元自定义着色器
@@ -3708,7 +3705,7 @@ export const addDiffShader = (viewer: any) => {
     // adddiff2(viewer);
 
     // 圆扫描雷达
-    adddiff3(viewer);
+    // adddiff3(viewer);
  
 }
 
