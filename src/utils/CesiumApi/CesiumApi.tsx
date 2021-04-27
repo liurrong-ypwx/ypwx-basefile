@@ -15,6 +15,7 @@ import moment from "moment";
 import {  WuShader } from './MulShader';
 import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
+import CesiumVideo3d from "./CesiumVideo3D.js"
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
@@ -184,7 +185,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -224,7 +225,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-04-26 粉刷匠 可视域分析
         // addViewShed(viewer);
 
-        // 2021-04-26 粉刷匠 添加视频投影 中级 todo:未完成
+        // 2021-04-26-27 粉刷匠 添加视频投影 中级 todo:未完成
         addVideoLevel1(viewer);
 
         // 添加一个glb模型
@@ -2828,36 +2829,21 @@ export const addFlood = (viewer: any) => {
 
 }
 
-// 2021-04-22 粉刷匠 添加视频投影 中级 未完成
+// 2021-04-22-27 粉刷匠 添加视频投影 中级 未完成
 export const addVideoLevel1 = (viewer: any) => {
     // 获取视频元素
-    // const videoElement: any = document.getElementById("trailer");
-    // // 创建实体对象
-    // const rectangle = viewer.entities.add({
-    //     rectangle: {
-    //         coordinates: Cesium.Rectangle.fromDegrees(113.92, 22.53, 114.12, 22.69),
-    //         material: videoElement
-    //     },
-    //     // 或创建多边形
-    //     // polygon: {
-    //     //    hierarchy: new PolygonHierarchy(positions),
-    //     //    material: videoElement
-    //     // },
-    // });
-
-    // let synchronizer = new Cesium.VideoSynchronizer({
-    //     clock: viewer.clock,
-    //     element: videoElement
+    // const c3 = Cesium.Cartesian3.fromDegrees(113.91, 22.50, 140.0)
+    // new ViewShedStage(viewer, {
+    //     viewPosition: c3,
+    //     viewDistance: 1000
     // })
-
-    // if(synchronizer){
-    //     // 
-    // }
-
-    // viewer.clock.shouldAnimate = true;
-    // // 锁定实体对象（这句可有可无）
-    // viewer.trackedEntity = rectangle;
-
+    // todo: 注意修改各项参数
+    new CesiumVideo3d(Cesium, viewer, {
+        url: "https://cesium.com/public/SandcastleSampleData/big-buck-bunny_trailer.webm",
+        position: { x: 113.94, y: 22.51, z: 140.0 },
+        far: 1000,
+        rotation: { x: 0, y: 0 }
+    })
 }
 
 // 2021-04-22 粉刷匠 建筑物限高分析，todo；搭配弹窗 说明现有高度及超出高度
@@ -3690,50 +3676,50 @@ export const addTestBlueBuilding = (viewer: any) => {
         viewer.scene.primitives.add(tmpTileset);
 
         tileset.style = new Cesium.Cesium3DTileStyle({
-            color: {
-                conditions: [
-                    ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-                ]
-            }
+            // color: {
+            //     conditions: [
+            //         ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+            //     ]
+            // }
         });
 
-        tileset.tileVisible.addEventListener(function (tile: any) {
-            const content = tile.content;
-            const featuresLength = content.featuresLength;
-            for (let i = 0; i < featuresLength; i += 2) {
-                let feature = content.getFeature(i)
-                let model = feature.content._model
+        // tileset.tileVisible.addEventListener(function (tile: any) {
+        //     const content = tile.content;
+        //     const featuresLength = content.featuresLength;
+        //     for (let i = 0; i < featuresLength; i += 2) {
+        //         let feature = content.getFeature(i)
+        //         let model = feature.content._model
 
-                if (model && model._sourcePrograms && model._rendererResources) {
-                    Object.keys(model._sourcePrograms).forEach(key => {
-                        let program = model._sourcePrograms[key]
-                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-                        let v_position = "";
-                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-                            v_position = "v_positionEC";
-                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-                            v_position = "v_pos";
-                        }
-                        const color = `vec4(${feature.color.toString()})`;
+        //         if (model && model._sourcePrograms && model._rendererResources) {
+        //             Object.keys(model._sourcePrograms).forEach(key => {
+        //                 let program = model._sourcePrograms[key]
+        //                 let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+        //                 let v_position = "";
+        //                 if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+        //                     v_position = "v_positionEC";
+        //                 } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+        //                     v_position = "v_pos";
+        //                 }
+        //                 const color = `vec4(${feature.color.toString()})`;
 
-                        model._rendererResources.sourceShaders[program.fragmentShader] =
-                            "varying vec3 " + v_position + ";\n" +
-                            "void main(void){\n" +
-                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-                            "    float glowRange = 120.0;\n" +
-                            "    gl_FragColor = " + color + ";\n" +
-                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
-                            "    float time = fract(czm_frameNumber / 120.0);\n" +
-                            "    time = abs(time - 0.5) * 2.0;\n" +
-                            "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-                            "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-                            "}\n"
-                    })
-                    model._shouldRegenerateShaders = true
-                }
-            }
-        });
+        //                 model._rendererResources.sourceShaders[program.fragmentShader] =
+        //                     "varying vec3 " + v_position + ";\n" +
+        //                     "void main(void){\n" +
+        //                     "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+        //                     "    float glowRange = 120.0;\n" +
+        //                     "    gl_FragColor = " + color + ";\n" +
+        //                     // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+        //                     "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
+        //                     "    float time = fract(czm_frameNumber / 120.0);\n" +
+        //                     "    time = abs(time - 0.5) * 2.0;\n" +
+        //                     "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+        //                     "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+        //                     "}\n"
+        //             })
+        //             model._shouldRegenerateShaders = true
+        //         }
+        //     }
+        // });
 
         // 设置3dTiles贴地
         set3DtilesHeight(1, tileset);
