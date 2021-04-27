@@ -72,6 +72,8 @@ class ViewShedStage {
             this.postStage = null;
         }
     }
+
+    // 创建相机
     createLightCamera() {
         this.lightCamera = new Cesium.Camera(this.viewer.scene);
         this.lightCamera.position = this.viewPosition;
@@ -101,6 +103,8 @@ class ViewShedStage {
             }
         });
     }
+
+    // 阴影贴图：实现阴影效果
     createShadowMap() {
         this.shadowMap = new Cesium.ShadowMap({
             context: (this.viewer.scene).context,
@@ -116,6 +120,8 @@ class ViewShedStage {
         });
         this.viewer.scene.shadowMap = this.shadowMap;
     }
+
+    // 创建PostStage
     createPostStage() {
         const fs = glsl
         const postStage = new Cesium.PostProcessStage({
@@ -171,6 +177,8 @@ class ViewShedStage {
         });
         this.postStage = this.viewer.scene.postProcessStages.add(postStage);
     }
+
+    // 创建视锥线
     drawFrustumOutline() {
         const scratchRight = new Cesium.Cartesian3();
         const scratchRotation = new Cesium.Matrix3();
@@ -211,6 +219,8 @@ class ViewShedStage {
             })
         );
     }
+
+    // 创建视网
     drawSketch() {
         this.sketch = this.viewer.entities.add({
             name: 'sketch',
