@@ -15,7 +15,8 @@ import moment from "moment";
 import {  WuShader } from './MulShader';
 import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
-import CesiumVideo3d from "./CesiumVideo3D.js"
+import CesiumVideo3d from "./CesiumVideo3D.js";
+import normalMap from "../../assets/image/fabric_normal.jpg";
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
@@ -227,6 +228,12 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-04-26-27 粉刷匠 添加视频投影 中级 todo:完成，不懂意思
         // addVideoLevel1(viewer);
+
+        // 2021-04-27 粉刷匠 补充-模型旋转--未测试
+        // addModelRotation(viewer); 
+
+        // 2021-04-27 粉刷匠 补充-水面效果
+        // addWaterPolygon(viewer)
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -3438,6 +3445,57 @@ export const addViewShed = (viewer: any) => {
     }
 }
 
+// 2021-04-27 粉刷匠 模型旋转
+export const addModelRotation = (viewer: any) => {
+    const tileset: any = null;
+    const RotateX: any = null;
+
+    // todo:注意传参为模型以及旋转角度
+    if (!tileset) return;
+
+    var m = tileset.modelMatrix;
+    //RotateX为旋转角度，转为弧度再参与运算
+    var m1 = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(RotateX));
+
+    //矩阵计算
+    Cesium.Matrix4.multiplyByMatrix3(m, m1, m);
+
+    //赋值
+    tileset.modelMatrix = m;
+}
+
+// 2021-04-27 粉刷匠 补充-水面效果
+export const addWaterPolygon = (viewer: any) => {
+    // eslint-disable-next-line
+    const polygon = viewer.scene.primitives.add(new Cesium.Primitive({
+        geometryInstances: new Cesium.GeometryInstance({
+            geometry: new Cesium.PolygonGeometry({
+                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray([
+                    113.91, 22.50,
+                    113.95, 22.50,
+                    113.95, 22.55,
+                    113.91, 22.55,
+                ])),
+                vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            })
+        }),
+        appearance: new Cesium.EllipsoidSurfaceAppearance({
+            aboveGround: true,
+            material: new Cesium.Material({
+                fabric: {
+                    type: 'Water',
+                    uniforms: {
+                        normalMap: Cesium.buildModuleUrl(normalMap),
+                        frequency: 10000.0,
+                        animationSpeed: 0.01,
+                        amplitude: 50
+                    }
+                }
+            })
+        }),
+        show: true
+    }))
+}
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
