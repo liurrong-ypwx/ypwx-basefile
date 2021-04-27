@@ -143,8 +143,7 @@ let CesiumVideo3d = (function () {
     videoShed3d.prototype._initCameraParam = function () {
         var viewPoint = this.ECEF.enu_to_ecef({ longitude: this.param.position.x * 1, latitude: this.param.position.y * 1, altitude: this.param.position.z * 1 },
             { distance: this.param.far, azimuth: this.param.rotation.y * 1, elevation: this.param.rotation.x * 1 });
-        debugger;
-        
+
         var position = Cesium.Cartesian3.fromDegrees(viewPoint.longitude, viewPoint.latitude, viewPoint.altitude);
         var cameraPosition = Cesium.Cartesian3.fromDegrees(this.param.position.x * 1, this.param.position.y * 1, this.param.position.z * 1);
         return {

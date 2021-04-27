@@ -225,8 +225,8 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-04-26 粉刷匠 可视域分析
         // addViewShed(viewer);
 
-        // 2021-04-26-27 粉刷匠 添加视频投影 中级 todo:未完成
-        addVideoLevel1(viewer);
+        // 2021-04-26-27 粉刷匠 添加视频投影 中级 todo:完成，不懂意思
+        // addVideoLevel1(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
