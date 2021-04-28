@@ -64,10 +64,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 演示1：三维地形图
         // terrainProvider: Cesium.createWorldTerrain()
-        terrainProvider: Cesium.createWorldTerrain({
-            requestVertexNormals:true, // 坡度可视化的必须勾选
-            // requestWaterMask:true
-        }),
+        // terrainProvider: Cesium.createWorldTerrain({
+        //     requestVertexNormals:true, // 坡度可视化的必须勾选
+        //     // requestWaterMask:true
+        // }),
         // skyBox: new Cesium.SkyBox({
         //     sources: {
         //         positiveX: './Models/image/box.png',
@@ -233,9 +233,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addModelRotation(viewer); 
 
         // 2021-04-27 粉刷匠 补充-水面效果
-        // addWaterPolygon(viewer)
+        addWaterPolygon(viewer)
 
-        // 2021-04-27 粉刷匠 补充-自定义着色器
+        // 2021-04-27-28 粉刷匠 补充-自定义着色器
         // addDiffShader(viewer);
 
         // 2021-04-27 粉刷匠 补充-线管
@@ -243,7 +243,6 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-04-28 粉刷匠 等高线 注意升级到cesium1.8
         // addContour(viewer);
-
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -3697,6 +3696,143 @@ export const adddiff3 = (viewer: any) => {
     addRadarScanPostStage(viewer, CartographicCenter, 1000, scanColor, 3000);
 }
 
+export const adddiff4 = (viewer: any) => {
+    // 雷达的高度
+    const length = 4000.0;
+    // 地面位置(垂直地面)
+    const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(113.91, 22.50);
+    // 中心位置
+    // const centerOnEllipsoid = Cesium.Cartesian3.fromDegrees(116.39, 39.9, length * 0.5);
+    // 顶部位置(卫星位置)
+    // const topOnEllipsoid = Cesium.Cartesian3.fromDegrees(116.39, 39.9, length);
+    // 矩阵计算
+    const modelMatrix = Cesium.Matrix4.multiplyByTranslation( // 转换矩阵
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid), // 矩阵
+        new Cesium.Cartesian3(0.0, 0.0, length * 0.5), // 要转换的笛卡尔坐标 
+        new Cesium.Matrix4() // 返回新的矩阵
+    );
+
+    // 1. 构造geometry
+    const cylinderGeometry = new Cesium.CylinderGeometry({
+        length: length,
+        topRadius: length * 0.5,
+        bottomRadius: length * 0.5,
+        vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat
+    });
+    // 2. 创建GeometryInstance
+    const redCone = new Cesium.GeometryInstance({
+        geometry: cylinderGeometry, //geomtry类型
+        modelMatrix: modelMatrix, //模型矩阵 调整矩阵的位置和方向
+    });
+
+    let source =
+        //传入的动态数值
+        `uniform vec4 color; 
+uniform float repeat; 
+uniform float offset; 
+uniform float thickness;
+
+//设置图形外观材质
+czm_material czm_getMaterial(czm_materialInput materialInput){
+   czm_material material = czm_getDefaultMaterial(materialInput); //获取内置的默认材质
+   float sp = 1.0/repeat; //重复贴图
+   vec2 st = materialInput.st; //二维纹理坐标
+   float dis = distance(st, vec2(0.5)); //计算距离
+   float m = mod(dis + offset, sp); //间隔
+   float a = step(sp*(1.0-thickness), m);//线条拼色 
+   //修改材质
+   material.diffuse = color.rgb;
+   material.alpha = a * color.a;
+   return material;
+}`
+
+
+    let material = new Cesium.Material({
+        fabric: {
+            // type: 'VtxfShader1',
+            uniforms: { // 动态传递参数
+                color: Cesium.Color.WHITE.withAlpha(0.3),
+                repeat: 30.0,
+                offset: 0.0,
+                thickness: 0.3,
+            },
+            source: source
+        },
+        translucent: false
+    })
+
+    let appearance = new Cesium.MaterialAppearance({
+        // material: material,// 自定义的材质
+        material:new Cesium.Material({
+            fabric:{
+                type : 'Color',
+                uniforms : {
+                    color : new Cesium.Color(1.0, 1.0, 0.0, 1.0)
+                }
+            }
+        }),
+        faceForward: false, // 当绘制的三角面片法向不能朝向视点时，自动翻转法向，					从而避免法向计算后发黑等问题
+        closed: true // 是否为封闭体，实际上执行的是是否进行背面裁剪
+    })
+
+    // 添加Primitive
+    var radar = viewer.scene.primitives.add(
+        new Cesium.Primitive({
+            geometryInstances: [redCone],
+            appearance: appearance
+        }));
+
+    // 动态修改雷达材质中的offset变量，从而实现动态效果。
+    viewer.scene.preUpdate.addEventListener(function () {
+        var offset = radar.appearance.material.uniforms.offset;
+        offset -= 0.001;
+        if (offset > 1.0) {
+            offset = 0.0;
+        }
+        radar.appearance.material.uniforms.offset = offset;
+    })
+
+
+}
+
+export const addOther1 = (viewer: any) => {
+    // var lon = 117.286419;
+    // var lat = 31.864436;
+    // const CartographicCenter = Cesium.Cartographic.fromDegrees(113.91, 22.50);
+
+    let tmpHeight = 0.0;
+    let minHeight = 0.0;
+    let maxHeight = 1000.0;
+    let tmpInterv = 1;
+
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    const polyPosition = new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray([
+        113.91, 22.50,
+        113.95, 22.50,
+        113.95, 22.55,
+        113.91, 22.55,
+    ]))
+    const tmpEntity = viewer.entities.add({
+        name: '多边形',
+        polygon: {
+            hierarchy: polyPosition,
+            perPositionHeight: true,            
+            extrudedHeight: new Cesium.CallbackProperty(() => {
+                if (tmpHeight > maxHeight) {
+                    tmpHeight = minHeight;
+                } else {
+                    tmpHeight += tmpInterv;
+                }
+                return tmpHeight;
+            }, false),
+            closeTop: false, // 这个要设置为false
+            closeBottom: false,
+            material: Cesium.Color.fromBytes(64, 157, 253, 150)
+        }
+    })
+
+}
+
 // 2021-04-27 粉刷匠 补充 图元自定义着色器
 export const addDiffShader = (viewer: any) => {
     // Primitive是cesium核心api之一，与entity方式绘制方式(基于数据)不同，
@@ -3712,6 +3848,11 @@ export const addDiffShader = (viewer: any) => {
 
     // 圆扫描雷达
     // adddiff3(viewer);
+
+    // 扩散墙-todo 未完成
+    // adddiff4(viewer);
+
+    addOther1(viewer)
  
 }
 
