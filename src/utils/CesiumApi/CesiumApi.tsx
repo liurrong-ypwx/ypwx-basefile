@@ -17,6 +17,7 @@ import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
+import { LatheGeometry } from 'three';
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
@@ -45,9 +46,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
-        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
-        }),
+        // imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+        //     url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+        // }),
         // 导出为图片时，需要设置
         contextOptions: {
             webgl: {
@@ -64,10 +65,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 演示1：三维地形图
         // terrainProvider: Cesium.createWorldTerrain()
-        // terrainProvider: Cesium.createWorldTerrain({
-            // requestVertexNormals:true,
+        terrainProvider: Cesium.createWorldTerrain({
+            requestVertexNormals:true, // 坡度可视化的必须勾选
             // requestWaterMask:true
-        // }),
+        }),
         // skyBox: new Cesium.SkyBox({
         //     sources: {
         //         positiveX: './Models/image/box.png',
@@ -186,7 +187,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        addTestBlueBuilding(viewer);
+        // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -236,7 +237,14 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addWaterPolygon(viewer)
 
         // 2021-04-27 粉刷匠 补充-自定义着色器
-        addDiffShader(viewer);
+        // addDiffShader(viewer);
+
+        // 2021-04-27 粉刷匠 补充-线管
+        // addPolylineVolume(viewer);
+
+        // 2021-04-28 粉刷匠 等高线
+        addContour(viewer);
+
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -3681,7 +3689,6 @@ export const adddiff2 = (viewer: any) => {
 
 }
 
-
 export const adddiff3 = (viewer: any) => {
     // 好像是需要关闭地形监测
     viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -3707,6 +3714,106 @@ export const addDiffShader = (viewer: any) => {
     // 圆扫描雷达
     // adddiff3(viewer);
  
+}
+
+// 2021-04-27 粉刷匠 补充-线管
+export const addPolylineVolume = (viewer: any) => {
+
+
+    function starPositions(arms: any, rOuter: any, rInner: any) {
+        var angle = Math.PI / arms;
+        var pos = [];
+        for (var i = 0; i < 2 * arms; i++) {
+          var r = i % 2 === 0 ? rOuter : rInner;
+          var p = new Cesium.Cartesian2(
+            Math.cos(i * angle) * r,
+            Math.sin(i * angle) * r
+          );
+          pos.push(p);
+        }
+        return pos;
+      }
+
+
+    viewer.entities.add({
+        polylineVolume: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                -102.0,
+                15.0,
+                100000.0,
+                -105.0,
+                20.0,
+                200000.0,
+                -110.0,
+                20.0,
+                100000.0,
+            ]),
+            shape: starPositions(7, 30000.0, 20000.0),
+            outline: true,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 1,
+            material: Cesium.Color.fromRandom({ alpha: 1.0 }),
+        },
+    });
+}
+
+// 2021-04-28 粉刷匠 添加等高线
+export const addContour = (viewer: any) => {
+    // 基础篇
+    // let contourUniforms: any = {};
+    // const material = Cesium.Material.fromType('ElevationContour');
+    // contourUniforms = material.uniforms;
+    // contourUniforms.width = 2.0; // 线宽
+    // contourUniforms.spacing = 150.0; // 间距
+    // contourUniforms.color = Cesium.Color.fromRandom({ alpha: 1.0 }, Cesium.Color.RED.clone()); // 颜色
+    // viewer.scene.globe.material = material;
+
+    // 高能篇
+    let viewModel = {
+        gradient: false,
+        band1Position: 7000.0,
+        band2Position: 7500.0,
+        band3Position: 8000.0,
+        bandThickness: 100.0,
+        bandTransparency: 0.5,
+        backgroundTransparency: 0.75,
+    };
+
+    let gradient = Boolean(viewModel.gradient);
+    let band1Position = Number(viewModel.band1Position);
+    let band2Position = Number(viewModel.band2Position);
+    let band3Position = Number(viewModel.band3Position);
+    let bandThickness = Number(viewModel.bandThickness);
+    let bandTransparency = Number(viewModel.bandTransparency);
+    let backgroundTransparency = Number(viewModel.backgroundTransparency);
+
+    let layers:any = [];
+    let backgroundLayer = {
+      entries: [
+        {
+          height: 4200.0,
+          color: new Cesium.Color(0.0, 0.0, 0.2, backgroundTransparency),
+        },
+        {
+          height: 8000.0,
+          color: new Cesium.Color(1.0, 1.0, 1.0, backgroundTransparency),
+        },
+        {
+          height: 8500.0,
+          color: new Cesium.Color(1.0, 0.0, 0.0, backgroundTransparency),
+        },
+      ],
+      extendDownwards: true,
+      extendUpwards: true,
+    };
+    layers.push(backgroundLayer);
+ 
+    // 官网是使用的例子为 Cesium.createElevationBandMaterial，而这个版本并没有
+    let material = Cesium.createElevationBandMaterial({
+        scene: viewer.scene,
+        layers: layers,
+    });
+    viewer.scene.globe.material = material;
 }
 
 // 添加geoserver发布的wmts服务

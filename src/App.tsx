@@ -51,7 +51,7 @@ function App() {
             <Route path={"/overview"} exact={true} component={Overview} />
             <Route path={"/startgis"} exact={true} component={StartGIS} />
           </GIS>
-          <Redirect from="/" to={"/gis"} />
+          <Redirect from="/" to={"/gis"} />  
 
         </Switch>
       </BrowserRouter>
