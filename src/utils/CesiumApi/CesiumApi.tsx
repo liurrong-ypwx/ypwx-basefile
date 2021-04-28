@@ -17,7 +17,6 @@ import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
-import { LatheGeometry } from 'three';
 
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
@@ -242,8 +241,8 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-04-27 粉刷匠 补充-线管
         // addPolylineVolume(viewer);
 
-        // 2021-04-28 粉刷匠 等高线
-        addContour(viewer);
+        // 2021-04-28 粉刷匠 等高线 注意升级到cesium1.8
+        // addContour(viewer);
 
 
         // 添加一个glb模型
@@ -3807,8 +3806,126 @@ export const addContour = (viewer: any) => {
       extendUpwards: true,
     };
     layers.push(backgroundLayer);
+
+    let gridStartHeight = 4200.0;
+    let gridEndHeight = 8848.0;
+    let gridCount = 50;
+
+    for (let i = 0; i < gridCount; i++) {
+        let lerper = i / (gridCount - 1);
+        let heightBelow = Cesium.Math.lerp(
+            gridStartHeight,
+            gridEndHeight,
+            lerper
+        );
+        let heightAbove = heightBelow + 10.0;
+        let alpha =
+            Cesium.Math.lerp(0.2, 0.4, lerper) * backgroundTransparency;
+        layers.push({
+            entries: [
+                {
+                    height: heightBelow,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+                },
+                {
+                    height: heightAbove,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+                },
+            ],
+        });
+    }
+    
+    let antialias = Math.min(10.0, bandThickness * 0.1);
+    if (!gradient) {
+        let band1 = {
+            entries: [
+                {
+                    height: band1Position - bandThickness * 0.5 - antialias,
+                    color: new Cesium.Color(0.0, 0.0, 1.0, 0.0),
+                },
+                {
+                    height: band1Position - bandThickness * 0.5,
+                    color: new Cesium.Color(0.0, 0.0, 1.0, bandTransparency),
+                },
+                {
+                    height: band1Position + bandThickness * 0.5,
+                    color: new Cesium.Color(0.0, 0.0, 1.0, bandTransparency),
+                },
+                {
+                    height: band1Position + bandThickness * 0.5 + antialias,
+                    color: new Cesium.Color(0.0, 0.0, 1.0, 0.0),
+                },
+            ],
+        };
+
+        let band2 = {
+            entries: [
+                {
+                    height: band2Position - bandThickness * 0.5 - antialias,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, 0.0),
+                },
+                {
+                    height: band2Position - bandThickness * 0.5,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, bandTransparency),
+                },
+                {
+                    height: band2Position + bandThickness * 0.5,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, bandTransparency),
+                },
+                {
+                    height: band2Position + bandThickness * 0.5 + antialias,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, 0.0),
+                },
+            ],
+        };
+
+        let band3 = {
+            entries: [
+                {
+                    height: band3Position - bandThickness * 0.5 - antialias,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, 0.0),
+                },
+                {
+                    height: band3Position - bandThickness * 0.5,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, bandTransparency),
+                },
+                {
+                    height: band3Position + bandThickness * 0.5,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, bandTransparency),
+                },
+                {
+                    height: band3Position + bandThickness * 0.5 + antialias,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, 0.0),
+                },
+            ],
+        };
+
+        layers.push(band1);
+        layers.push(band2);
+        layers.push(band3);
+    } else {
+        let combinedBand = {
+            entries: [
+                {
+                    height: band1Position - bandThickness * 0.5,
+                    color: new Cesium.Color(0.0, 0.0, 1.0, bandTransparency),
+                },
+                {
+                    height: band2Position,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, bandTransparency),
+                },
+                {
+                    height: band3Position + bandThickness * 0.5,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, bandTransparency),
+                },
+            ],
+        };
+
+        layers.push(combinedBand);
+    }
+    
  
-    // 官网是使用的例子为 Cesium.createElevationBandMaterial，而这个版本并没有
+    // 官网是使用的例子为 Cesium.createElevationBandMaterial，而1.8版本才有,请注意升级
     let material = Cesium.createElevationBandMaterial({
         scene: viewer.scene,
         layers: layers,
