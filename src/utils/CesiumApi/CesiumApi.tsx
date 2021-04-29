@@ -233,7 +233,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addModelRotation(viewer); 
 
         // 2021-04-27 粉刷匠 补充-水面效果
-        addWaterPolygon(viewer)
+        // addWaterPolygon(viewer)
 
         // 2021-04-27-28 粉刷匠 补充-自定义着色器
         // addDiffShader(viewer);
@@ -243,6 +243,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-04-28 粉刷匠 等高线 注意升级到cesium1.8
         // addContour(viewer);
+
+        // 2021-04-28 粉刷匠 粒子效果
+        addParticel(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -3725,42 +3728,6 @@ export const adddiff4 = (viewer: any) => {
         modelMatrix: modelMatrix, //模型矩阵 调整矩阵的位置和方向
     });
 
-    let source =
-        //传入的动态数值
-        `uniform vec4 color; 
-uniform float repeat; 
-uniform float offset; 
-uniform float thickness;
-
-//设置图形外观材质
-czm_material czm_getMaterial(czm_materialInput materialInput){
-   czm_material material = czm_getDefaultMaterial(materialInput); //获取内置的默认材质
-   float sp = 1.0/repeat; //重复贴图
-   vec2 st = materialInput.st; //二维纹理坐标
-   float dis = distance(st, vec2(0.5)); //计算距离
-   float m = mod(dis + offset, sp); //间隔
-   float a = step(sp*(1.0-thickness), m);//线条拼色 
-   //修改材质
-   material.diffuse = color.rgb;
-   material.alpha = a * color.a;
-   return material;
-}`
-
-
-    let material = new Cesium.Material({
-        fabric: {
-            // type: 'VtxfShader1',
-            uniforms: { // 动态传递参数
-                color: Cesium.Color.WHITE.withAlpha(0.3),
-                repeat: 30.0,
-                offset: 0.0,
-                thickness: 0.3,
-            },
-            source: source
-        },
-        translucent: false
-    })
-
     let appearance = new Cesium.MaterialAppearance({
         // material: material,// 自定义的材质
         material:new Cesium.Material({
@@ -3795,44 +3762,6 @@ czm_material czm_getMaterial(czm_materialInput materialInput){
 
 }
 
-export const addOther1 = (viewer: any) => {
-    // var lon = 117.286419;
-    // var lat = 31.864436;
-    // const CartographicCenter = Cesium.Cartographic.fromDegrees(113.91, 22.50);
-
-    let tmpHeight = 0.0;
-    let minHeight = 0.0;
-    let maxHeight = 1000.0;
-    let tmpInterv = 1;
-
-    viewer.scene.globe.depthTestAgainstTerrain = true;
-    const polyPosition = new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray([
-        113.91, 22.50,
-        113.95, 22.50,
-        113.95, 22.55,
-        113.91, 22.55,
-    ]))
-    const tmpEntity = viewer.entities.add({
-        name: '多边形',
-        polygon: {
-            hierarchy: polyPosition,
-            perPositionHeight: true,            
-            extrudedHeight: new Cesium.CallbackProperty(() => {
-                if (tmpHeight > maxHeight) {
-                    tmpHeight = minHeight;
-                } else {
-                    tmpHeight += tmpInterv;
-                }
-                return tmpHeight;
-            }, false),
-            closeTop: false, // 这个要设置为false
-            closeBottom: false,
-            material: Cesium.Color.fromBytes(64, 157, 253, 150)
-        }
-    })
-
-}
-
 // 2021-04-27 粉刷匠 补充 图元自定义着色器
 export const addDiffShader = (viewer: any) => {
     // Primitive是cesium核心api之一，与entity方式绘制方式(基于数据)不同，
@@ -3851,8 +3780,6 @@ export const addDiffShader = (viewer: any) => {
 
     // 扩散墙-todo 未完成
     // adddiff4(viewer);
-
-    addOther1(viewer)
  
 }
 
@@ -4072,6 +3999,566 @@ export const addContour = (viewer: any) => {
         layers: layers,
     });
     viewer.scene.globe.material = material;
+}
+
+// 2021-04-28 粉刷匠 添加粒子
+export const addParticelFireWork = (viewer: any, scene: any) => {
+    Cesium.Math.setRandomNumberSeed(315);
+    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+        Cesium.Cartesian3.fromDegrees(113.91, 22.50)
+    )
+
+    const emitterInitialLocation = new Cesium.Cartesian3(0.0, 0.0, 100);
+    let particleCanvas: any = null;
+    function getImage() {
+        if (!Cesium.defined(particleCanvas)) {
+            particleCanvas = document.createElement('canvas');
+            particleCanvas.width = 20;
+            particleCanvas.height = 20;
+            const context2D = particleCanvas.getContext('2d');
+            context2D.beginPath();
+            context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
+            context2D.closePath();
+            context2D.fillStyle = 'rgb(255,255,255)';
+            context2D.fill();
+        }
+        return particleCanvas;
+    }
+
+    const minimumExplosionSize = 30.0;
+    const maximumExplosionSize = 100.0;
+    const particlePixelSize = new Cesium.Cartesian2(7.0, 7.0);
+    const burstSize = 400.0;
+    const lifetime = 10.0;
+    const numberOfFireworks = 20.0;
+
+    let emitterModelMatrixScratch = new Cesium.Matrix4();
+    function createFirework(offset: any, color: any, bursts: any) {
+        let position = Cesium.Cartesian3.add(
+            emitterInitialLocation,
+            offset,
+            new Cesium.Cartesian3()
+        );
+        let emitterModelMatrix = Cesium.Matrix4.fromTranslation(
+            position,
+            emitterModelMatrixScratch
+        );
+        let particleToWorld = Cesium.Matrix4.multiply(
+            modelMatrix,
+            emitterModelMatrix,
+            new Cesium.Matrix4()
+        );
+        let worldToParticle = Cesium.Matrix4.inverseTransformation(
+            particleToWorld,
+            particleToWorld
+        );
+        let size = Cesium.Math.randomBetween(
+            minimumExplosionSize,
+            maximumExplosionSize
+        );
+        var particlePositionScratch = new Cesium.Cartesian3();
+        var force = function (particle: any) {
+            var position = Cesium.Matrix4.multiplyByPoint(
+                worldToParticle,
+                particle.position,
+                particlePositionScratch
+            );
+            if (Cesium.Cartesian3.magnitudeSquared(position) >= size * size) {
+                Cesium.Cartesian3.clone(
+                    Cesium.Cartesian3.ZERO,
+                    particle.velocity
+                );
+            }
+        };
+
+        var normalSize =
+            (size - minimumExplosionSize) /
+            (maximumExplosionSize - minimumExplosionSize);
+        var minLife = 0.3;
+        var maxLife = 1.0;
+        var life = normalSize * (maxLife - minLife) + minLife;
+
+        scene.primitives.add(
+            new Cesium.ParticleSystem({
+                image: getImage(),
+                startColor: color,
+                endColor: color.withAlpha(0.0),
+                particleLife: life,
+                speed: 100.0,
+                imageSize: particlePixelSize,
+                emissionRate: 0,
+                emitter: new Cesium.SphereEmitter(0.1),
+                bursts: bursts,
+                lifetime: lifetime,
+                updateCallback: force,
+                modelMatrix: modelMatrix,
+                emitterModelMatrix: emitterModelMatrix,
+            })
+        );
+
+
+    }
+
+    let xMin = -100.0;
+    let xMax = 100.0;
+    let yMin = -80.0;
+    let yMax = 100.0;
+    let zMin = -50.0;
+    let zMax = 50.0;
+
+    let colorOptions = [
+        {
+            minimumRed: 0.75,
+            green: 0.0,
+            minimumBlue: 0.8,
+            alpha: 1.0,
+        },
+        {
+            red: 0.0,
+            minimumGreen: 0.75,
+            minimumBlue: 0.8,
+            alpha: 1.0,
+        },
+        {
+            red: 0.0,
+            green: 0.0,
+            minimumBlue: 0.8,
+            alpha: 1.0,
+        },
+        {
+            minimumRed: 0.75,
+            minimumGreen: 0.75,
+            blue: 0.0,
+            alpha: 1.0,
+        },
+    ];
+
+    for (let i = 0; i < numberOfFireworks; ++i) {
+        let x = Cesium.Math.randomBetween(xMin, xMax);
+        let y = Cesium.Math.randomBetween(yMin, yMax);
+        let z = Cesium.Math.randomBetween(zMin, zMax);
+        let offset = new Cesium.Cartesian3(x, y, z);
+        let color = Cesium.Color.fromRandom(
+            colorOptions[i % colorOptions.length]
+        );
+
+        let bursts = [];
+        for (let j = 0; j < 3; ++j) {
+            bursts.push(
+                new Cesium.ParticleBurst({
+                    time: Cesium.Math.nextRandomNumber() * lifetime,
+                    minimum: burstSize,
+                    maximum: burstSize,
+                })
+            );
+        }
+
+        createFirework(offset, color, bursts);
+    }
+}
+
+// 2021-04-28 粉刷匠 添加粒子
+export const addParticelEimm = (viewer: any) => {
+    const particlesOffset = new Cesium.Cartesian3(
+        -8.950115473940969,
+        34.852766731753945,
+        -30.235411095432937
+    );
+    let particleCanvas: any = null;
+    function getImage() {
+        if (!Cesium.defined(particleCanvas)) {
+            particleCanvas = document.createElement("canvas");
+            particleCanvas.width = 20;
+            particleCanvas.height = 20;
+            const context2D = particleCanvas.getContext("2d");
+            context2D.beginPath();
+            context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
+            context2D.closePath();
+            context2D.fillStyle = "rgb(255, 255, 255)";
+            context2D.fill();
+        }
+        return particleCanvas;
+    }
+
+    // creating particles model matrix
+    let planePosition = Cesium.Cartesian3.fromDegrees(
+        113.91, 22.50, 800.0
+    );
+    let translationOffset = Cesium.Matrix4.fromTranslation(
+        particlesOffset,
+        new Cesium.Matrix4()
+    );
+    let translationOfPlane = Cesium.Matrix4.fromTranslation(
+        planePosition,
+        new Cesium.Matrix4()
+    );
+    let particlesModelMatrix = Cesium.Matrix4.multiplyTransformation(
+        translationOfPlane,
+        translationOffset,
+        new Cesium.Matrix4()
+    );
+
+    let rocketOptions = {
+        numberOfSystems: 50.0,
+        iterationOffset: 0.1,
+        cartographicStep: 0.000001,
+        baseRadius: 0.0005,
+
+        colorOptions: [
+            {
+                minimumRed: 1.0,
+                green: 0.5,
+                minimumBlue: 0.05,
+                alpha: 1.0,
+            },
+            {
+                red: 0.9,
+                minimumGreen: 0.6,
+                minimumBlue: 0.01,
+                alpha: 1.0,
+            },
+            {
+                red: 0.8,
+                green: 0.05,
+                minimumBlue: 0.09,
+                alpha: 1.0,
+            },
+            {
+                minimumRed: 1,
+                minimumGreen: 0.05,
+                blue: 0.09,
+                alpha: 1.0,
+            },
+        ],
+    };
+
+    let cometOptions = {
+        numberOfSystems: 100.0,
+        iterationOffset: 0.003,
+        cartographicStep: 0.0000001,
+        baseRadius: 0.0005,
+
+        colorOptions: [
+            {
+                red: 0.6,
+                green: 0.6,
+                blue: 0.6,
+                alpha: 1.0,
+            },
+            {
+                red: 0.6,
+                green: 0.6,
+                blue: 0.9,
+                alpha: 0.9,
+            },
+            {
+                red: 0.5,
+                green: 0.5,
+                blue: 0.7,
+                alpha: 0.5,
+            },
+        ],
+    };
+
+    let scratchCartesian3 = new Cesium.Cartesian3();
+    let scratchCartographic = new Cesium.Cartographic();
+    let forceFunction = function (options: any, iteration: any) {
+        return function (particle: any, dt: any) {
+            dt = Cesium.Math.clamp(dt, 0.0, 0.05);
+
+            scratchCartesian3 = Cesium.Cartesian3.normalize(
+                particle.position,
+                new Cesium.Cartesian3()
+            );
+            scratchCartesian3 = Cesium.Cartesian3.multiplyByScalar(
+                scratchCartesian3,
+                -40.0 * dt,
+                scratchCartesian3
+            );
+
+            scratchCartesian3 = Cesium.Cartesian3.add(
+                particle.position,
+                scratchCartesian3,
+                scratchCartesian3
+            );
+
+            scratchCartographic = Cesium.Cartographic.fromCartesian(
+                scratchCartesian3,
+                Cesium.Ellipsoid.WGS84,
+                scratchCartographic
+            );
+
+            var angle =
+                (Cesium.Math.PI * 2.0 * iteration) / options.numberOfSystems;
+            iteration += options.iterationOffset;
+            scratchCartographic.longitude +=
+                Math.cos(angle) * options.cartographicStep * 30.0 * dt;
+            scratchCartographic.latitude +=
+                Math.sin(angle) * options.cartographicStep * 30.0 * dt;
+
+            particle.position = Cesium.Cartographic.toCartesian(
+                scratchCartographic
+            );
+        };
+    };
+
+    let matrix4Scratch = new Cesium.Matrix4();
+    let scratchAngleForOffset = 0.0;
+    let scratchOffset = new Cesium.Cartesian3();
+    let imageSize = new Cesium.Cartesian2(15.0, 15.0);
+    function createParticleSystems(options:any, systemsArray:any) {
+        let length = options.numberOfSystems;
+        for (let i = 0; i < length; ++i) {
+            scratchAngleForOffset =
+                (Math.PI * 2.0 * i) / options.numberOfSystems;
+            scratchOffset.x +=
+                options.baseRadius * Math.cos(scratchAngleForOffset);
+            scratchOffset.y +=
+                options.baseRadius * Math.sin(scratchAngleForOffset);
+
+            let emitterModelMatrix = Cesium.Matrix4.fromTranslation(
+                scratchOffset,
+                matrix4Scratch
+            );
+            let color = Cesium.Color.fromRandom(
+                options.colorOptions[i % options.colorOptions.length]
+            );
+            let force = forceFunction(options, i);
+
+            let item = viewer.scene.primitives.add(
+                new Cesium.ParticleSystem({
+                    image: getImage(),
+                    startColor: color,
+                    endColor: color.withAlpha(0.0),
+                    particleLife: 3.5,
+                    speed: 0.00005,
+                    imageSize: imageSize,
+                    emissionRate: 30.0,
+                    emitter: new Cesium.CircleEmitter(0.1),
+                    lifetime: 0.1,
+                    updateCallback: force,
+                    modelMatrix: particlesModelMatrix,
+                    emitterModelMatrix: emitterModelMatrix,
+                })
+            );
+            systemsArray.push(item);
+        }
+    }
+
+    let rocketSystems:any = [];
+    createParticleSystems(rocketOptions, rocketSystems);
+    // let cometSystems:any = [];
+    // createParticleSystems(cometOptions, cometSystems);
+
+    if(cometOptions){
+        // 
+    }
+
+
+
+}
+
+// 2021-04-28 粉刷匠 添加粒子
+export const addParticelCar = (viewer: any, scene: any) => {
+    //Set the random number seed for consistent results.
+    Cesium.Math.setRandomNumberSeed(3);
+    //Set bounds of our simulation time
+    let start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+    let stop = Cesium.JulianDate.addSeconds(
+        start,
+        120,
+        new Cesium.JulianDate()
+    );
+
+    //Make sure viewer is at the desired time.
+    viewer.clock.startTime = start.clone();
+    viewer.clock.stopTime = stop.clone();
+    viewer.clock.currentTime = start.clone();
+    viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
+    viewer.clock.multiplier = 1;
+    viewer.clock.shouldAnimate = true;
+
+    //Set timeline to simulation bounds
+    viewer.timeline.zoomTo(start, stop);
+
+    let viewModel:any = {
+        emissionRate: 5.0,
+        gravity: 0.0,
+        minimumParticleLife: 1.2,
+        maximumParticleLife: 1.2,
+        minimumSpeed: 1.0,
+        maximumSpeed: 4.0,
+        startScale: 1.0,
+        endScale: 5.0,
+        particleSize: 25.0,
+    };
+
+    let entityPosition = new Cesium.Cartesian3();
+    let entityOrientation = new Cesium.Quaternion();
+    let rotationMatrix = new Cesium.Matrix3();
+    let modelMatrix = new Cesium.Matrix4();
+
+    function computeModelMatrix(entity: any, time: any) {
+        return entity.computeModelMatrix(time, new Cesium.Matrix4());
+    }
+
+    let emitterModelMatrix = new Cesium.Matrix4();
+    let translation = new Cesium.Cartesian3();
+    let rotation = new Cesium.Quaternion();
+    let hpr = new Cesium.HeadingPitchRoll();
+    let trs = new Cesium.TranslationRotationScale();
+
+    function computeEmitterModelMatrix() {
+        hpr = Cesium.HeadingPitchRoll.fromDegrees(0.0, 0.0, 0.0, hpr);
+        trs.translation = Cesium.Cartesian3.fromElements(
+            -4.0,
+            0.0,
+            1.4,
+            translation
+        );
+        trs.rotation = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
+
+        return Cesium.Matrix4.fromTranslationRotationScale(
+            trs,
+            emitterModelMatrix
+        );
+    }
+
+    let pos1 = Cesium.Cartesian3.fromDegrees(
+        113.91, 22.50
+    );
+    let pos2 = Cesium.Cartesian3.fromDegrees(
+        113.91, 22.55
+    );
+    let position = new Cesium.SampledPositionProperty();
+
+    position.addSample(start, pos1);
+    position.addSample(stop, pos2);
+
+    let entity = viewer.entities.add({
+        availability: new Cesium.TimeIntervalCollection([
+            new Cesium.TimeInterval({
+                start: start,
+                stop: stop,
+            }),
+        ]),
+        model: {
+            uri: "./Models/Cesium_Air.glb",
+            minimumPixelSize: 64,
+        },
+        viewFrom: new Cesium.Cartesian3(-100.0, 0.0, 100.0),
+        position: position,
+        orientation: new Cesium.VelocityOrientationProperty(position),
+    });
+    // viewer.trackedEntity = entity;
+
+    // var scene = viewer.scene;
+    let particleSystem = scene.primitives.add(
+        new Cesium.ParticleSystem({
+            image: "./Models/image/partical.png",
+
+            startColor: Cesium.Color.LIGHTSEAGREEN.withAlpha(0.7),
+            endColor: Cesium.Color.WHITE.withAlpha(0.0),
+
+            startScale: viewModel.startScale,
+            endScale: viewModel.endScale,
+
+            minimumParticleLife: viewModel.minimumParticleLife,
+            maximumParticleLife: viewModel.maximumParticleLife,
+
+            minimumSpeed: viewModel.minimumSpeed,
+            maximumSpeed: viewModel.maximumSpeed,
+
+            imageSize: new Cesium.Cartesian2(
+                viewModel.particleSize,
+                viewModel.particleSize
+            ),
+
+            emissionRate: viewModel.emissionRate,
+
+            bursts: [
+                // these burst will occasionally sync to create a multicolored effect
+                new Cesium.ParticleBurst({
+                    time: 5.0,
+                    minimum: 10,
+                    maximum: 100,
+                }),
+                new Cesium.ParticleBurst({
+                    time: 10.0,
+                    minimum: 50,
+                    maximum: 100,
+                }),
+                new Cesium.ParticleBurst({
+                    time: 15.0,
+                    minimum: 200,
+                    maximum: 300,
+                }),
+            ],
+
+            lifetime: 16.0,
+
+            emitter: new Cesium.CircleEmitter(2.0),
+
+            emitterModelMatrix: computeEmitterModelMatrix(),
+
+            updateCallback: applyGravity,
+        })
+    );
+
+    let gravityScratch = new Cesium.Cartesian3();
+
+    function applyGravity(p: any, dt: any) {
+        // We need to compute a local up vector for each particle in geocentric space.
+        let position = p.position;
+
+        Cesium.Cartesian3.normalize(position, gravityScratch);
+        Cesium.Cartesian3.multiplyByScalar(
+            gravityScratch,
+            viewModel.gravity * dt,
+            gravityScratch
+        );
+
+        p.velocity = Cesium.Cartesian3.add(
+            p.velocity,
+            gravityScratch,
+            p.velocity
+        );
+    }
+
+    viewer.scene.preUpdate.addEventListener(function (scene: any, time: any) {
+        particleSystem.modelMatrix = computeModelMatrix(entity, time);
+
+        // Account for any changes to the emitter model matrix.
+        particleSystem.emitterModelMatrix = computeEmitterModelMatrix();
+
+        // Spin the emitter if enabled.
+        if (viewModel.spin) {
+            viewModel.heading += 1.0;
+            viewModel.pitch += 1.0;
+            viewModel.roll += 1.0;
+        }
+    });
+
+    if (entityPosition && entityOrientation && rotationMatrix && modelMatrix) {
+        // 
+    }
+
+}
+
+// 2021-04-28 粉刷匠 添加粒子
+export const addParticel = (viewer: any) => {
+    viewer.clock.shouldAnimate = true;
+    const scene = viewer.scene;
+
+    // 放烟花
+    // addParticelFireWork(viewer, scene);
+
+    // 喷雾
+    // addParticelEimm(viewer)
+
+    // 汽车尾气
+    addParticelCar(viewer, scene);
+
 }
 
 // 添加geoserver发布的wmts服务
