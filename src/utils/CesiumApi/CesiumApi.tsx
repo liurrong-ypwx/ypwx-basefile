@@ -154,10 +154,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        // setExtent(viewer);
+        setExtent(viewer);
 
         // 添加不同的地图底图
-        // addDiffBaseMap(viewer, "arcgis");
+        addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -188,7 +188,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -253,7 +253,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addExpandCylinder(viewer);
 
         // 2021-05-12 粉刷匠 风向图
-        addWindMap(viewer);
+        // addWindMap(viewer);
+
+        // 2021-05-12 粉刷匠 添加日照光阴影 
+        // addSunShadow(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -322,7 +325,8 @@ export const addDiffBaseMap = (viewer: any, type?: string) => {
         );
     } else if (type === "arcgis") {
         viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+            // url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+            url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetGray/MapServer'
         }))
     } else if (type === "geoserver") {
         // wms地图服务
@@ -4835,6 +4839,15 @@ export const addWindMap = (viewer: any) => {
     // 
     new Wind3D(viewer);
 };
+
+// 2021-05-12 粉刷匠 添加日照光阴影
+export const addSunShadow = (viewer: any) => {
+    viewer.scene.globe.enableLighting = true;
+    viewer.shadows = true;
+    // 有时候需要看一天的阴影变化，可以通过设置时间的方法，示例如下，注意北京东八区
+    const utc = Cesium.JulianDate.fromDate(new Date("2021/01/01 00:00:00"));// UTC
+    viewer.clockViewModel.currentTime = Cesium.JulianDate.addHours(utc, 8, new Cesium.JulianDate());//北京时间=UTC+8=GMT+8
+}
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
