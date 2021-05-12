@@ -18,6 +18,7 @@ import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
 
+
 window.CESIUM_BASE_URL = './cesium/';
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
@@ -245,7 +246,13 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addContour(viewer);
 
         // 2021-04-28 粉刷匠 粒子效果
-        addParticel(viewer);
+        // addParticel(viewer);
+
+        // 2021-05-012 粉刷匠 添加一个扩散圆柱-成功
+        // addExpandCylinder(viewer);
+
+        // 2021-05-12 粉刷匠 风向图
+        addWindMap(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -3509,6 +3516,7 @@ export const addWaterPolygon = (viewer: any) => {
     }))
 }
 
+
 export const adddiff1 = (viewer: any) => {
     // 雷达的高度
     const length = 4000.0;
@@ -4560,6 +4568,273 @@ export const addParticel = (viewer: any) => {
     addParticelCar(viewer, scene);
 
 }
+
+// 2021-05-07 粉刷匠 添加扩散的线及圆柱
+export const addExpandCylindert = (viewer: any) => {
+
+    const centerPoint = [113.925, 22.525];
+    let sigDeep = 0.0;
+    let polyline: any = null;
+
+    let positions: any = [
+        // Cesium.Cartesian3.fromDegrees(centerPoint[0] - sigDeep, centerPoint[1] - sigDeep),
+        // Cesium.Cartesian3.fromDegrees(centerPoint[0] + sigDeep, centerPoint[1] - sigDeep),
+        // Cesium.Cartesian3.fromDegrees(centerPoint[0] + sigDeep, centerPoint[1] + sigDeep),
+        // Cesium.Cartesian3.fromDegrees(centerPoint[0] - sigDeep, centerPoint[1] + sigDeep),
+        // Cesium.Cartesian3.fromDegrees(centerPoint[0] - sigDeep, centerPoint[1] - sigDeep),
+
+        centerPoint[0] - sigDeep, centerPoint[1] - sigDeep,
+        centerPoint[0] + sigDeep, centerPoint[1] - sigDeep,
+        centerPoint[0] + sigDeep, centerPoint[1] + sigDeep,
+        centerPoint[0] - sigDeep, centerPoint[1] + sigDeep,
+        centerPoint[0] - sigDeep, centerPoint[1] - sigDeep,
+    ];
+
+    setInterval(() => {
+        updatePosition();
+    }, 100);
+
+
+    function updatePosition() {
+
+        // sigDeep = sigDeep > 0.10 ? 0.0 : sigDeep + 0.001;
+        sigDeep = sigDeep > 0.07 ? 0.0 : sigDeep + 0.0005;
+
+        if (!Cesium.defined(polyline)) {
+            // polyline = new PolyLinePrimitive(positions);
+            polyline = new WallPrimitive(positions);
+        } else {
+            // positions[0] = Cesium.Cartesian3.fromDegrees(centerPoint[0] - sigDeep, centerPoint[1] - sigDeep);
+            // positions[1] = Cesium.Cartesian3.fromDegrees(centerPoint[0] + sigDeep, centerPoint[1] - sigDeep);
+            // positions[2] = Cesium.Cartesian3.fromDegrees(centerPoint[0] + sigDeep, centerPoint[1] + sigDeep);
+            // positions[3] = Cesium.Cartesian3.fromDegrees(centerPoint[0] - sigDeep, centerPoint[1] + sigDeep);
+            // positions[4] = Cesium.Cartesian3.fromDegrees(centerPoint[0] - sigDeep, centerPoint[1] - sigDeep);
+
+            positions[0] = centerPoint[0] - sigDeep;
+            positions[1] = centerPoint[1] - sigDeep;
+            positions[2] = centerPoint[0] + sigDeep;
+            positions[3] = centerPoint[1] - sigDeep;
+            positions[4] = centerPoint[0] + sigDeep;
+            positions[5] = centerPoint[1] + sigDeep;
+            positions[6] = centerPoint[0] - sigDeep;
+            positions[7] = centerPoint[1] + sigDeep;
+            positions[8] = centerPoint[0] - sigDeep;
+            positions[9] = centerPoint[1] - sigDeep; 
+            
+        }
+
+    }
+   
+                  
+
+
+    // const PolyLinePrimitive: any = (function () {
+    //     function _(this: any, positions: any) {
+    //         const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+    //         // console.log(tmpId);
+    //         this.options = {
+    //             id: "draw_Clip_Line" + tmpId,
+    //             name: '直线',
+    //             polyline: {
+    //                 show: true,
+    //                 positions: [],
+    //                 material: Cesium.Color.CHARTREUSE,
+    //                 width: 7,
+    //                 clampToGround: true
+    //             }
+    //         };
+    //         this.positions = positions;
+    //         this._init();
+    //     }
+
+    //     _.prototype._init = function () {
+    //         var _self = this;
+    //         // 当可以画矩形的时候，把线的postion设置为 undefined
+    //         var _update = function () {
+    //             return  _self.positions;
+    //         };
+    //         // 实时更新polyline.positions
+    //         this.options.polyline.positions = new Cesium.CallbackProperty(_update, false);
+    //         const tmpEntity = viewer.entities.add(this.options);
+    //         if (tmpEntity) {
+    //             entityDrawArr.push(tmpEntity);
+    //         }
+    //     };
+
+    //     return _;
+    // })();
+    const WallPrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            // console.log(tmpId);
+            this.options = {
+                id: "expand_wall" + tmpId,
+                name: '这是个墙',
+                // polyline: {
+                //     show: true,
+                //     positions: [],
+                //     material: Cesium.Color.CHARTREUSE,
+                //     width: 7,
+                //     clampToGround: true
+                // }
+                wall: {
+                    positions: [],
+                    minimumHeights: [10.0, 10.0, 10.0, 10.0, 10.0],
+                    maximumHeights: [1000.0, 1000.0, 1000.0, 1000.0, 1000.0],
+                    material: new Cesium.ImageMaterialProperty({
+                        image: "./Models/image/wall.png",
+                        transparent: true
+                    })
+                    // outline: true,
+                }
+            };
+            this.positions = positions;
+            this._init();
+        }
+
+        _.prototype._init = function () {
+            var _self = this;
+            // 当可以画矩形的时候，把线的postion设置为 undefined
+            var _update = function () {
+                return _self.positions ? Cesium.Cartesian3.fromDegreesArray(_self.positions) : undefined;
+            };
+            // 实时更新polyline.positions
+            this.options.wall.positions = new Cesium.CallbackProperty(_update, false);
+            const tmpEntity = viewer.entities.add(this.options);
+            if (tmpEntity) {
+                entityDrawArr.push(tmpEntity);
+            }
+        };
+
+        return _;
+    })();
+
+ 
+
+
+    // setInterval(() => {
+    //     addNewWall();
+    // }, 500);
+
+    // let sigWall: any = null;
+    // let sigDeep = 0.0;
+    // function addNewWall() {
+    //     if (sigWall) {
+    //         viewer.entities.remove(sigWall)//删除entity
+    //     }
+    //     sigWall = viewer.entities.add({
+    //         name: "test wall",
+    //         wall: {
+    //             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+    //                 centerPoint[0] - sigDeep, centerPoint[1] - sigDeep, 0.0,
+    //                 centerPoint[0] + sigDeep, centerPoint[1] - sigDeep, 0.0,
+    //                 centerPoint[0] + sigDeep, centerPoint[1] + sigDeep, 0.0,
+    //                 centerPoint[0] - sigDeep, centerPoint[1] + sigDeep, 0.0,
+    //                 centerPoint[0] - sigDeep, centerPoint[1] - sigDeep, 0.0,
+    //                 // 113.95, 22.50, 0.0,
+    //                 // 113.95, 22.55, 0.0,
+    //                 // 113.90, 22.55, 0.0,
+    //                 // 113.90, 22.50, 0.0,
+    //             ]),
+    //             minimumHeights: [10.0, 10.0, 10.0, 10.0, 10.0],
+    //             maximumHeights: [1000.0, 1000.0, 1000.0, 1000.0, 1000.0],
+    //             // maximumHeights: new Cesium.CallbackProperty(changeR1, false),
+    //             material: new Cesium.ImageMaterialProperty({
+    //                 image: getColorRamp([0, 0, 0, 0, 0, 0.54, 1.0], true),
+    //                 transparent: true
+    //             })
+    //             // outline: true,
+    //         }
+    //     })
+
+    //     sigDeep = sigDeep > 0.25 ? 0.0 : sigDeep + 0.01;
+    // }
+
+}
+
+// 2021-05-12 粉刷匠 添加扩散圆柱--成功
+export const addExpandCylinder = (viewer: any) => {
+
+    const centerPoint = [113.925, 22.525];
+    let sigDeep = 0.0;
+    let wall: any = null;
+
+    let positions: any = [
+        centerPoint[0] - sigDeep, centerPoint[1] - sigDeep,
+        centerPoint[0] + sigDeep, centerPoint[1] - sigDeep,
+        centerPoint[0] + sigDeep, centerPoint[1] + sigDeep,
+        centerPoint[0] - sigDeep, centerPoint[1] + sigDeep,
+        centerPoint[0] - sigDeep, centerPoint[1] - sigDeep,
+    ];
+
+    setInterval(() => {
+        updatePosition();
+    }, 100);
+
+
+    function updatePosition() {
+
+        sigDeep = sigDeep > 0.07 ? 0.0 : sigDeep + 0.0005;
+
+        if (!Cesium.defined(wall)) {
+            wall = new WallPrimitive(positions);
+        } else {
+            positions[0] = centerPoint[0] - sigDeep;
+            positions[1] = centerPoint[1] - sigDeep;
+            positions[2] = centerPoint[0] + sigDeep;
+            positions[3] = centerPoint[1] - sigDeep;
+            positions[4] = centerPoint[0] + sigDeep;
+            positions[5] = centerPoint[1] + sigDeep;
+            positions[6] = centerPoint[0] - sigDeep;
+            positions[7] = centerPoint[1] + sigDeep;
+            positions[8] = centerPoint[0] - sigDeep;
+            positions[9] = centerPoint[1] - sigDeep;
+        }
+
+    }
+
+
+    const WallPrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            // console.log(tmpId);
+            this.options = {
+                id: "expand_wall" + tmpId,
+                name: '这是个墙',
+                wall: {
+                    positions: [],
+                    minimumHeights: [10.0, 10.0, 10.0, 10.0, 10.0],
+                    maximumHeights: [1000.0, 1000.0, 1000.0, 1000.0, 1000.0],
+                    material: new Cesium.ImageMaterialProperty({
+                        image: "./Models/image/wall.png",
+                        transparent: true
+                    })
+                }
+            };
+            this.positions = positions;
+            this._init();
+        }
+
+        _.prototype._init = function () {
+            var _self = this;
+            var _update = function () {
+                return _self.positions ? Cesium.Cartesian3.fromDegreesArray(_self.positions) : undefined;
+            };
+            // 更新positions
+            this.options.wall.positions = new Cesium.CallbackProperty(_update, false);
+            viewer.entities.add(this.options);
+        };
+
+        return _;
+    })();
+}
+
+// 2021-05-12 粉刷匠 添加云图
+export const addWindMap = (viewer: any) => {
+    // 
+};
+
+// ---------------------------------------------------------------------------------------------------------------------------------------
 
 // 添加geoserver发布的wmts服务
 export const addWmtsLayer = (viewer: any) => {
