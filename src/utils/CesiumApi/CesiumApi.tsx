@@ -17,6 +17,7 @@ import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
+import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';
 
 
 window.CESIUM_BASE_URL = './cesium/';
@@ -153,7 +154,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        setExtent(viewer);
+        // setExtent(viewer);
 
         // 添加不同的地图底图
         // addDiffBaseMap(viewer, "arcgis");
@@ -4832,6 +4833,7 @@ export const addExpandCylinder = (viewer: any) => {
 // 2021-05-12 粉刷匠 添加云图
 export const addWindMap = (viewer: any) => {
     // 
+    new Wind3D(viewer);
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
