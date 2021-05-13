@@ -3,6 +3,7 @@ import "./ChBuild.less";
 import * as CesiumApi from "../../../utils/CesiumApi/CesiumApi";
 import { titleList } from "./TuCao";
 import { message, Popover } from "antd";
+import echarts from "echarts";
 
 let cordX: any = null;
 let cordY: any = null;
@@ -19,6 +20,8 @@ function ChBuild(): JSX.Element {
     useEffect(() => {
         const tmpView = CesiumApi.initMap("cesiumContainer", true);
         setOrgView(tmpView);
+
+        drawEchartQxt();
     }, [])
 
     useEffect(() => {
@@ -136,6 +139,24 @@ function ChBuild(): JSX.Element {
         }
     }
 
+    // 2021-05-13 粉刷匠 画迁徙图
+    const drawEchartQxt = () => {
+        const tmpEl: any = document.getElementById('echart-qxt');
+        const myChart = echarts.init(tmpEl);
+        myChart.setOption({
+            xAxis: {
+                type: 'category',
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: [820, 932, 901, 934, 1290, 1330, 1320],
+                type: 'line'
+            }]
+        });
+    }
 
     // 书签
     const content = (
@@ -194,6 +215,8 @@ function ChBuild(): JSX.Element {
 
             </div>
 
+            {/* echart迁徙图容器 */}
+            <div className="echart-qxt" id="echart-qxt" />
 
             {/* 热力图容器 */}
             <div className="div-heatmap" />

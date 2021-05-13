@@ -30,7 +30,7 @@ function App() {
     let docEl = document.documentElement as any;
     let fontSize = UtilScreen.getDocElFontSize();
     fontSize && (docEl.style.fontSize = fontSize + "px");
-  }
+  }  
 
   const [state, dispatch] = useReducer(appReducer, defaultState);
 

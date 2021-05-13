@@ -17,10 +17,19 @@ import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
-import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';
+import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';   
+
+// export const Sampler;
+// export const ShaderSource;
+// export const ClearCommand;
+// export const DrawCommand;
+// export const Pass;
+// export const VertexArray;
+// export const BufferUsage;
 
 
-window.CESIUM_BASE_URL = './cesium/';
+
+window.CESIUM_BASE_URL = './cesium/'; 
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
@@ -157,7 +166,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         setExtent(viewer);
 
         // 添加不同的地图底图
-        addDiffBaseMap(viewer, "arcgis");
+        // addDiffBaseMap(viewer, "arcgis");
 
         // 添加聚类点
         // addClusterPoint(viewer);
@@ -257,6 +266,12 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-05-12 粉刷匠 添加日照光阴影 
         // addSunShadow(viewer);
+
+        // 2021-05-12 粉刷匠 地下模式 未完成
+        // addUnderground(viewer);
+
+        // 2021-05-13 粉刷匠 试图联系echart
+        addEchart(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -4847,6 +4862,17 @@ export const addSunShadow = (viewer: any) => {
     // 有时候需要看一天的阴影变化，可以通过设置时间的方法，示例如下，注意北京东八区
     const utc = Cesium.JulianDate.fromDate(new Date("2021/01/01 00:00:00"));// UTC
     viewer.clockViewModel.currentTime = Cesium.JulianDate.addHours(utc, 8, new Cesium.JulianDate());//北京时间=UTC+8=GMT+8
+}
+
+// 2021-05-12 粉刷匠 地下模式
+export const addUnderground = (viewer: any) => {
+    viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
+    viewer.scene.globe.translucency.frontFaceAlpha = 0.5;
+}
+
+// 2021-05-13 粉刷匠 试图联系echart
+export const addEchart = (viewer: any) => {
+    // 
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
