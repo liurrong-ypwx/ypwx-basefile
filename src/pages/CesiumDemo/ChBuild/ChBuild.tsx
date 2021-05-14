@@ -20,12 +20,11 @@ function ChBuild(): JSX.Element {
     useEffect(() => {
         const tmpView = CesiumApi.initMap("cesiumContainer", true);
         setOrgView(tmpView);
-
-        drawEchartQxt();
     }, [])
 
     useEffect(() => {
         if (!orgView) return;
+        false && drawEchartQxt();
     }, [orgView])
 
     // 添加点线面

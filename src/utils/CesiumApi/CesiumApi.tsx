@@ -18,6 +18,7 @@ import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
 import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';   
+import { EchartPoint } from './WithEchart/EchartPoint';
 
 // export const Sampler;
 // export const ShaderSource;
@@ -163,7 +164,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        setExtent(viewer);
+        // setExtent(viewer);
 
         // 添加不同的地图底图
         // addDiffBaseMap(viewer, "arcgis");
@@ -197,7 +198,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        addTestBlueBuilding(viewer);
+        // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -4873,6 +4874,7 @@ export const addUnderground = (viewer: any) => {
 // 2021-05-13 粉刷匠 试图联系echart
 export const addEchart = (viewer: any) => {
     // 
+    new EchartPoint(viewer);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
