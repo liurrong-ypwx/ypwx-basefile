@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { combineEcharts } from './combineEchart';
+import { combineEcharts } from './combineEchart';   
 
 export class EchartPoint {
     viewer: any;
