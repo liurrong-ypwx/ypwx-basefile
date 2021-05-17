@@ -7,7 +7,13 @@ function TestPage(): JSX.Element {
 
     useEffect(() => {
 
-        const url = "https://api.waqi.info/feed/beijing/";
+        // aqi上的一些接口 "//api.waqi.info/search/?token=" + token() + "&keyword=" + keyword,
+        //  "//api.waqi.info/feed/@" + station.uid + "/?token=" + token(),
+        //  "https://api.waqi.info/map/bounds/?latlng=" + bounds + "&token=" + token()
+        // "https://api.waqi.info/feed/@" + markerUID + "/?token=" + token()
+
+        const url = "http://api.waqi.info/search/?keyword=shanghai"
+        // const url = "https://api.waqi.info/feed/beijing/";
         const formPars = {
             token: "19776e0b379e0a6f7c0d85303cea703a5ee46281"
         }
