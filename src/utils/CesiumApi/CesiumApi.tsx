@@ -18,7 +18,8 @@ import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
 import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';   
-import { EchartPoint } from './WithEchart/EchartPoint';
+// import { EchartPoint } from './WithEchart/EchartPoint';
+// import { EchartFly } from './WithEchart/EchartFly';
 
 // export const Sampler;
 // export const ShaderSource;
@@ -271,8 +272,8 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-05-12 粉刷匠 地下模式 未完成
         // addUnderground(viewer);
 
-        // 2021-05-13 粉刷匠 试图联系echart
-        addEchart(viewer);
+        // 2021-05-13 粉刷匠 试图联系echart  散点图及飞行图
+        // addEchart(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -4874,7 +4875,8 @@ export const addUnderground = (viewer: any) => {
 // 2021-05-13 粉刷匠 试图联系echart
 export const addEchart = (viewer: any) => {
     // 
-    new EchartPoint(viewer);
+    // new EchartPoint(viewer);
+    // new EchartFly(viewer);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
