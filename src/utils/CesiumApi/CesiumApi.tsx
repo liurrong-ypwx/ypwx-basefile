@@ -162,10 +162,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     if (isAddBuilding) {
 
         // 添加测试蓝色的底图
-        // addTestDarkImg(viewer);
+        addTestDarkImg(viewer);
 
         // 缩放到深圳
-        // setExtent(viewer);
+        setExtent(viewer);
 
         // 添加不同的地图底图
         // addDiffBaseMap(viewer, "arcgis");
@@ -189,7 +189,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addDynamicPoint(viewer);
 
         // 各类点样式集合 有点意思
-        // addMulTypePoint(viewer);
+        addMulTypePoint(viewer);
 
         // 各类线样式集合 有点意思
         // addMutTypeLine(viewer);
@@ -199,14 +199,14 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
 
 
         // 添加测试道路数据: 光晕染线 或者 发光线 我能想到最简单的办法是修改图片
-        // addTestRroadGeoJsonData(viewer);
+        addTestRroadGeoJsonData(viewer);
 
         // 添加雨、雾、雪天气渲染, 注意打开倾斜摄影模型，更加方便看到效果
         // addWeatherCondition(viewer);
@@ -1548,6 +1548,7 @@ let handlerDraw: any = null;
 let entityDrawArr: any = [];
 export const drawReal = (viewer: any, type: string) => {
 
+    debugger
 
     if (!viewer) return;
 
@@ -5118,50 +5119,50 @@ export const addTestBlueBuilding = (viewer: any) => {
         viewer.scene.primitives.add(tmpTileset);
 
         tileset.style = new Cesium.Cesium3DTileStyle({
-            // color: {
-            //     conditions: [
-            //         ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-            //     ]
-            // }
+            color: {
+                conditions: [
+                    ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+                ]
+            }
         });
 
-        // tileset.tileVisible.addEventListener(function (tile: any) {
-        //     const content = tile.content;
-        //     const featuresLength = content.featuresLength;
-        //     for (let i = 0; i < featuresLength; i += 2) {
-        //         let feature = content.getFeature(i)
-        //         let model = feature.content._model
+        tileset.tileVisible.addEventListener(function (tile: any) {
+            const content = tile.content;
+            const featuresLength = content.featuresLength;
+            for (let i = 0; i < featuresLength; i += 2) {
+                let feature = content.getFeature(i)
+                let model = feature.content._model
 
-        //         if (model && model._sourcePrograms && model._rendererResources) {
-        //             Object.keys(model._sourcePrograms).forEach(key => {
-        //                 let program = model._sourcePrograms[key]
-        //                 let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-        //                 let v_position = "";
-        //                 if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-        //                     v_position = "v_positionEC";
-        //                 } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-        //                     v_position = "v_pos";
-        //                 }
-        //                 const color = `vec4(${feature.color.toString()})`;
+                if (model && model._sourcePrograms && model._rendererResources) {
+                    Object.keys(model._sourcePrograms).forEach(key => {
+                        let program = model._sourcePrograms[key]
+                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+                        let v_position = "";
+                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+                            v_position = "v_positionEC";
+                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+                            v_position = "v_pos";
+                        }
+                        const color = `vec4(${feature.color.toString()})`;
 
-        //                 model._rendererResources.sourceShaders[program.fragmentShader] =
-        //                     "varying vec3 " + v_position + ";\n" +
-        //                     "void main(void){\n" +
-        //                     "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-        //                     "    float glowRange = 120.0;\n" +
-        //                     "    gl_FragColor = " + color + ";\n" +
-        //                     // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-        //                     "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
-        //                     "    float time = fract(czm_frameNumber / 120.0);\n" +
-        //                     "    time = abs(time - 0.5) * 2.0;\n" +
-        //                     "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-        //                     "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-        //                     "}\n"
-        //             })
-        //             model._shouldRegenerateShaders = true
-        //         }
-        //     }
-        // });
+                        model._rendererResources.sourceShaders[program.fragmentShader] =
+                            "varying vec3 " + v_position + ";\n" +
+                            "void main(void){\n" +
+                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+                            "    float glowRange = 120.0;\n" +
+                            "    gl_FragColor = " + color + ";\n" +
+                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
+                            "    float time = fract(czm_frameNumber / 120.0);\n" +
+                            "    time = abs(time - 0.5) * 2.0;\n" +
+                            "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+                            "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+                            "}\n"
+                    })
+                    model._shouldRegenerateShaders = true
+                }
+            }
+        });
 
         // 设置3dTiles贴地
         set3DtilesHeight(1, tileset);

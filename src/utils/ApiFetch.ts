@@ -1,12 +1,12 @@
-import { IMethod, IReject, IResolve, IResponse } from "./declare";
+import { IMethod, IReject, IResponse } from "./declare";
 import { CURRENT_VERSION } from "./global-const";
-import * as CommonFunc from "./common-fun";
+// import * as CommonFunc from "./common-fun";
 
 require("whatwg-fetch");
 
 
-let host = "";
-let localHost = "";
+// let host = "";
+// let localHost = "";
 
 if (process.env.NODE_ENV === "production") {
     // 
@@ -84,8 +84,11 @@ const getParam = (url: string, param: object | undefined | string) => {
 const doFetch = async (api: string, method: IMethod, body: string | undefined, header: any, isConCurrent: boolean = false) =>
     new Promise<object>((resolve: any, reject: IReject) => {
         
-        let url: string;
-        let tmpPqm = {};
+        let url: string = '';
+        if(url){
+            // 
+        }
+        // let tmpPqm = {};
         body && (/^\{.*\}$/.test(body) || /^\[.*\]$/.test(body)) && JSON.parse(body).baseUrl ?
             url = `${ApiFetch.host}${JSON.parse(body).baseUrl}` :
             url = api.startsWith("http") ? api : `${ApiFetch.host}${api}`;
