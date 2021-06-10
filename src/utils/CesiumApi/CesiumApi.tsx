@@ -76,7 +76,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         },
 
         // 演示1：三维地形图
-        // terrainProvider: Cesium.createWorldTerrain()
+        // terrainProvider: Cesium.createWorldTerrain(),
         // terrainProvider: Cesium.createWorldTerrain({
         //     requestVertexNormals:true, // 坡度可视化的必须勾选
         //     // requestWaterMask:true
@@ -162,10 +162,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     if (isAddBuilding) {
 
         // 添加测试蓝色的底图
-        addTestDarkImg(viewer);
+        // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        setExtent(viewer);
+        // setExtent(viewer);
 
         // 添加不同的地图底图
         // addDiffBaseMap(viewer, "arcgis");
@@ -189,24 +189,24 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addDynamicPoint(viewer);
 
         // 各类点样式集合 有点意思
-        addMulTypePoint(viewer);
+        // addMulTypePoint(viewer);
 
         // 各类线样式集合 有点意思
         // addMutTypeLine(viewer);
 
         // 添加倾斜摄影三维模型+ 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addQxsyModel(viewer);
+        addQxsyModel(viewer);
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        addTestBlueBuilding(viewer);
+        // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
 
 
         // 添加测试道路数据: 光晕染线 或者 发光线 我能想到最简单的办法是修改图片
-        addTestRroadGeoJsonData(viewer);
+        // addTestRroadGeoJsonData(viewer);
 
         // 添加雨、雾、雪天气渲染, 注意打开倾斜摄影模型，更加方便看到效果
         // addWeatherCondition(viewer);
@@ -263,7 +263,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 2021-05-012 粉刷匠 添加一个扩散圆柱-成功
         // addExpandCylinder(viewer);
 
-        // 2021-05-12 粉刷匠 风向图
+        // 2021-05-12 粉刷匠 风场图
         // addWindMap(viewer);
 
         // 2021-05-12 粉刷匠 添加日照光阴影 
@@ -274,6 +274,12 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
         // 2021-05-13 粉刷匠 试图联系echart  散点图及飞行图
         // addEchart(viewer);
+
+        // 2021-06-09 粉刷匠 风图
+        // addRsWind(viewer);
+
+        // 2021-06-09 粉刷匠 添加通视分析
+        // addAnaTongShi(viewer);
 
         // 添加一个glb模型
         // addTestGlbLabel(viewer);
@@ -1548,8 +1554,6 @@ let handlerDraw: any = null;
 let entityDrawArr: any = [];
 export const drawReal = (viewer: any, type: string) => {
 
-    debugger
-
     if (!viewer) return;
 
     // 鼠标点击 获取当前坐标
@@ -2635,10 +2639,10 @@ export const addFlood = (viewer: any) => {
     // });
 
     // 创建地形图层
-    const cord1 = [113.88,22.56];
-    const cord2 = [114.00,22.63];
+    const cord1 = [113.88, 22.56];
+    const cord2 = [114.00, 22.63];
     const rectangle = new Cesium.Rectangle(Cesium.Math.toRadians(cord1[0]), Cesium.Math.toRadians(cord1[1]), Cesium.Math.toRadians(cord2[0]), Cesium.Math.toRadians(cord2[1]));
-    viewer.scene.globe.depthTestAgainstTerrain = true;   
+    viewer.scene.globe.depthTestAgainstTerrain = true;
     viewer.scene.camera.flyTo({ destination: rectangle });  // 定位到目标地形
 
     // ---------------------------------动态画贴底线-------------------------------------
@@ -4878,6 +4882,230 @@ export const addEchart = (viewer: any) => {
     // 
     // new EchartPoint(viewer);
     // new EchartFly(viewer);
+}
+
+// 2021-06-09 粉刷匠 添加云图
+export const addRsWind = (viewer: any) => {
+    const cor = {
+        w: -179,
+        s: -60,
+        e: 179,
+        n: 60
+    };
+    // 传入的动态数值
+    let source =
+        `uniform vec4 color; 
+       uniform float time;
+
+       //设置图形外观材质
+       czm_material czm_getMaterial(czm_materialInput materialInput){
+          czm_material material = czm_getDefaultMaterial(materialInput); //获取内置的默认材质
+          vec2 st = materialInput.st;
+          vec4 colorImage = texture2D(image, vec2(fract(st.s + time),fract(st.t)));
+          material.alpha = colorImage.a * color.a  ;
+          material.diffuse =    color.rgb  ;
+          return material;
+      }`
+
+    const material = new Cesium.Material({
+        fabric: {
+            uniforms: {
+                image: "./Models/image/cloud.png",
+                // alpha: 0.7,//透明度
+                time: 0.0,
+                color: Cesium.Color.fromCssColorString('#E5EBFB'),
+            },
+            source: source
+        },
+        translucent: false
+    });
+    let appearance = new Cesium.MaterialAppearance({
+        material: material,// 自定义的材质
+        faceForward: false, // 当绘制的三角面片法向不能朝向视点时，自动翻转法向，					从而避免法向计算后发黑等问题
+        closed: true // 是否为封闭体，实际上执行的是是否进行背面裁剪
+    })
+    const rectangle = viewer.scene.primitives.add(
+        new Cesium.Primitive({
+            geometryInstances: new Cesium.GeometryInstance({
+                geometry: new Cesium.RectangleGeometry({
+                    rectangle: Cesium.Rectangle.fromDegrees(cor.w, cor.s, cor.e, cor.n),
+                  //vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                  height: 300000
+                }),
+            }),
+            appearance: appearance
+            // appearance: new Cesium.EllipsoidSurfaceAppearance({
+            //     aboveGround: true,
+            // }),
+        })
+    );	
+
+    // 动态修改雷达材质中的offset变量，从而实现动态效果。
+    viewer.scene.preUpdate.addEventListener(function () {
+        var time = rectangle.appearance.material.uniforms.time;
+        time += 0.001;
+        if (time > 1.0) {
+            time = 0.0;
+        }
+        rectangle.appearance.material.uniforms.time = time;
+    })
+    
+  
+    
+  
+}
+
+// 2021-06-09 粉刷匠 添加通视分析
+export const addAnaTongShi = (viewer: any) => {
+
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    if (handlerDraw) { handlerDraw.destroy(); }
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+    let positions: any = [];
+    let tempPoints: any = [];
+    let polyline: any = null;
+    let cartesian: any = null;
+    let floatingPoint: any = []; // 浮动点
+
+    // 注册鼠标移动事件
+    handler.setInputAction((movement: any) => {
+        let ray = viewer.camera.getPickRay(movement.endPosition);
+        cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        if (positions.length === 2) {
+            if (!Cesium.defined(polyline)) {
+                polyline = new PolyLinePrimitive(positions);
+            } else {
+                positions.pop();
+                positions.push(cartesian);
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    // 注册鼠标左击效果
+    handler.setInputAction(function (movement: any) {
+
+        if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+            console.log('This browser does not support polylines on terrain.');
+            return;
+        }
+
+        // 粉刷匠 获取地形上的点
+        cartesian = viewer.scene.pickPosition(movement.position);
+        if (Cesium.defined(cartesian)) {
+            if (positions.length === 0) {
+                positions.push(cartesian.clone());
+            }
+            positions.push(cartesian);
+        }
+
+        // 在三维场景中添加点
+        let cartographic = Cesium.Cartographic.fromCartesian(positions[positions.length - 1]);
+        let longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
+        let latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
+        let heightString = cartographic.height;
+        tempPoints.push({ lon: longitudeString, lat: latitudeString, hei: heightString });
+        const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+        floatingPoint = viewer.entities.add({
+            id: "draw_Clip_Point" + tmpId,
+            position: positions[positions.length - 1],
+            point: {
+                pixelSize: 5,
+                color: Cesium.Color.RED,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 2,
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            }
+        });
+        if (floatingPoint) {
+            entityDrawArr.push(floatingPoint);
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    // 注册鼠标右击效果
+    handler.setInputAction(function (movement: any) {
+        positions.pop();
+        handler.destroy();
+
+        if (positions && polyline) {
+            addTongshi(positions);
+        }
+
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+    const PolyLinePrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            // console.log(tmpId);
+            this.options = {
+                id: "draw_Tongshi_Line" + tmpId,
+                name: '直线',
+                polyline: {
+                    show: true,
+                    positions: [],
+                    material: Cesium.Color.CHARTREUSE,
+                    width: 7,
+                    clampToGround: true
+                }
+            };
+            this.positions = positions;
+            this._init();
+        }
+
+        _.prototype._init = function () {
+            var _self = this;
+            // 当可以画矩形的时候，把线的postion设置为 undefined
+            var _update = function () {
+                return _self.positions.length > 2 ? undefined : _self.positions;
+            };
+            // 实时更新polyline.positions
+            this.options.polyline.positions = new Cesium.CallbackProperty(_update, false);
+            const tmpEntity = viewer.entities.add(this.options);
+            if (tmpEntity) {
+                entityDrawArr.push(tmpEntity);
+            }
+        };
+
+        return _;
+    })();
+
+
+    const addTongshi = (points: any) => {
+        const startPoint = points[0];
+        const endPoint = points[1];
+        // * 计算射线的方向
+        let direction = Cesium.Cartesian3.normalize(
+            Cesium.Cartesian3.subtract(
+                endPoint,
+                startPoint,
+                new Cesium.Cartesian3()
+            ),
+            new Cesium.Cartesian3()
+        );
+        // 建立射线
+        let ray = new Cesium.Ray(startPoint, direction);
+        let result = viewer.scene.globe.pick(ray, viewer.scene); // 计算交点
+
+        if (result !== undefined && result !== null) {
+            drawLine(result, startPoint, Cesium.Color.GREEN); // 可视
+            drawLine(result, endPoint, Cesium.Color.RED); // 不可视
+        } else {
+            drawLine(startPoint, endPoint, Cesium.Color.GREEN);
+        }
+    }
+
+
+    function drawLine(point1: any, point2: any, color: any) {
+        viewer.entities.add({
+            polyline: {
+                positions: [point1, point2],
+                width: 1,
+                material: color,
+                depthFailMaterial: color
+            }
+        });
+    }
+  
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------

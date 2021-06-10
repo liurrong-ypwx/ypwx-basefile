@@ -182,7 +182,7 @@ function ChBuild(): JSX.Element {
             </div>
 
             {/* 按钮区 */}
-            <div  className="test-btn-group">
+            <div className="test-btn-group" style={{ display: "none" }}>
                 <div className="sig-btn" onClick={() => { setDedaultExtent() }} >重置</div>
                 {/* <div className="sig-btn" onClick={() => { handleAddGeometry("Point") }} >添加标注</div>
                 <div className="sig-btn" onClick={() => { handleAddGeometry("Polyline") }} >添加Polyline</div>
