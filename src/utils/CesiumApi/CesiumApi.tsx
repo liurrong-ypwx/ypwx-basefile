@@ -62,18 +62,18 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         //     url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
         // }),
         // 导出为图片时，需要设置
-        contextOptions: {
-            webgl: {
-                alpha: true,
-                depth: true,
-                stencil: true,
-                antialias: true,
-                premultipliedAlpha: true,
-                // 通过canvas.toDataURL()实现截图需要将该项设置为true
-                preserveDrawingBuffer: true,
-                failIfMajorPerformanceCaveat: true
-            }
-        },
+        // contextOptions: {
+        //     webgl: {
+        //         alpha: true,
+        //         depth: true,
+        //         stencil: true,
+        //         antialias: true,
+        //         premultipliedAlpha: true,
+        //         // 通过canvas.toDataURL()实现截图需要将该项设置为true
+        //         preserveDrawingBuffer: true,
+        //         failIfMajorPerformanceCaveat: true
+        //     }
+        // },
 
         // 演示1：三维地形图
         // terrainProvider: Cesium.createWorldTerrain(),
@@ -165,7 +165,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        // setExtent(viewer);
+        setExtent(viewer);
 
         // 添加不同的地图底图
         // addDiffBaseMap(viewer, "arcgis");
@@ -195,11 +195,11 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addMutTypeLine(viewer);
 
         // 添加倾斜摄影三维模型+ 附带贴地 + 附带普通建筑物3dTiles单体化
-        addQxsyModel(viewer);
+        // addQxsyModel(viewer);
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -2480,11 +2480,6 @@ export const getCurrentCameraInfo = (viewer: any) => {
         "latitude": clatitude,
         "height": height
     }
-
-    
-
-
-
     return params;// 返回屏幕所在经纬度范围
 }
 
@@ -5105,7 +5100,199 @@ export const addAnaTongShi = (viewer: any) => {
             }
         });
     }
+
+}
+
+// 2021-06-10 粉刷匠 添加天际线分析
+export const addSkyLine = (viewer: any) => {
+
+    // canvas左上角及右下角
+    let canvas = viewer.scene.canvas;
+    // 构造上下点序列对
+    let maxNum = 100;
+    let sigDis = Math.floor(canvas.clientWidth / maxNum);
+    const upDownPair: any = [];
+    for (let i = 0; i < maxNum; i++) {
+        upDownPair.push({
+            "up": [sigDis * i, 1],  // 本来应该是0的，为了方便计算，下移1px
+            "down": [sigDis * i, canvas.clientHeight]
+        })
+    }
+
+    // 初始数据检查
+    const cordData: any = [];
+    for (let i = 0; i < upDownPair.length; i++) {
+        const pt1 = upDownPair[i]['up'];
+        const pt2 = upDownPair[i]['down'];
+        let pt1Able = false;
+        let pt2Able = false;
+
+        const c21 = new Cesium.Cartesian2(pt1[0], pt1[1]);
+        const c22 = new Cesium.Cartesian2(pt2[0], pt2[1]);
+        const pick1 = viewer.scene.globe.pick(viewer.camera.getPickRay(c21), viewer.scene);
+        const pick2 = viewer.scene.globe.pick(viewer.camera.getPickRay(c22), viewer.scene);
+        if (pick1 !== undefined && pick1 !== null) {
+            pt1Able = true;
+        }
+        if (pick2 !== undefined && pick2 !== null) {
+            pt2Able = true;
+        }
+
+
+        // 天-天 抛弃 地-地 留上 地-天 抛弃 天-地 保留
+        if (!pt1Able && !pt2Able) {
+            cordData.push([null, null]);
+        }
+        if (pt1Able && !pt2Able) {
+            cordData.push([null, null]);
+        }
+        if (pt1Able && pt2Able) {
+            cordData.push([pt1, null]);
+        }
+        if (!pt1Able && pt2Able) {
+            cordData.push([pt1, pt2]);
+        }
+
+    }
+
+    // 仅对天地数据处理
+    const midPointArr: any = [];
+    for (let i = 0; i < cordData.length; i++) {
+        if (cordData[i][0] && cordData[i][1]) {
+            const midPoint = calcMidPoint(cordData[i][0], cordData[i][1], viewer);
+            midPointArr.push(midPoint);
+        } else if (cordData[i][0]) {
+            midPointArr.push(cordData[i][0]);
+        }
+    }
+
+    const linePoint: any = [];
+    for (let i = 0; i < midPointArr.length; i++) {
+        const pt1 = midPointArr[i];
+        if (!pt1) continue;
+        const c21 = new Cesium.Cartesian2(pt1[0], pt1[1]);
+        const pick1 = viewer.scene.globe.pick(viewer.camera.getPickRay(c21), viewer.scene);
+        const pickedFeature1 = viewer.scene.pick(c21);
+        // 获取场景坐标 Cartesian3 （pickPosition）
+        const position = viewer.scene.pickPosition(c21);
+        if (Cesium.defined(pickedFeature1) && position ) {
+            linePoint.push(position);
+        } else if (pick1 !== undefined && pick1 !== null) {
+            linePoint.push(pick1);
+        }
+    }
+
+    viewer.entities.add({
+        polyline: {
+            positions: linePoint,
+            width: 1,
+            material: Cesium.Color.GREEN,
+            depthFailMaterial: Cesium.Color.GREEN
+        }
+    });
+
+
+
+
   
+
+
+
+
+
+
+
+
+
+    // let ellipsoid = viewer.scene.globe.ellipsoid;
+    // let upperLeft3 = viewer.camera.pickEllipsoid(
+    //     upperLeft,
+    //     ellipsoid
+    // );// 2D转3D世界坐标
+
+    // let lowerRight3 = viewer.camera.pickEllipsoid(
+    //     lowerRight,
+    //     ellipsoid
+    // );// 2D转3D世界坐标
+
+    // let upperLeftCartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(
+    //     upperLeft3
+    // );// 3D世界坐标转弧度
+    // let lowerRightCartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(
+    //     lowerRight3
+    // );// 3D世界坐标转弧度
+
+    // let minx = Cesium.Math.toDegrees(upperLeftCartographic.longitude);//弧度转经纬度
+    // let maxx = Cesium.Math.toDegrees(lowerRightCartographic.longitude);//弧度转经纬度
+
+    // let miny = Cesium.Math.toDegrees(lowerRightCartographic.latitude);//弧度转经纬度
+    // let maxy = Cesium.Math.toDegrees(upperLeftCartographic.latitude);//弧度转经纬度
+
+
+}
+
+// 2021-06-10 粉刷匠 二分法计算中心点
+export const calcMidPoint = (point1: any, point2: any, viewer: any): any => {
+    // 计算两点之间的中点
+    if (Math.abs(point1[1] - point2[1]) < 5) {
+        console.log('point', point2);
+        return point2;
+    }
+
+    const midx = Math.floor((point1[0] + point2[0]) / 2);
+    const midy = Math.floor((point1[1] + point2[1]) / 2);
+    const point3 = [midx, midy];
+
+    const c21 = new Cesium.Cartesian2(point1[0], point1[1]);
+    const c22 = new Cesium.Cartesian2(point2[0], point2[1]);
+    const c23 = new Cesium.Cartesian2(point3[0], point3[1]);
+
+    const pick1 = viewer.scene.globe.pick(viewer.camera.getPickRay(c21), viewer.scene);
+    const pick2 = viewer.scene.globe.pick(viewer.camera.getPickRay(c22), viewer.scene);
+    const pick3 = viewer.scene.globe.pick(viewer.camera.getPickRay(c23), viewer.scene);
+
+    const pickedFeature1 = viewer.scene.pick(c21);
+    const pickedFeature2 = viewer.scene.pick(c22);
+    const pickedFeature3 = viewer.scene.pick(c23);
+
+    let pt1Able = false;
+    let pt2Able = false;
+    let pt3Able = false;
+    if (pick1 !== undefined && pick1 !== null) {
+        pt1Able = true;
+    }
+    if (pick2 !== undefined && pick2 !== null) {
+        pt2Able = true;
+    }
+    if (pick3 !== undefined && pick3 !== null) {
+        pt3Able = true;
+    }
+
+    if (Cesium.defined(pickedFeature1)) {
+        pt1Able = true;
+    }
+    if (Cesium.defined(pickedFeature2)) {
+        pt2Able = true;
+    }
+    if (Cesium.defined(pickedFeature3)) {
+        pt3Able = true;
+    }
+
+    if (!pt1Able && pt2Able) {
+        if (pt3Able) {
+            return calcMidPoint(point1, point3, viewer);
+        } else {
+            return calcMidPoint(point3, point2, viewer);
+        }
+    } else {
+        return point2;
+    }
+}
+
+// 2021-06-10 粉刷匠 正统添加天际线
+export const addRealSkyline = (viewer: any) => {
+    //创建天际线分析
+    // var skyline = new Cesium.Skyline(viewer.scene);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -5354,43 +5541,43 @@ export const addTestBlueBuilding = (viewer: any) => {
             }
         });
 
-        tileset.tileVisible.addEventListener(function (tile: any) {
-            const content = tile.content;
-            const featuresLength = content.featuresLength;
-            for (let i = 0; i < featuresLength; i += 2) {
-                let feature = content.getFeature(i)
-                let model = feature.content._model
+        // tileset.tileVisible.addEventListener(function (tile: any) {
+        //     const content = tile.content;
+        //     const featuresLength = content.featuresLength;
+        //     for (let i = 0; i < featuresLength; i += 2) {
+        //         let feature = content.getFeature(i)
+        //         let model = feature.content._model
 
-                if (model && model._sourcePrograms && model._rendererResources) {
-                    Object.keys(model._sourcePrograms).forEach(key => {
-                        let program = model._sourcePrograms[key]
-                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-                        let v_position = "";
-                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-                            v_position = "v_positionEC";
-                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-                            v_position = "v_pos";
-                        }
-                        const color = `vec4(${feature.color.toString()})`;
+        //         if (model && model._sourcePrograms && model._rendererResources) {
+        //             Object.keys(model._sourcePrograms).forEach(key => {
+        //                 let program = model._sourcePrograms[key]
+        //                 let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+        //                 let v_position = "";
+        //                 if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+        //                     v_position = "v_positionEC";
+        //                 } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+        //                     v_position = "v_pos";
+        //                 }
+        //                 const color = `vec4(${feature.color.toString()})`;
 
-                        model._rendererResources.sourceShaders[program.fragmentShader] =
-                            "varying vec3 " + v_position + ";\n" +
-                            "void main(void){\n" +
-                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-                            "    float glowRange = 120.0;\n" +
-                            "    gl_FragColor = " + color + ";\n" +
-                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
-                            "    float time = fract(czm_frameNumber / 120.0);\n" +
-                            "    time = abs(time - 0.5) * 2.0;\n" +
-                            "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-                            "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-                            "}\n"
-                    })
-                    model._shouldRegenerateShaders = true
-                }
-            }
-        });
+        //                 model._rendererResources.sourceShaders[program.fragmentShader] =
+        //                     "varying vec3 " + v_position + ";\n" +
+        //                     "void main(void){\n" +
+        //                     "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+        //                     "    float glowRange = 120.0;\n" +
+        //                     "    gl_FragColor = " + color + ";\n" +
+        //                     // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+        //                     "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
+        //                     "    float time = fract(czm_frameNumber / 120.0);\n" +
+        //                     "    time = abs(time - 0.5) * 2.0;\n" +
+        //                     "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+        //                     "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+        //                     "}\n"
+        //             })
+        //             model._shouldRegenerateShaders = true
+        //         }
+        //     }
+        // });
 
         // 设置3dTiles贴地
         set3DtilesHeight(1, tileset);

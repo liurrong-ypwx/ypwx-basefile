@@ -174,12 +174,24 @@ function ChBuild(): JSX.Element {
         </div>
       );
 
+    //   2021-06-10 粉刷匠 添加天际线
+    const calcSkyline = () => {
+        // console.log('点击天际线')
+     
+        if (orgView) {
+            // 傻子型，我自己写的，我都唾弃我自己
+            // CesiumApi.addSkyLine(orgView);
+            
+        }
+    }
+
     return (
         <div className="main-map-container">
             {/* 初始化一个框来放置场景 */}
             <div id='cesiumContainer' >
                 {/* <div id="slider"></div> */}
             </div>
+         
 
             {/* 按钮区 */}
             <div className="test-btn-group" style={{ display: "none" }}>
@@ -238,6 +250,13 @@ function ChBuild(): JSX.Element {
                 </div>
             </div>
         
+
+            {/* 天际线分析 */}
+            <div className="test-btn-group">
+                <div className="sig-btn" onClick={() => { calcSkyline() }} >天际线</div>
+            </div>
+
+
         </div>
     )
 }
