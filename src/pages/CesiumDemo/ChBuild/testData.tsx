@@ -4727,3 +4727,6 @@ export const testCzmlData = [{
         ]
     }
 }];
+
+// 水坝相关
+export const shuibaCord = [110.95, 23.40];

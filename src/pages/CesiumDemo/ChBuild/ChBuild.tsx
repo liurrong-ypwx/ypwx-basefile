@@ -185,6 +185,12 @@ function ChBuild(): JSX.Element {
         }
     }
 
+    const getCord = () => {
+        if (orgView) {
+            CesiumApi.clickToGetCord(orgView);
+        }
+    }
+
     return (
         <div className="main-map-container">
             {/* 初始化一个框来放置场景 */}
@@ -252,8 +258,9 @@ function ChBuild(): JSX.Element {
         
 
             {/* 天际线分析 */}
-            <div className="test-btn-group">
-                <div className="sig-btn" onClick={() => { calcSkyline() }} >天际线</div>
+            <div className="test-btn-group" >
+                <div style={{ display: "none" }} className="sig-btn" onClick={() => { getCord() }} >get坐标</div>
+                <div style={{ display: "none" }} className="sig-btn" onClick={() => { calcSkyline() }} >天际线</div>
             </div>
 
 

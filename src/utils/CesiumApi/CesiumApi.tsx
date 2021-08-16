@@ -165,7 +165,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        setExtent(viewer);
+        // setExtent(viewer);
 
         // 添加不同的地图底图
         // addDiffBaseMap(viewer, "arcgis");
@@ -185,6 +185,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 添加div文字标签 详细参见chbuild.tsx文件夹，里面是完整的用法样例
         // addDivTxtBoard(viewer);
 
+        // 2021-08-16 点击获取经纬度
+        // clickToGetCord(viewer);
+
         // 添加动态效果点+动态效果墙
         // addDynamicPoint(viewer);
 
@@ -199,7 +202,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        addTestBlueBuilding(viewer);
+        // addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -326,14 +329,7 @@ export const addDiffBaseMap = (viewer: any, type?: string) => {
                 layer: "tdtBasicLayer",
                 style: "default",
                 format: "image/jpeg",
-                // url: 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
-                // layer: 'USGSShadedReliefOnly',
-                // style: 'default',
-                // format: 'image/jpeg',
                 tileMatrixSetID: 'GoogleMapsCompatible',
-                // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
-                // maximumLevel: 19,
-                // credit: new Cesium.Credit('U. S. Geological Survey')
             }),
         );
         // 注记
@@ -348,8 +344,8 @@ export const addDiffBaseMap = (viewer: any, type?: string) => {
         );
     } else if (type === "arcgis") {
         viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-            // url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
-            url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetGray/MapServer'
+            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+            // url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetGray/MapServer'
         }))
     } else if (type === "geoserver") {
         // wms地图服务
@@ -660,6 +656,31 @@ export const makeBillBoardImg = (number: string) => {
         ctx.stroke();
     }
     return ramp;
+}
+
+// 2021-08-16 粉刷匠 点击获取经纬度
+export const clickToGetCord = (viewer: any) => {
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function (movement: any) {
+
+        // 获取世界坐标 Ray 三维模式下的坐标转换（getPickRay参数：屏幕坐标），从摄像机位置通过窗口位置的像素创建一条光线，返回射线的笛卡尔坐标位置和方向
+        const windowPosition = viewer.camera.getPickRay(movement.position);
+        const cartesianCoordinates = viewer.scene.globe.pick(windowPosition, viewer.scene);
+        const cartoCoordinates = viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesianCoordinates);
+        const latitude = (cartoCoordinates.latitude * 180 / Math.PI).toFixed(2);
+        const longitude = (cartoCoordinates.longitude * 180 / Math.PI).toFixed(2);
+
+        // 获取世界坐标 Cartesian3（pickEllipsoid参数：屏幕坐标，椭球体），二维的方法
+        // WGS84经纬度坐标系（没有实际的对象）、WGS84弧度坐标系（Cartographic）、笛卡尔空间直角坐标系（Cartesian3）、平面坐标系（Cartesian2），4D笛卡尔坐标系（Cartesian4）
+        // const cartesian2 = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+        // const carto2 = viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian2);
+        // const latitude = carto2.latitude * 180 / Math.PI;
+        // const longitude = carto2.longitude * 180 / Math.PI;
+
+        // 获取场景坐标 Cartesian3 （pickPosition）
+        // const cartesian = viewer.scene.pickPosition(movement.position);
+        console.log("经纬度：", longitude, latitude)
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 
 // 2021-04-13 粉刷匠 添加一个div文字标签
@@ -2716,11 +2737,16 @@ export const addFlood = (viewer: any) => {
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     // 注册鼠标右击效果
+    let isdown = false;
     handler.setInputAction(function (movement: any) {
         positions.pop();
         handler.destroy();
 
         if (positions && polygon) {
+            // viewer.entities.remove(polygon);
+            // polygon.polygon.hierarchy = undefined;
+            viewer.scene.primitives.remove(polygon);
+            isdown = true;
             addRealFlood(positions);
         }
 
@@ -2745,6 +2771,7 @@ export const addFlood = (viewer: any) => {
         _.prototype._init = function () {
             var _self = this;
             var _update = function () {
+                if (isdown) return undefined;
                 return _self.hierarchy;
             };
             // 实时更新polygon.hierarchy
@@ -2846,7 +2873,7 @@ export const addFlood = (viewer: any) => {
         const maxHeight = tmpAllHeight.maxHeight;
         const minHeight = tmpAllHeight.minHeight;
         let tmpHeight = minHeight;
-        let tmpInterv = (maxHeight - minHeight) * 0.01;
+        let tmpInterv = (maxHeight - minHeight) * 0.001;
 
         viewer.scene.globe.depthTestAgainstTerrain = true;
         const tmpEntity = viewer.entities.add({
@@ -5541,43 +5568,43 @@ export const addTestBlueBuilding = (viewer: any) => {
             }
         });
 
-        // tileset.tileVisible.addEventListener(function (tile: any) {
-        //     const content = tile.content;
-        //     const featuresLength = content.featuresLength;
-        //     for (let i = 0; i < featuresLength; i += 2) {
-        //         let feature = content.getFeature(i)
-        //         let model = feature.content._model
+        tileset.tileVisible.addEventListener(function (tile: any) {
+            const content = tile.content;
+            const featuresLength = content.featuresLength;
+            for (let i = 0; i < featuresLength; i += 2) {
+                let feature = content.getFeature(i)
+                let model = feature.content._model
 
-        //         if (model && model._sourcePrograms && model._rendererResources) {
-        //             Object.keys(model._sourcePrograms).forEach(key => {
-        //                 let program = model._sourcePrograms[key]
-        //                 let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-        //                 let v_position = "";
-        //                 if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-        //                     v_position = "v_positionEC";
-        //                 } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-        //                     v_position = "v_pos";
-        //                 }
-        //                 const color = `vec4(${feature.color.toString()})`;
+                if (model && model._sourcePrograms && model._rendererResources) {
+                    Object.keys(model._sourcePrograms).forEach(key => {
+                        let program = model._sourcePrograms[key]
+                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+                        let v_position = "";
+                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+                            v_position = "v_positionEC";
+                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+                            v_position = "v_pos";
+                        }
+                        const color = `vec4(${feature.color.toString()})`;
 
-        //                 model._rendererResources.sourceShaders[program.fragmentShader] =
-        //                     "varying vec3 " + v_position + ";\n" +
-        //                     "void main(void){\n" +
-        //                     "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-        //                     "    float glowRange = 120.0;\n" +
-        //                     "    gl_FragColor = " + color + ";\n" +
-        //                     // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-        //                     "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
-        //                     "    float time = fract(czm_frameNumber / 120.0);\n" +
-        //                     "    time = abs(time - 0.5) * 2.0;\n" +
-        //                     "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-        //                     "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-        //                     "}\n"
-        //             })
-        //             model._shouldRegenerateShaders = true
-        //         }
-        //     }
-        // });
+                        model._rendererResources.sourceShaders[program.fragmentShader] =
+                            "varying vec3 " + v_position + ";\n" +
+                            "void main(void){\n" +
+                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+                            "    float glowRange = 120.0;\n" +
+                            "    gl_FragColor = " + color + ";\n" +
+                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
+                            "    float time = fract(czm_frameNumber / 120.0);\n" +
+                            "    time = abs(time - 0.5) * 2.0;\n" +
+                            "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+                            "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+                            "}\n"
+                    })
+                    model._shouldRegenerateShaders = true
+                }
+            }
+        });
 
         // 设置3dTiles贴地
         set3DtilesHeight(1, tileset);
