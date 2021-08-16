@@ -305,6 +305,9 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // 测试---雷达圆扩散图
         // showTestCircleScan2(viewer);
 
+        // 2021-08-16 粉刷匠 添加水坝glb
+        addShuiBa(viewer);
+
 
 
     }
@@ -5914,6 +5917,58 @@ export const addTestGlbLabel = (viewer: any) => {
     }
 
     loadModel();
+}
+
+// 2021-08-16 粉刷匠 添加水坝
+export const addShuiBa = (viewer: any) => {
+    const airplaneUrl = "./Models/shuiba.glb";
+
+    // 此方法问题在于缩放的时候不能随着缩放
+    // viewer.entities.add({
+    //     position: Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100),
+    //     model: {
+    //         uri: airplaneUrl,
+    //         minimumPixelSize: 128,
+    //         maximumScale: 20000,
+    //     },
+    //     // orientation: new Cesium.VelocityOrientationProperty(positionProperty)
+    // });
+
+    const cartesian = Cesium.Cartesian3.fromDegrees(110.95, 23.401, 0);
+    const newHeading = Cesium.Math.toRadians(0); //初始heading值赋0
+    const newPitch = Cesium.Math.toRadians(0);
+    const newRoll = Cesium.Math.toRadians(0);
+    const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+    const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+
+    const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+        url: airplaneUrl, // 模型地址
+        modelMatrix,
+    }));
+
+    // todo:平移,可使用偷懒方法，修改Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100); 
+
+    // 放大一点
+    curModel.scale = 80;
+
+    // 模型旋转
+    const curModelMatrix = curModel.modelMatrix; // 获取当前模型modelMatrix
+    const tcartesian = new Cesium.Cartesian3(curModelMatrix[12], curModelMatrix[13], curModelMatrix[14]);
+    const tnewHeading = Cesium.Math.toRadians(-25);// 改变Heading值
+    const tnewPitch = Cesium.Math.toRadians(0);// pitch值填当前模型pitch，上文介绍过如何获取
+    const tnewRoll = Cesium.Math.toRadians(0);// 同上
+    const theadingPitchRoll = new Cesium.HeadingPitchRoll(tnewHeading, tnewPitch, tnewRoll);
+    const m = Cesium.Transforms.headingPitchRollToFixedFrame(tcartesian, theadingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+    curModel.modelMatrix = m; //新的modelMatrix赋给模型
+
+    viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100),
+        orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch: Cesium.Math.toRadians(-90),
+            roll: 0.0
+        }
+    });
 }
 
 // 测试 沿指定的路径飞行
