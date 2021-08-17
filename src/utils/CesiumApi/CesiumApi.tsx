@@ -5973,15 +5973,30 @@ export const addShuiBa = (viewer: any) => {
     // 添加水面
     addWater(viewer);
     // 添加水库流水
-    addQingxie(viewer);
+    // addQingxie(viewer);
 
 }
-const addWater = (viewer: any) => {
+export const addWater = (viewer: any) => {
 
-    // frequency：波的数量
-    // animationSpeed：水震动的速度
-    // amplitude：振幅大小
-    var primitive = new Cesium.GroundPrimitive({// 贴地的primitive
+    // 2021-08-17 粉刷匠 第一次尝试 透明水体 原本是为了修改着色器，但是发现使用baseWaterColor即可
+    let material = new Cesium.Material({
+        fabric: {
+            type: 'Water',
+            uniforms: { // 动态传递参数
+                baseWaterColor:Cesium.Color.WHITE.withAlpha(0.1), // 水体颜色
+                blendColor:Cesium.Color.DARKBLUE, // 水陆混合处颜色
+                // specularMap:"../../**/jpg", // 一张黑白图用来作为标识哪里是用水来渲染的贴图
+                normalMap: Cesium.buildModuleUrl(normalMap), // 用来生成起伏效果的水体
+                frequency: 100.0,
+                animationSpeed: 0.01,
+                amplitude: 1000
+            },
+            // source: source
+        },
+        translucent: false
+    })
+
+    const primitive = new Cesium.GroundPrimitive({// 贴地的primitive
         geometryInstances: new Cesium.GeometryInstance({
             geometry: new Cesium.PolygonGeometry({// 支持CircleGeometry，CorridorGeometry，EllipseGeometry，RectangleGeometry
                 // polygonHierarchy: new Cesium.PolygonHierarchy([
@@ -5991,23 +6006,10 @@ const addWater = (viewer: any) => {
                 polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(shuiMian)),
                 vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             }),
-            // attributes: {
-            //     color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-            // }
         }),
         appearance: new Cesium.EllipsoidSurfaceAppearance({
             aboveGround: true,
-            material: new Cesium.Material({
-                fabric: {
-                    type: 'Water',
-                    uniforms: {
-                        normalMap: Cesium.buildModuleUrl(normalMap),
-                        frequency: 1000.0,
-                        animationSpeed: 0.01,
-                        amplitude: 100
-                    }
-                }
-            })
+            material:material
         }),
         show: true
     })
@@ -6015,7 +6017,7 @@ const addWater = (viewer: any) => {
 
 }
 
-const addQingxie = (viewer: any) => {
+export const addQingxie = (viewer: any) => {
     let viewModel: any = {
         emissionRate: 5.0,
         gravity: -3.0,
