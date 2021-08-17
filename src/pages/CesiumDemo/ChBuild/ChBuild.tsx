@@ -259,7 +259,7 @@ function ChBuild(): JSX.Element {
 
             {/* 天际线分析 */}
             <div className="test-btn-group" >
-                <div style={{ display: "none" }} className="sig-btn" onClick={() => { getCord() }} >get坐标</div>
+                <div className="sig-btn" onClick={() => { getCord() }} >get坐标</div>
                 <div style={{ display: "none" }} className="sig-btn" onClick={() => { calcSkyline() }} >天际线</div>
             </div>
 

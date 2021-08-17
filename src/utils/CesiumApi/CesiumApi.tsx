@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import { flowArray, testFlightData } from '../../pages/CesiumDemo/ChBuild/testData';
+import { flowArray, shuiMian, testFlightData } from '../../pages/CesiumDemo/ChBuild/testData';
 // import roadImage from "../../assets/image/road.jpg";
 import testPoint from "../../assets/image/point5.png";
 // import julei from "../../assets/image/point1.png";
@@ -670,8 +670,8 @@ export const clickToGetCord = (viewer: any) => {
         const windowPosition = viewer.camera.getPickRay(movement.position);
         const cartesianCoordinates = viewer.scene.globe.pick(windowPosition, viewer.scene);
         const cartoCoordinates = viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesianCoordinates);
-        const latitude = (cartoCoordinates.latitude * 180 / Math.PI).toFixed(2);
-        const longitude = (cartoCoordinates.longitude * 180 / Math.PI).toFixed(2);
+        const latitude = (cartoCoordinates.latitude * 180 / Math.PI).toFixed(5);
+        const longitude = (cartoCoordinates.longitude * 180 / Math.PI).toFixed(5);
 
         // 获取世界坐标 Cartesian3（pickEllipsoid参数：屏幕坐标，椭球体），二维的方法
         // WGS84经纬度坐标系（没有实际的对象）、WGS84弧度坐标系（Cartographic）、笛卡尔空间直角坐标系（Cartesian3）、平面坐标系（Cartesian2），4D笛卡尔坐标系（Cartesian4）
@@ -5969,6 +5969,163 @@ export const addShuiBa = (viewer: any) => {
             roll: 0.0
         }
     });
+
+    // 添加水面
+    addWater(viewer);
+    // 添加水库流水
+    addQingxie(viewer);
+
+}
+const addWater = (viewer: any) => {
+
+    // frequency：波的数量
+    // animationSpeed：水震动的速度
+    // amplitude：振幅大小
+    var primitive = new Cesium.GroundPrimitive({// 贴地的primitive
+        geometryInstances: new Cesium.GeometryInstance({
+            geometry: new Cesium.PolygonGeometry({// 支持CircleGeometry，CorridorGeometry，EllipseGeometry，RectangleGeometry
+                // polygonHierarchy: new Cesium.PolygonHierarchy([
+                //     // Cesium.Cartesian3.fromDegreesArray(100，25，100，30，110，30)
+                //     Cesium.Cartesian3.fromDegreesArrayHeights(shuiMian)
+                // ])
+                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(shuiMian)),
+                vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            }),
+            // attributes: {
+            //     color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+            // }
+        }),
+        appearance: new Cesium.EllipsoidSurfaceAppearance({
+            aboveGround: true,
+            material: new Cesium.Material({
+                fabric: {
+                    type: 'Water',
+                    uniforms: {
+                        normalMap: Cesium.buildModuleUrl(normalMap),
+                        frequency: 1000.0,
+                        animationSpeed: 0.01,
+                        amplitude: 100
+                    }
+                }
+            })
+        }),
+        show: true
+    })
+    viewer.scene.primitives.add(primitive)
+
+}
+
+const addQingxie = (viewer: any) => {
+    let viewModel: any = {
+        emissionRate: 5.0,
+        gravity: -3.0,
+        minimumParticleLife: 10.1,
+        maximumParticleLife: 15.1,
+        minimumSpeed: 10.0,
+        maximumSpeed: 40.0,
+        startScale: 3.0,
+        endScale: 5.0,
+        particleSize: 25.0,
+    };
+    const lng = 110.9495;
+    const lat = 23.4036;
+    const height = 200;
+
+    const boxEntity = viewer.entities.add(
+        new Cesium.Entity({
+            id: "boxID01",
+            name: 'Red box with black outline',
+            position: Cesium.Cartesian3.fromDegrees(lng, lat, height),
+            box: {
+                dimensions: new Cesium.Cartesian3(30, 30, 30),
+                // 颜色材质
+                material: Cesium.Color.RED.withAlpha(0.0),
+            }
+        })
+    ); 
+    viewer.clock.shouldAnimate = true;
+
+    let emitterModelMatrix = new Cesium.Matrix4();
+    let translation = new Cesium.Cartesian3();
+    let rotation = new Cesium.Quaternion();
+    let hpr = new Cesium.HeadingPitchRoll();
+    let trs = new Cesium.TranslationRotationScale();
+
+    function computeEmitterModelMatrix() {
+        hpr = Cesium.HeadingPitchRoll.fromDegrees(-25.0, -60.0, 0.0, hpr);
+        trs.translation = Cesium.Cartesian3.fromElements(
+            -4.0,
+            0.0,
+            1.4,
+            translation
+        );
+        trs.rotation = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
+        return Cesium.Matrix4.fromTranslationRotationScale(
+            trs,
+            emitterModelMatrix
+        );
+    }
+
+    let gravityScratch = new Cesium.Cartesian3();
+    function applyGravity(p: any, dt: any) {
+        // We need to compute a local up vector for each particle in geocentric space.
+        let position = p.position;
+
+        Cesium.Cartesian3.normalize(position, gravityScratch);
+        Cesium.Cartesian3.multiplyByScalar(
+            gravityScratch,
+            viewModel.gravity * dt,
+            gravityScratch
+        );
+
+        p.velocity = Cesium.Cartesian3.add(
+            p.velocity,
+            gravityScratch,
+            p.velocity
+        );
+    }
+
+    const particleSystem = viewer.scene.primitives.add(
+        new Cesium.ParticleSystem({
+            image: "./Models/image/partical.png",
+            startColor: Cesium.Color.LIGHTSEAGREEN.withAlpha(0.7),
+            endColor: Cesium.Color.WHITE.withAlpha(0.0),
+            startScale: viewModel.startScale,
+            endScale: viewModel.endScale,
+            minimumParticleLife: viewModel.minimumParticleLife,
+            maximumParticleLife: viewModel.maximumParticleLife,
+            minimumSpeed: viewModel.minimumSpeed,
+            maximumSpeed: viewModel.maximumSpeed,
+            imageSize: new Cesium.Cartesian2(
+                viewModel.particleSize,
+                viewModel.particleSize
+            ),
+            emissionRate: viewModel.emissionRate,
+            lifetime: 16.0,
+            emitter : new Cesium.CircleEmitter(0.5),
+            emitterModelMatrix: computeEmitterModelMatrix(),
+            updateCallback: applyGravity,
+        })
+    );
+
+    function computeModelMatrix(entity: any, time: any) {
+        return entity.computeModelMatrix(time, new Cesium.Matrix4());
+    }
+
+    viewer.scene.preUpdate.addEventListener(function (scene: any, time: any) {
+        particleSystem.modelMatrix = computeModelMatrix(boxEntity, time);
+
+        // Account for any changes to the emitter model matrix.
+        particleSystem.emitterModelMatrix = computeEmitterModelMatrix();
+
+        // Spin the emitter if enabled.
+        if (viewModel.spin) {
+            viewModel.heading += 1.0;
+            viewModel.pitch += 1.0;
+            viewModel.roll += 1.0;
+        }
+    });
+
 }
 
 // 测试 沿指定的路径飞行
