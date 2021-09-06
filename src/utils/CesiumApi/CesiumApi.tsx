@@ -8,30 +8,22 @@ import testgif from "../../assets/image/testgif.gif";
 import kuang1 from "../../assets/image/box.png";
 import circleGif from "../../assets/image/circle2.gif";
 // import kuanggif from "../../assets/image/kuang1.gif";
-// import jt from "../../assets/image/JT1.png";
+import jt from "../../assets/image/JT5.png";
 import jt2 from "../../assets/image/JT2.png";
 // import yr1 from "../../assets/image/yr1.png";
 import moment from "moment";
-import {  WuShader } from './MulShader';
+import { WuShader } from './MulShader';
 import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
-import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';   
-// import { EchartPoint } from './WithEchart/EchartPoint';
-// import { EchartFly } from './WithEchart/EchartFly';
-
-// export const Sampler;
-// export const ShaderSource;
-// export const ClearCommand;
-// export const DrawCommand;
-// export const Pass;
-// export const VertexArray;
-// export const BufferUsage;
+import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';
+import { PolyRiver, PloyFlood, WaterControlPoint, WaterFallCord, WaterMonitorPoint, WaterControlPointValue } from './TestData/PolyRiver';
+import { MultiPolyRiver, PolylineRiver } from './TestData/a';
+import { riverTwoLine } from './TestData/b';
 
 
-
-window.CESIUM_BASE_URL = './cesium/'; 
+window.CESIUM_BASE_URL = './cesium/';
 Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);// 西南东北，默认显示中国
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZTIxYjQ0Yi1kODkwLTQwYTctYTdjNi1hOTkwYTRhYTI2NDEiLCJpZCI6MzY4OTQsImlhdCI6MTYwNDMwMzkzM30.btKZ2YlmB0wCTBvk3ewmGk5MAjS5rwl_Izra03VcrnY';
 const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
@@ -81,6 +73,8 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         //     requestVertexNormals:true, // 坡度可视化的必须勾选
         //     // requestWaterMask:true
         // }),
+        // http://localhost:9000/terrain/aad787c00b0011ecbf0d11c2c0edeb81
+
         // skyBox: new Cesium.SkyBox({
         //     sources: {
         //         positiveX: './Models/image/box.png',
@@ -130,7 +124,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         //     viewer.resolutionScale = vtxf_dpr;
         // }
     }
- 
+
 
     // 普通款制作专题图的样式
     // tmpTileset.style = new Cesium.Cesium3DTileStyle({
@@ -151,7 +145,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
     //     }
     // });
     // viewer.scene.primitives.add(tmpTileset);
-    
+
 
     // 2021-04-19 粉刷匠 添加分帘遮罩
     // 注意：打开ChBuild 中的slider  <div id="slider"></div> 
@@ -306,7 +300,10 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // showTestCircleScan2(viewer);
 
         // 2021-08-16 粉刷匠 添加水坝glb
-        addShuiBa(viewer);
+        // addShuiBa(viewer);
+
+        // 2021-09-01 粉刷匠 添加水面
+        addJdyShuimian(viewer);
 
 
 
@@ -637,25 +634,25 @@ export const addNewBeerPoint = (viewer: any) => {
 // 2021-04-10 粉刷匠 目标是：添加一个科技感的标签 billboard 
 export const makeBillBoardImg = (number: string) => {
     const ramp = document.createElement('canvas');
-    ramp.width = 320;
-    ramp.height = 230;
+    ramp.width = 3200;
+    ramp.height = 2300;
     const ctx: any = ramp.getContext('2d');
     ctx.beginPath();
     const img = new Image();
     img.src = kuang1;
     img.onload = function () {
         // 将图片画到canvas上面上去！
-        ctx.drawImage(img, 40, 0, 280, 190);
+        ctx.drawImage(img, 400, 0, 2800, 1900);
         ctx.fillStyle = '#fff';   // 文字填充颜色
-        ctx.font = '64px Adobe Ming Std';
+        ctx.font = '256px Adobe Ming Std';
         ctx.textAlign = 'center';
-        ctx.fillText(number, 100, 120);
+        ctx.fillText(number, 1000, 1200);
 
         // 画一条斜线
-        ctx.moveTo(0, 230);
-        ctx.lineTo(40, 190);
-        ctx.strokeStyle = 'blue';
-        ctx.lineWidth = 6;
+        // ctx.moveTo(0, 2300);
+        // ctx.lineTo(400, 1900);
+        // ctx.strokeStyle = 'rgb(81,162,255)';
+        // ctx.lineWidth = 6;
         ctx.stroke();
     }
     return ramp;
@@ -682,7 +679,8 @@ export const clickToGetCord = (viewer: any) => {
 
         // 获取场景坐标 Cartesian3 （pickPosition）
         // const cartesian = viewer.scene.pickPosition(movement.position);
-        console.log("经纬度：", longitude, latitude)
+        // console.log("经f纬度：", cartoCoordinates);
+        console.log("经纬度：", longitude, latitude);
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 
@@ -1112,7 +1110,7 @@ export const addMutTypeLine = (viewer: any) => {
         return ramp;
     }
     const allPoint = animatedParabola([113.90, 22.50, 114.39, 22.77]);
-    viewer.entities.add({  
+    viewer.entities.add({
         polyline: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights(allPoint),
             width: 7,
@@ -1560,7 +1558,7 @@ export const yiDongSiCeng = (viewer: any) => {
         const boxEntity = new Cesium.Entity({
             id: "boxCengId" + i,
             name: 'sig-box',
-            position: Cesium.Cartesian3.fromDegrees(108.9594, 34.2198, boxHeight[i]),           
+            position: Cesium.Cartesian3.fromDegrees(108.9594, 34.2198, boxHeight[i]),
             box: {
                 dimensions: new Cesium.Cartesian3(50, 50, 10),
                 // 渐变纹理
@@ -1605,7 +1603,7 @@ export const drawReal = (viewer: any, type: string) => {
             if (!Cesium.defined(pickedFeature) && cartesianCoordinates) {
                 clickHandler(movement);
                 // 添加地面点              
-                const tmpEntity = viewer.entities.add({         
+                const tmpEntity = viewer.entities.add({
                     id: "draw_Point" + tmpId,
                     position: cartesianCoordinates,
                     billboard: {
@@ -1680,7 +1678,7 @@ export const drawReal = (viewer: any, type: string) => {
                     outlineWidth: 2,
                 }
             });
-            if(floatingPoint){
+            if (floatingPoint) {
                 entityDrawArr.push(floatingPoint);
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -1992,7 +1990,7 @@ export const drawReal = (viewer: any, type: string) => {
 
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-  
+
 
 
         const PolyCirclePrimitive: any = (function () {
@@ -2075,7 +2073,7 @@ export const drawReal = (viewer: any, type: string) => {
         // 注册鼠标左击事件
         handler.setInputAction((movement: any) => {
             let ray = viewer.camera.getPickRay(movement.position);
-            cartesian = viewer.scene.globe.pick(ray, viewer.scene);            
+            cartesian = viewer.scene.globe.pick(ray, viewer.scene);
             if (positions.length === 0) {
                 positions.push(cartesian.clone());
             }
@@ -2105,7 +2103,7 @@ export const drawReal = (viewer: any, type: string) => {
 
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-  
+
         const PolySquarePrimitive: any = (function () {
             function _(this: any, positions: any) {
                 const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
@@ -2115,8 +2113,8 @@ export const drawReal = (viewer: any, type: string) => {
                     position: [],
                     rectangle: {
                         coordinates: [],
-                        material : Cesium.Color.BLACK.withAlpha(0.4),
-                        outline : true,
+                        material: Cesium.Color.BLACK.withAlpha(0.4),
+                        outline: true,
                         classificationType: Cesium.ClassificationType.TERRAIN,
                     },
                 };
@@ -2133,7 +2131,7 @@ export const drawReal = (viewer: any, type: string) => {
                     const Point2 = _self.positions[1];
                     const Point1Cart = viewer.scene.globe.ellipsoid.cartesianToCartographic(Point1);
                     const Point2Cart = viewer.scene.globe.ellipsoid.cartesianToCartographic(Point2);
-                    const rect = Cesium.Rectangle.fromCartographicArray([Point1Cart, Point2Cart]);       
+                    const rect = Cesium.Rectangle.fromCartographicArray([Point1Cart, Point2Cart]);
                     return rect ? rect : [];
                 };
 
@@ -2168,7 +2166,7 @@ export const drawReal = (viewer: any, type: string) => {
         for (let i = 0; i < entityDrawArr.length; i++) {
             const sigEntity = entityDrawArr[i];
             tmpTestData.push({
-                id: sigEntity.id,     
+                id: sigEntity.id,
             })
         }
 
@@ -2600,7 +2598,7 @@ export const addVideoLevel0 = (viewer: any) => {
         114.12,
         22.69,
         6000,
-    ]; 
+    ];
     const instance = new Cesium.GeometryInstance({
         geometry: new Cesium.WallGeometry({
             positions: Cesium.Cartesian3.fromDegreesArrayHeights(pArray),
@@ -2631,7 +2629,7 @@ export const addVideoLevel0 = (viewer: any) => {
         element: videoElement
     })
 
-    if(synchronizer){
+    if (synchronizer) {
         // 
     }
 
@@ -2708,14 +2706,14 @@ export const addFlood = (viewer: any) => {
 
         // 粉刷匠 获取地形上的点
         cartesian = viewer.scene.pickPosition(movement.position);
-        if(Cesium.defined(cartesian)){
+        if (Cesium.defined(cartesian)) {
             if (positions.length === 0) {
                 positions.push(cartesian.clone());
             }
             positions.push(cartesian);
         }
 
-    
+
         // 在三维场景中添加点
         let cartographic = Cesium.Cartographic.fromCartesian(positions[positions.length - 1]);
         let longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
@@ -3064,7 +3062,7 @@ export const addClipTo3DTiles = (viewer: any) => {
         viewer.scene.canvas
     );
     downHandler.setInputAction(function (movement) {
-        const pickedObject =  viewer.scene.pick(movement.position);
+        const pickedObject = viewer.scene.pick(movement.position);
         if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id) && Cesium.defined(pickedObject.id.plane)) {
             selectedPlane = pickedObject.id.plane;
             selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.05);
@@ -3264,7 +3262,7 @@ export const addClipToTerrien = (viewer: any) => {
         return _;
     })();
 
- 
+
     // --------------------------------根据点坐标构建clippingPlans--------------------------
     // 构建逆时针序列
     const makeDataCCW = (pointArr: any) => {
@@ -3326,7 +3324,7 @@ export const addClipToTerrien = (viewer: any) => {
         // 计算地面点坐标
         const tmpInterval = 10;
         const landPoint = calcLandPointInter(viewer, pointArr, tmpInterval);
-  
+
 
         // 底部
         viewer.entities.add({
@@ -3496,7 +3494,7 @@ const calcLandPointInter = (viewer: any, pointArr: any, tmpInterval: any) => {
         cart3Arr.push(Cesium.Cartesian3.fromDegrees(
             interpolationArr[i].longitude,
             interpolationArr[i].latitude,
-            interpolationArr[i].height,            
+            interpolationArr[i].height,
         ))
     }
 
@@ -3511,7 +3509,7 @@ export const addViewShed = (viewer: any) => {
         viewPosition: c3,
         viewDistance: 1000
     })
-    if(tmpView){
+    if (tmpView) {
         // 
     }
 }
@@ -3790,11 +3788,11 @@ export const adddiff4 = (viewer: any) => {
 
     let appearance = new Cesium.MaterialAppearance({
         // material: material,// 自定义的材质
-        material:new Cesium.Material({
-            fabric:{
-                type : 'Color',
-                uniforms : {
-                    color : new Cesium.Color(1.0, 1.0, 0.0, 1.0)
+        material: new Cesium.Material({
+            fabric: {
+                type: 'Color',
+                uniforms: {
+                    color: new Cesium.Color(1.0, 1.0, 0.0, 1.0)
                 }
             }
         }),
@@ -3840,7 +3838,7 @@ export const addDiffShader = (viewer: any) => {
 
     // 扩散墙-todo 未完成
     // adddiff4(viewer);
- 
+
 }
 
 // 2021-04-27 粉刷匠 补充-线管
@@ -3851,15 +3849,15 @@ export const addPolylineVolume = (viewer: any) => {
         var angle = Math.PI / arms;
         var pos = [];
         for (var i = 0; i < 2 * arms; i++) {
-          var r = i % 2 === 0 ? rOuter : rInner;
-          var p = new Cesium.Cartesian2(
-            Math.cos(i * angle) * r,
-            Math.sin(i * angle) * r
-          );
-          pos.push(p);
+            var r = i % 2 === 0 ? rOuter : rInner;
+            var p = new Cesium.Cartesian2(
+                Math.cos(i * angle) * r,
+                Math.sin(i * angle) * r
+            );
+            pos.push(p);
         }
         return pos;
-      }
+    }
 
 
     viewer.entities.add({
@@ -3914,24 +3912,24 @@ export const addContour = (viewer: any) => {
     let bandTransparency = Number(viewModel.bandTransparency);
     let backgroundTransparency = Number(viewModel.backgroundTransparency);
 
-    let layers:any = [];
+    let layers: any = [];
     let backgroundLayer = {
-      entries: [
-        {
-          height: 4200.0,
-          color: new Cesium.Color(0.0, 0.0, 0.2, backgroundTransparency),
-        },
-        {
-          height: 8000.0,
-          color: new Cesium.Color(1.0, 1.0, 1.0, backgroundTransparency),
-        },
-        {
-          height: 8500.0,
-          color: new Cesium.Color(1.0, 0.0, 0.0, backgroundTransparency),
-        },
-      ],
-      extendDownwards: true,
-      extendUpwards: true,
+        entries: [
+            {
+                height: 4200.0,
+                color: new Cesium.Color(0.0, 0.0, 0.2, backgroundTransparency),
+            },
+            {
+                height: 8000.0,
+                color: new Cesium.Color(1.0, 1.0, 1.0, backgroundTransparency),
+            },
+            {
+                height: 8500.0,
+                color: new Cesium.Color(1.0, 0.0, 0.0, backgroundTransparency),
+            },
+        ],
+        extendDownwards: true,
+        extendUpwards: true,
     };
     layers.push(backgroundLayer);
 
@@ -3962,7 +3960,7 @@ export const addContour = (viewer: any) => {
             ],
         });
     }
-    
+
     let antialias = Math.min(10.0, bandThickness * 0.1);
     if (!gradient) {
         let band1 = {
@@ -4051,8 +4049,8 @@ export const addContour = (viewer: any) => {
 
         layers.push(combinedBand);
     }
-    
- 
+
+
     // 官网是使用的例子为 Cesium.createElevationBandMaterial，而1.8版本才有,请注意升级
     let material = Cesium.createElevationBandMaterial({
         scene: viewer.scene,
@@ -4366,7 +4364,7 @@ export const addParticelEimm = (viewer: any) => {
     let scratchAngleForOffset = 0.0;
     let scratchOffset = new Cesium.Cartesian3();
     let imageSize = new Cesium.Cartesian2(15.0, 15.0);
-    function createParticleSystems(options:any, systemsArray:any) {
+    function createParticleSystems(options: any, systemsArray: any) {
         let length = options.numberOfSystems;
         for (let i = 0; i < length; ++i) {
             scratchAngleForOffset =
@@ -4405,12 +4403,12 @@ export const addParticelEimm = (viewer: any) => {
         }
     }
 
-    let rocketSystems:any = [];
+    let rocketSystems: any = [];
     createParticleSystems(rocketOptions, rocketSystems);
     // let cometSystems:any = [];
     // createParticleSystems(cometOptions, cometSystems);
 
-    if(cometOptions){
+    if (cometOptions) {
         // 
     }
 
@@ -4441,7 +4439,7 @@ export const addParticelCar = (viewer: any, scene: any) => {
     //Set timeline to simulation bounds
     viewer.timeline.zoomTo(start, stop);
 
-    let viewModel:any = {
+    let viewModel: any = {
         emissionRate: 5.0,
         gravity: 0.0,
         minimumParticleLife: 1.2,
@@ -4671,13 +4669,13 @@ export const addExpandCylindert = (viewer: any) => {
             positions[6] = centerPoint[0] - sigDeep;
             positions[7] = centerPoint[1] + sigDeep;
             positions[8] = centerPoint[0] - sigDeep;
-            positions[9] = centerPoint[1] - sigDeep; 
-            
+            positions[9] = centerPoint[1] - sigDeep;
+
         }
 
     }
-   
-                  
+
+
 
 
     // const PolyLinePrimitive: any = (function () {
@@ -4761,7 +4759,7 @@ export const addExpandCylindert = (viewer: any) => {
         return _;
     })();
 
- 
+
 
 
     // setInterval(() => {
@@ -4954,8 +4952,8 @@ export const addRsWind = (viewer: any) => {
             geometryInstances: new Cesium.GeometryInstance({
                 geometry: new Cesium.RectangleGeometry({
                     rectangle: Cesium.Rectangle.fromDegrees(cor.w, cor.s, cor.e, cor.n),
-                  //vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                  height: 300000
+                    //vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    height: 300000
                 }),
             }),
             appearance: appearance
@@ -4963,7 +4961,7 @@ export const addRsWind = (viewer: any) => {
             //     aboveGround: true,
             // }),
         })
-    );	
+    );
 
     // 动态修改雷达材质中的offset变量，从而实现动态效果。
     viewer.scene.preUpdate.addEventListener(function () {
@@ -4974,10 +4972,10 @@ export const addRsWind = (viewer: any) => {
         }
         rectangle.appearance.material.uniforms.time = time;
     })
-    
-  
-    
-  
+
+
+
+
 }
 
 // 2021-06-09 粉刷匠 添加通视分析
@@ -5205,7 +5203,7 @@ export const addSkyLine = (viewer: any) => {
         const pickedFeature1 = viewer.scene.pick(c21);
         // 获取场景坐标 Cartesian3 （pickPosition）
         const position = viewer.scene.pickPosition(c21);
-        if (Cesium.defined(pickedFeature1) && position ) {
+        if (Cesium.defined(pickedFeature1) && position) {
             linePoint.push(position);
         } else if (pick1 !== undefined && pick1 !== null) {
             linePoint.push(pick1);
@@ -5224,7 +5222,7 @@ export const addSkyLine = (viewer: any) => {
 
 
 
-  
+
 
 
 
@@ -5556,7 +5554,8 @@ export const addTestBox = (viewer: any) => {
 export const addTestBlueBuilding = (viewer: any) => {
 
     const tmpTileset = new Cesium.Cesium3DTileset({
-        url: "./Models/szNanshan/tileset.json"
+        // url: "./Models/szNanshan/tileset.json"
+        url: "./Models/building4/tileset.json"
     })
 
     // 给建筑物添加shader
@@ -5610,7 +5609,7 @@ export const addTestBlueBuilding = (viewer: any) => {
         });
 
         // 设置3dTiles贴地
-        set3DtilesHeight(1, tileset);
+        set3DtilesHeight(500, tileset);
 
         // 设置hover事件
         // addHoverAction(tileset, viewer);
@@ -5921,7 +5920,7 @@ export const addTestGlbLabel = (viewer: any) => {
 
 // 2021-08-16 粉刷匠 添加水坝
 export const addShuiBa = (viewer: any) => {
-    const airplaneUrl = "./Models/shuiba.glb";
+    const airplaneUrl = "./Models/shuiba0902.glb";
 
     // 此方法问题在于缩放的时候不能随着缩放
     // viewer.entities.add({
@@ -5934,57 +5933,539 @@ export const addShuiBa = (viewer: any) => {
     //     // orientation: new Cesium.VelocityOrientationProperty(positionProperty)
     // });
 
-    const cartesian = Cesium.Cartesian3.fromDegrees(110.95, 23.401, 0);
-    const newHeading = Cesium.Math.toRadians(0); //初始heading值赋0
-    const newPitch = Cesium.Math.toRadians(0);
-    const newRoll = Cesium.Math.toRadians(0);
-    const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
-    const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+    // flyToPoint(viewer, { lng: 111.02660, lat: 23.42913, height: 100 });
 
-    const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
-        url: airplaneUrl, // 模型地址
-        modelMatrix,
-    }));
+    for (let i = 0; i < WaterControlPoint.length; i += 4) {
+        // const cord = [104.04486, 30.77336, 504];
+        const cord = [WaterControlPoint[i], WaterControlPoint[i + 1], WaterControlPoint[i + 2]];
+        const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
+        const newHeading = Cesium.Math.toRadians(WaterControlPoint[i + 3]); //初始heading值赋0
+        const newPitch = Cesium.Math.toRadians(0);
+        const newRoll = Cesium.Math.toRadians(0);
+        const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+    
+        const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+            url: airplaneUrl, // 模型地址
+            modelMatrix,
+        }));
+    
+        // todo:平移,可使用偷懒方法，修改Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100); 
+    
+        // 放大一点
+        curModel.scale = 10;
+    }
 
-    // todo:平移,可使用偷懒方法，修改Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100); 
-
-    // 放大一点
-    curModel.scale = 80;
+  
 
     // 模型旋转
-    const curModelMatrix = curModel.modelMatrix; // 获取当前模型modelMatrix
-    const tcartesian = new Cesium.Cartesian3(curModelMatrix[12], curModelMatrix[13], curModelMatrix[14]);
-    const tnewHeading = Cesium.Math.toRadians(-25);// 改变Heading值
-    const tnewPitch = Cesium.Math.toRadians(0);// pitch值填当前模型pitch，上文介绍过如何获取
-    const tnewRoll = Cesium.Math.toRadians(0);// 同上
-    const theadingPitchRoll = new Cesium.HeadingPitchRoll(tnewHeading, tnewPitch, tnewRoll);
-    const m = Cesium.Transforms.headingPitchRollToFixedFrame(tcartesian, theadingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
-    curModel.modelMatrix = m; //新的modelMatrix赋给模型
+    // const curModelMatrix = curModel.modelMatrix; // 获取当前模型modelMatrix
+    // const tcartesian = new Cesium.Cartesian3(curModelMatrix[12], curModelMatrix[13], curModelMatrix[14]);
+    // const tnewHeading = Cesium.Math.toRadians(0);// 改变Heading值
+    // const tnewPitch = Cesium.Math.toRadians(0);// pitch值填当前模型pitch，上文介绍过如何获取
+    // const tnewRoll = Cesium.Math.toRadians(0);// 同上
+    // const theadingPitchRoll = new Cesium.HeadingPitchRoll(tnewHeading, tnewPitch, tnewRoll);
+    // const m = Cesium.Transforms.headingPitchRollToFixedFrame(tcartesian, theadingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+    // curModel.modelMatrix = m; //新的modelMatrix赋给模型
 
+    // viewer.camera.flyTo({
+    //     destination: Cesium.Cartesian3.fromDegrees(cord[0], cord[1], 100),
+    //     orientation: {
+    //         heading: Cesium.Math.toRadians(0),
+    //         pitch: Cesium.Math.toRadians(-90),
+    //         roll: 0.0
+    //     }
+    // });
+
+
+
+
+    // 添加水库流水
+    for (let i = 0; i < WaterFallCord.length; i += 7) {
+        setTimeout(() => {
+            const portHeight = 510;
+            const startPoint = [WaterFallCord[i], WaterFallCord[i + 1], portHeight];
+            const endPoint = [WaterFallCord[i + 2], WaterFallCord[i + 3], portHeight];
+            const portNum = 6;
+            const sigStep1 = (endPoint[0] - startPoint[0]) / (portNum - 1);
+            const sigStep2 = (endPoint[1] - startPoint[1]) / (portNum - 1);
+            const baArray: any = [];
+            baArray.push(startPoint);
+            for (let j = 1; j < portNum - 1; j++) {
+                baArray.push([startPoint[0] + sigStep1 * j, startPoint[1] + sigStep2 * j, portHeight]);
+            }
+            baArray.push(endPoint);
+            for (let j = 0; j < baArray.length; j++) {
+                addQingxie(viewer, baArray[j][0], baArray[j][1], baArray[j][2], `box${i}-${j}`, WaterFallCord[i + 4], WaterFallCord[i + 5]);
+            }
+        }, WaterFallCord[i + 6]);
+    }
+
+
+
+}
+
+// 2021-09-01 粉刷匠 九道堰相关
+let isWaterChange: boolean = false;
+let waterChangeTime: number = 0;
+export const addJdyShuimian = (viewer: any) => {
+
+    // 添加一个地形
+    let terrainProvider = new Cesium.CesiumTerrainProvider({
+        url: "http://192.168.207.155:9000/terrain/aad787c00b0011ecbf0d11c2c0edeb81"
+        // url: 'http://localhost:9000/terrain/aad787c00b0011ecbf0d11c2c0edeb81'
+        // url:'http://localhost:9000/terrain/73f16a300b1611ecbf0d11c2c0edeb81'
+    });
+    viewer.terrainProvider = terrainProvider;
+
+    const polyRivers: any = [];
+    const riverFeature = MultiPolyRiver.features;
+    for (let i = 0; i < riverFeature.length; i++) {
+        const sigFeature = riverFeature[i];
+        const coordinates = sigFeature.geometry.coordinates;
+        for (let j = 0; j < coordinates.length; j++) {
+            const sigPolygon = coordinates[j];
+            const sigPolyCord: any = [];
+            for (let k = 0; k < sigPolygon.length; k++) {
+                sigPolyCord.push(sigPolygon[k][0], sigPolygon[k][1]);
+            }
+            polyRivers.push(sigPolyCord);
+        }
+    }
+
+    for (let i = 0; i < polyRivers.length; i++) {
+        addWater(viewer, polyRivers[i]);
+        addWaterBase(viewer, polyRivers[i]);
+    }
+
+    // addWater(viewer, PolyRiver);
+    flyToPoint(viewer, { lng: PolyRiver[0], lat: PolyRiver[1], height: 1000 });
+    // addShuiBa(viewer);   
+    // addJDYFlood(viewer)
+    addJDYLabel(viewer);  
+    // addJDYFlowLine(viewer);
+}
+
+// 2021-09-04 粉刷匠 添加一个不断变化的多边形
+export const addJDYFlowLine = (viewer: any) => {
+    const waterAside = riverTwoLine.features[0].geometry.coordinates;
+    const waterBside = riverTwoLine.features[1].geometry.coordinates;
+
+    const maxPointNum = 800;
+    let chooseLength = waterAside.length > waterBside.length ? waterBside.length : waterAside.length;
+    chooseLength = chooseLength > maxPointNum ? maxPointNum : chooseLength;
+    const chooseAside: any = [];
+    const chooseBside: any = [];
+    for (let i = 0; i < chooseLength; i++) {
+        chooseAside.push(waterAside[waterAside.length - 1 - i]);
+        chooseBside.push(waterBside[i]);
+    }
+
+    const step = 2;
+    // for (let i = 0; i < chooseLength; i += step) {
+    //     const 
+    // }
+
+    // viewer.entities.add({
+    //     name: '多边形',
+    //     polygon: {
+    //         hierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(polydata)),
+    //         // material: new Cesium.ColorMaterialProperty(Cesium.Color.fromBytes(8, 116, 100)),
+    //         material: new Cesium.ColorMaterialProperty(Cesium.Color.RED),
+    //         // material: new Cesium.ImageMaterialProperty({
+    //         //     image: new Cesium.CallbackProperty(makeJT, false),
+    //         //     transparent: true,
+    //         // })
+    //     },
+    // });
+
+
+
+   
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+
+    const PolygonPrimitive: any = (function () {
+        function _(this: any, positions: any) {
+            const tmpId = moment().format('YYYY_MM_DD_HH_mm_ss_') + moment().get('milliseconds');
+            this.options = {
+                id: "draw_Clip" + tmpId,
+                name: '多边形',
+                polygon: {
+                    hierarchy: [],
+                    // material: Cesium.Color.GREEN.withAlpha(0.5),
+                    material: Cesium.Color.RED,
+                }
+            };
+
+            this.hierarchy = { positions };
+            this._init();
+        }
+
+        _.prototype._init = function () {
+            var _self = this;
+            var _update = function () {
+                return _self.hierarchy;
+            };
+            // 实时更新polygon.hierarchy
+            this.options.polygon.hierarchy = new Cesium.CallbackProperty(_update, false);
+            const tmpEntity = viewer.entities.add(this.options);
+            if (tmpEntity) {
+                entityDrawArr.push(tmpEntity);
+            }
+        };
+
+        return _;
+    })();
+
+    let polygon: any = null;
+    let positions: any = Cesium.Cartesian3.fromDegreesArray([
+        chooseBside[1][0], chooseBside[1][1],
+        chooseBside[0][0], chooseBside[0][1],
+        chooseAside[0][0], chooseAside[0][1],
+        chooseAside[1][0], chooseAside[1][1],
+    ]);
+    polygon = new PolygonPrimitive(positions);
+    let polyIndex = 0;
+    let tout: any = null;
+
+    // 2021-09-04 粉刷匠 自迭代
+    // tout = setInterval(() => {
+    //     if ((polyIndex + 1) * step > chooseLength) {
+    //         clearInterval(tout);
+    //         return;
+    //     }
+    //     const lineA = chooseAside.filter((t: any, index: any) => index >= (polyIndex) * step && index < (polyIndex + 1) * step);
+    //     const lineB = chooseBside.filter((t: any, index: any) => index >= (polyIndex) * step && index < (polyIndex + 1) * step);
+ 
+
+    //     // for (let i = 0; i < lineB.length; i++) {
+    //     //     const sigPointA = lineA[i];
+    //     //     const sigPointB = lineB[lineB.length - 1 - i];
+    //     //     const sigPointAArr = [sigPointA[0], sigPointA[1]];
+    //     //     const sigPointBArr = [sigPointB[0], sigPointB[1]];
+    //     //     positions.push(Cesium.Cartesian3.fromDegreesArray(sigPointAArr)[0]);
+    //     //     positions.unshift(Cesium.Cartesian3.fromDegreesArray(sigPointBArr)[0])
+    //     // }   
+        
+    //     for (let i = 0; i < lineA.length; i++) {
+    //         const sigPointA = lineA[i];          
+    //         const sigPointAArr = [sigPointA[0], sigPointA[1]];           
+    //         positions.push(Cesium.Cartesian3.fromDegreesArray(sigPointAArr)[0]);           
+    //     }
+        
+    //     for (let i = 0; i < lineB.length; i++) {      
+    //         const sigPointB = lineB[lineB.length - 1 - i];        
+    //         const sigPointBArr = [sigPointB[0], sigPointB[1]];          
+    //         positions.unshift(Cesium.Cartesian3.fromDegreesArray(sigPointBArr)[0])
+    //     }   
+        
+    //     polyIndex = polyIndex + 1;
+    // }, 500);
+
+    tout = setInterval(() => {
+        if ((polyIndex + 1) * step > chooseLength) {
+            clearInterval(tout);
+            return;
+        }
+        const lineA = chooseAside.filter((t: any, index: any) => index >= (polyIndex) * step && index <= (polyIndex + 1) * step);
+        const lineB = chooseBside.filter((t: any, index: any) => index >= (polyIndex) * step && index <= (polyIndex + 1) * step);
+        const allLinePoint: any = [];
+
+        for (let i = 0; i < lineB.length; i++) {
+            const sigPointB = lineB[lineB.length - 1 - i];
+            allLinePoint.push(sigPointB[0]);
+            allLinePoint.push(sigPointB[1]);
+        }
+
+        for (let i = 0; i < lineA.length; i++) {
+            const sigPointA = lineA[i];
+            allLinePoint.push(sigPointA[0]);
+            allLinePoint.push(sigPointA[1]);
+        }
+
+        // 174, 128, 77
+        addWater(viewer, allLinePoint, { r: 174, g: 128, b: 77, a: 150 })
+
+        // viewer.entities.add({
+        //     name: '多边形',
+        //     polygon: {
+        //         hierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(allLinePoint)),
+        //         // material: new Cesium.ColorMaterialProperty(Cesium.Color.fromBytes(8, 116, 100)),
+        //         material: new Cesium.ColorMaterialProperty(Cesium.Color.RED),
+        //         // material: new Cesium.ImageMaterialProperty({
+        //         //     image: new Cesium.CallbackProperty(makeJT, false),
+        //         //     transparent: true,
+        //         // })
+        //     },
+        // });
+        
+        polyIndex = polyIndex + 1;
+
+    }, 100)
+
+}
+
+
+
+// 2021-09-04 粉刷匠 修改label的值
+let interLable: any = null;
+let monitorValueTime = 0;
+export const changeLable = (entityArr: any) => {
+    if (interLable) {
+        // 
+    }
+    for (let i = 0; i < entityArr.length; i++) {
+        const sigEntity = entityArr[i];
+        if (sigEntity) {
+            const orgText = sigEntity.label._text._value;
+            const orgTextIndex = +orgText.substr(3, 1);
+            const newValue = WaterControlPointValue[monitorValueTime][orgTextIndex - 1];
+            sigEntity.label._text._value = `JCD${orgTextIndex}水位：${newValue}`;
+            sigEntity.label._fillColor._value = newValue > 2.5 ? Cesium.Color.RED : Cesium.Color.BLUE;
+        }
+    }
+    monitorValueTime = monitorValueTime + 1 < WaterControlPointValue.length ? monitorValueTime + 1 : 0;
+}
+
+export const addJDYLabel = (viewer: any) => {
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    // 水位点
+    // const pointArr = [[104.19183, 30.789, 500], [104.19879, 30.79091, 520]];
+    const pointArr: any = [];
+    for (let i = 0; i < WaterMonitorPoint.length; i += 3) {
+        pointArr.push([WaterMonitorPoint[i], WaterMonitorPoint[i + 1], 570])
+    }
+
+    const jcEntArr: any = [];
+    for (let i = 0; i < pointArr.length; i++) {
+        const sigEntity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
+            billboard: {
+                image: makeVirticelLine(), // default: undefined  
+                width: 50,
+                height: 50
+            },
+            label: {
+                // 竖直的文字
+                text: `JCD${i + 1}`,
+                // font: '30px sans-serif',
+                // fillColor : Cesium.Color.RED,
+                fillColor: new Cesium.Color(0.22, 0.89, 0.94),
+                pixelOffset: new Cesium.Cartesian2(0, -30),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        });
+        jcEntArr.push(sigEntity);
+    }
+
+    interLable = setInterval(() => {
+        changeLable(jcEntArr)
+    }, 2000);
+
+    // 洼地点
+    // const wadiArr = [[104.04863, 30.76756, 530], [104.05429, 30.76585, 530]];
+    // for (let i = 0; i < wadiArr.length; i++) {
+    //     viewer.entities.add({
+    //         position: Cesium.Cartesian3.fromDegrees(wadiArr[i][0], wadiArr[i][1], wadiArr[i][2]),
+    //         billboard: {
+    //             image: makeVirticelLine(), // default: undefined  
+    //             width: 50,
+    //             height: 50
+    //         },
+    //         label: {
+    //             // 竖直的文字
+    //             text: '洼地',
+    //             // font: '30px sans-serif',
+    //             fillColor: Cesium.Color.RED.withAlpha(0.7),
+    //             // fillColor: new Cesium.Color(0.5, 0.89, 0.94),
+    //             pixelOffset: new Cesium.Cartesian2(0, -30),
+    //             verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+    //         },
+    //     });
+    // }
+
+    // // 摄像头
+    // const sxtArr = [[104.06273, 30.77760, 490], [104.04797, 30.76234, 490], [104.06862, 30.76404, 490]];
+    // for (let i = 0; i < sxtArr.length; i++) {
+    //     viewer.entities.add({
+    //         position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], sxtArr[i][2]),
+    //         billboard: {
+    //             image: './Models/image/sxt.png',
+    //             verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+    //             heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+    //             scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
+    //         }
+    //     });
+    // }
+
+    // 水坝指标框
+    // const indexArr = [ 104.04506, 30.77378, 600];
+    // // const indexArr = [104.18799, 30.79238, 500];    
+    // viewer.entities.add({
+    //     position: Cesium.Cartesian3.fromDegrees(indexArr[0], indexArr[1], indexArr[2]),
+    //     billboard: {
+    //         image: makeBillBoardImg(""), // default: undefined  
+    //         width: 320,
+    //         height: 200
+    //     }, 
+    //     label: {
+    //         text: '指标展示：\n---------------\n---------------',
+    //         fillColor: new Cesium.Color(0.5, 0.89, 0.94),
+    //         pixelOffset: new Cesium.Cartesian2(0, 10),
+    //         verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+    //     },       
+    // });
+
+}
+
+
+// 缩放到指定点
+export const flyToPoint = (viewer: any, point: { lng: number, lat: number, height: number }) => {
     viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100),
+        destination: Cesium.Cartesian3.fromDegrees(point.lng, point.lat, point.height),
         orientation: {
             heading: Cesium.Math.toRadians(0),
             pitch: Cesium.Math.toRadians(-90),
             roll: 0.0
         }
     });
+}
 
-    // 添加水面
-    addWater(viewer);
-    // 添加水库流水
-    // addQingxie(viewer);
+// 九道堰淹没
+export const addJDYFlood = (viewer: any) => {
+
+    // const boxEntity = new Cesium.Entity({
+    //     id: "boxID01",
+    //     name: 'Red box with black outline',
+    //     position: Cesium.Cartesian3.fromDegrees(104.19973, 30.79115, 530),
+    //     box: {
+    //         dimensions: new Cesium.Cartesian3(500, 500, 500),
+    //         // 渐变纹理
+    //         material: new Cesium.ImageMaterialProperty({
+    //             image: getColorRamp([0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0], true),
+    //             transparent: true,
+    //         }),
+    //         outline: true,
+    //         outlineColor: Cesium.Color.BLACK
+    //     }
+    // });
+    // viewer.entities.add(boxEntity);
+
+
+
+
+
+    const addRealFlood = (polyPosition: any) => {
+        const tmpAllHeight = { maxHeight: 500, minHeight: 495 };
+        const maxHeight = tmpAllHeight.maxHeight;
+        const minHeight = tmpAllHeight.minHeight;
+        let tmpHeight = minHeight;
+        let tmpInterv = (maxHeight - minHeight) * 0.001;
+
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+        viewer.entities.add({
+            name: '多边形',
+            polygon: {
+                hierarchy: polyPosition,
+                perPositionHeight: true,
+                extrudedHeight: new Cesium.CallbackProperty(() => {
+                    if (!isWaterChange) return 0;
+                    if (tmpHeight > maxHeight) {
+                        tmpHeight = minHeight;
+                        isWaterChange = false;
+                        waterChangeTime = 0;
+                    } else {
+                        tmpHeight += tmpInterv;
+                    }
+                    return tmpHeight;
+                }, false),
+                // material: Cesium.Color.fromBytes(180, 130, 76, 150),
+                // material: Cesium.Color.fromBytes(64, 157, 253, 150),
+                material: Cesium.Color.fromBytes(174, 128, 77, 150),
+            }
+        })
+    }
+
+    addRealFlood(Cesium.Cartesian3.fromDegreesArray(PloyFlood))
+
 
 }
-export const addWater = (viewer: any) => {
 
+export const addWaterBase = (viewer: any, poly?: number[]) => {
+    const polydata = poly ? poly : shuiMian;
+
+    const colorData = {
+        min: 1,
+        max: 900,
+        deviation: 5
+    }
+    let colorI = colorData.min;
+    let maxWaterChange = 3;
+    function makeJT() { // 这是callback，参数不能内传
+        colorI = colorI + colorData.deviation;// deviationR为每次圆增加的大小
+        if (colorI >= colorData.max) {
+            colorI = colorData.min;
+            waterChangeTime++;
+            if (waterChangeTime > maxWaterChange) {
+                colorI = colorData.max;
+                isWaterChange = true;
+            }
+        }
+        const a = Math.floor(colorI / 10) * 0.01;
+        // const al = a > 0.5 ? (a - 0.5) : 0;
+        const al = a > 0.5 ? (a - 0.3) : 0;
+        const ramp = document.createElement('canvas');
+        ramp.width = 200;
+        ramp.height = 200;
+        const ctx: any = ramp.getContext('2d');
+        ctx.beginPath();
+        ctx.rect(0, 0, 200, 200);
+        ctx.closePath();
+
+        ctx.fillStyle = `rgba(174, 128, 77, ${al})`;
+        ctx.fill();
+        ctx.stroke();
+
+        return ramp;
+    }
+
+    viewer.entities.add({
+        name: '多边形',
+        polygon: {
+            hierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(polydata)),
+            // material: new Cesium.ColorMaterialProperty(Cesium.Color.fromBytes(8, 116, 100)),
+            material: new Cesium.ColorMaterialProperty(Cesium.Color.fromBytes(6, 79, 68)),
+            // material: new Cesium.ImageMaterialProperty({
+            //     image: new Cesium.CallbackProperty(makeJT, false),
+            //     transparent: true,
+            // })
+        },
+    });
+
+    // viewer.entities.add({
+    //     name: '多边形',
+    //     polygon: {
+    //         hierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(polydata)),
+    //         // material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(changeColor, false)),
+    //         material: new Cesium.ImageMaterialProperty({
+    //             image: new Cesium.CallbackProperty(makeJT, false),
+    //             transparent: true,
+    //         })
+    //     },
+    // });
+
+}
+
+export const addWater = (viewer: any, poly?: number[], color?: any) => {
+
+    const data = poly ? poly : shuiMian;
     // 2021-08-17 粉刷匠 第一次尝试 透明水体 原本是为了修改着色器，但是发现使用baseWaterColor即可
-    let material = new Cesium.Material({
+    let material: any = new Cesium.Material({
         fabric: {
             type: 'Water',
             uniforms: { // 动态传递参数
-                baseWaterColor:Cesium.Color.WHITE.withAlpha(0.1), // 水体颜色
-                blendColor:Cesium.Color.DARKBLUE, // 水陆混合处颜色
+                baseWaterColor: Cesium.Color.WHITE.withAlpha(0.1), // 水体颜色
+                blendColor: Cesium.Color.DARKBLUE, // 水陆混合处颜色
                 // specularMap:"../../**/jpg", // 一张黑白图用来作为标识哪里是用水来渲染的贴图
                 normalMap: Cesium.buildModuleUrl(normalMap), // 用来生成起伏效果的水体
                 frequency: 100.0,
@@ -5996,6 +6477,17 @@ export const addWater = (viewer: any) => {
         translucent: false
     })
 
+    if (color) {
+        material =new Cesium.Material({
+            fabric : {
+                type : 'Color',
+                uniforms : {
+                    color: Cesium.Color.fromBytes(color.r, color.g, color.b, color.a)
+                }
+            }
+        });
+    }
+
     const primitive = new Cesium.GroundPrimitive({// 贴地的primitive
         geometryInstances: new Cesium.GeometryInstance({
             geometry: new Cesium.PolygonGeometry({// 支持CircleGeometry，CorridorGeometry，EllipseGeometry，RectangleGeometry
@@ -6003,13 +6495,13 @@ export const addWater = (viewer: any) => {
                 //     // Cesium.Cartesian3.fromDegreesArray(100，25，100，30，110，30)
                 //     Cesium.Cartesian3.fromDegreesArrayHeights(shuiMian)
                 // ])
-                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(shuiMian)),
+                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(data)),
                 vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             }),
         }),
         appearance: new Cesium.EllipsoidSurfaceAppearance({
             aboveGround: true,
-            material:material
+            material: material
         }),
         show: true
     })
@@ -6017,25 +6509,25 @@ export const addWater = (viewer: any) => {
 
 }
 
-export const addQingxie = (viewer: any) => {
+export const addQingxie = (viewer: any, lng: number, lat: number, height: number, id: string, heading: any, pitch: any) => {
     let viewModel: any = {
-        emissionRate: 5.0,
-        gravity: -3.0,
-        minimumParticleLife: 10.1,
-        maximumParticleLife: 15.1,
-        minimumSpeed: 10.0,
-        maximumSpeed: 40.0,
+        emissionRate: 40.0,
+        gravity: -10.0,
+        minimumParticleLife: 1.5,
+        maximumParticleLife: 2.5,
+        minimumSpeed: 15.0,
+        maximumSpeed: 16.0,
         startScale: 3.0,
-        endScale: 5.0,
+        endScale: 4.0,
         particleSize: 25.0,
     };
-    const lng = 110.9495;
-    const lat = 23.4036;
-    const height = 200;
+    // const lng = 110.9495;
+    // const lat = 23.4036;
+    // const height = 200;
 
     const boxEntity = viewer.entities.add(
         new Cesium.Entity({
-            id: "boxID01",
+            id: id,
             name: 'Red box with black outline',
             position: Cesium.Cartesian3.fromDegrees(lng, lat, height),
             box: {
@@ -6044,7 +6536,7 @@ export const addQingxie = (viewer: any) => {
                 material: Cesium.Color.RED.withAlpha(0.0),
             }
         })
-    ); 
+    );
     viewer.clock.shouldAnimate = true;
 
     let emitterModelMatrix = new Cesium.Matrix4();
@@ -6054,7 +6546,7 @@ export const addQingxie = (viewer: any) => {
     let trs = new Cesium.TranslationRotationScale();
 
     function computeEmitterModelMatrix() {
-        hpr = Cesium.HeadingPitchRoll.fromDegrees(-25.0, -60.0, 0.0, hpr);
+        hpr = Cesium.HeadingPitchRoll.fromDegrees(heading, pitch, 0.0, hpr);
         trs.translation = Cesium.Cartesian3.fromElements(
             -4.0,
             0.0,
@@ -6069,6 +6561,8 @@ export const addQingxie = (viewer: any) => {
     }
 
     let gravityScratch = new Cesium.Cartesian3();
+    // let isShow: boolean = true;
+    let tmpParticel: any = null;
     function applyGravity(p: any, dt: any) {
         // We need to compute a local up vector for each particle in geocentric space.
         let position = p.position;
@@ -6085,30 +6579,48 @@ export const addQingxie = (viewer: any) => {
             gravityScratch,
             p.velocity
         );
+
+        const distance = Cesium.Cartesian3.distance(
+            viewer.scene.camera.position,
+            Cesium.Cartesian3.fromDegrees(lng, lat, height)
+        );
+        if (distance > 5000) {
+            // isShow = false;
+            if (tmpParticel) {
+                // tmpParticel.show = false;
+                tmpParticel.startColor = Cesium.Color.LIGHTSEAGREEN.withAlpha(0.0);
+            }
+        } else {
+            // isShow = true;
+            if (tmpParticel) {
+                // tmpParticel.show = true;
+                tmpParticel.startColor = Cesium.Color.LIGHTSEAGREEN.withAlpha(0.7);
+            }
+        }
     }
 
-    const particleSystem = viewer.scene.primitives.add(
-        new Cesium.ParticleSystem({
-            image: "./Models/image/partical.png",
-            startColor: Cesium.Color.LIGHTSEAGREEN.withAlpha(0.7),
-            endColor: Cesium.Color.WHITE.withAlpha(0.0),
-            startScale: viewModel.startScale,
-            endScale: viewModel.endScale,
-            minimumParticleLife: viewModel.minimumParticleLife,
-            maximumParticleLife: viewModel.maximumParticleLife,
-            minimumSpeed: viewModel.minimumSpeed,
-            maximumSpeed: viewModel.maximumSpeed,
-            imageSize: new Cesium.Cartesian2(
-                viewModel.particleSize,
-                viewModel.particleSize
-            ),
-            emissionRate: viewModel.emissionRate,
-            lifetime: 16.0,
-            emitter : new Cesium.CircleEmitter(0.5),
-            emitterModelMatrix: computeEmitterModelMatrix(),
-            updateCallback: applyGravity,
-        })
-    );
+    tmpParticel = new Cesium.ParticleSystem({
+        show: true,
+        image: "./Models/image/partical.png",
+        startColor: Cesium.Color.LIGHTSEAGREEN.withAlpha(0.7),
+        endColor: Cesium.Color.WHITE.withAlpha(0.0),
+        startScale: viewModel.startScale,
+        endScale: viewModel.endScale,
+        minimumParticleLife: viewModel.minimumParticleLife,
+        maximumParticleLife: viewModel.maximumParticleLife,
+        minimumSpeed: viewModel.minimumSpeed,
+        maximumSpeed: viewModel.maximumSpeed,
+        imageSize: new Cesium.Cartesian2(
+            viewModel.particleSize,
+            viewModel.particleSize
+        ),
+        emissionRate: viewModel.emissionRate,
+        lifetime: 16.0,
+        emitter: new Cesium.CircleEmitter(0.5),
+        emitterModelMatrix: computeEmitterModelMatrix(),
+        updateCallback: applyGravity,
+    })
+    const particleSystem = viewer.scene.primitives.add(tmpParticel);
 
     function computeModelMatrix(entity: any, time: any) {
         return entity.computeModelMatrix(time, new Cesium.Matrix4());
