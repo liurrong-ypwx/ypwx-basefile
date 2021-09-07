@@ -28,7 +28,7 @@ uniform sampler2D colorTexture;\n\
    vec2 resolution = czm_viewport.zw;\n\
     vec2 uv=(gl_FragCoord.xy*2.-resolution.xy)/min(resolution.x,resolution.y);\n\
     vec3 c=vec3(.6,.7,.8);\n\
-    float a=-.4;\n\
+    float a=-.1;\n\
   float si=sin(a),co=cos(a);\n\
   uv*=mat2(co,-si,si,co);\n\
   uv*=length(uv+vec2(0,4.9))*.3+1.;\n\

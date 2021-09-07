@@ -1,18 +1,19 @@
 import React, { useEffect, useReducer } from 'react';
 import './App.css';
-import TestPage from './pages/TestPage/TestPage';
+// import TestPage from './pages/TestPage/TestPage';
 import UtilScreen from './utils/comUtil/UtilScreen';
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
-import ThreeJsDemo from './pages/ThreeJsDemo/ThreeJsDemo';
-import GIS from './pages/GIS/GIS';
-import Overview from './pages/GIS/components/Overview/Overview';
-import StartGIS from './pages/GIS/components/StartGIS/StartGIS';
+// import ThreeJsDemo from './pages/ThreeJsDemo/ThreeJsDemo';
+// import GIS from './pages/GIS/GIS';
+// import Overview from './pages/GIS/components/Overview/Overview';
+// import StartGIS from './pages/GIS/components/StartGIS/StartGIS';
 import { StoreInterface } from './store/appStore/storeInterface';
 import { appReducer, defaultState } from './store/appStore/storeReducer';
-import OpenLayerDemo from './pages/OpenLayer/OpenLayer';
-import GetStart from './pages/CesiumDemo/GetStart/GetStart';
-import ChBuild from './pages/CesiumDemo/ChBuild/ChBuild';
-import LoadModel from './pages/CesiumDemo/LoadModel/LoadModel';
+// import OpenLayerDemo from './pages/OpenLayer/OpenLayer';
+// import GetStart from './pages/CesiumDemo/GetStart/GetStart';
+// import ChBuild from './pages/CesiumDemo/ChBuild/ChBuild';
+// import LoadModel from './pages/CesiumDemo/LoadModel/LoadModel';
+import JdyDemo from './pages/CesiumDemo/JDY/JdyDemo';
 
 export const TContext = React.createContext<StoreInterface | any>(defaultState);
 
@@ -39,19 +40,20 @@ function App() {
     <TContext.Provider value={{ state, dispatch }}>
       <BrowserRouter>
         <Switch>
-          <Route path={"/test"} exact={true} component={TestPage} />
+          {/* <Route path={"/test"} exact={true} component={TestPage} />
           <Route path={"/threejsdemo"} exact={true} component={ThreeJsDemo} />
           <Route path={"/openlayer"} exact={true} component={OpenLayerDemo} />
           <Route path={"/getstart"} exact={true} component={GetStart} />
           <Route path={"/chbuild"} exact={true} component={ChBuild} />
-          <Route path={"/loadModel"} exact={true} component={LoadModel} />
+          <Route path={"/loadModel"} exact={true} component={LoadModel} /> */}
+          <Route path={"/tjdy"} exact={true} component={JdyDemo} />
 
-          <GIS>
+          {/* <GIS>
             <Route path={"/"} exact={true} component={Overview} />
             <Route path={"/overview"} exact={true} component={Overview} />
             <Route path={"/startgis"} exact={true} component={StartGIS} />
-          </GIS>
-          <Redirect from="/" to={"/gis"} />  
+          </GIS> */}
+          <Redirect from="/" to={"/gis"} />
 
         </Switch>
       </BrowserRouter>

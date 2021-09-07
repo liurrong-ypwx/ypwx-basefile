@@ -8,7 +8,7 @@ import testgif from "../../assets/image/testgif.gif";
 import kuang1 from "../../assets/image/box.png";
 import circleGif from "../../assets/image/circle2.gif";
 // import kuanggif from "../../assets/image/kuang1.gif";
-import jt from "../../assets/image/JT5.png";
+// import jt from "../../assets/image/JT5.png";
 import jt2 from "../../assets/image/JT2.png";
 // import yr1 from "../../assets/image/yr1.png";
 import moment from "moment";
@@ -19,7 +19,7 @@ import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
 import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';
 import { PolyRiver, PloyFlood, WaterControlPoint, WaterFallCord, WaterMonitorPoint, WaterControlPointValue } from './TestData/PolyRiver';
-import { MultiPolyRiver, PolylineRiver } from './TestData/a';
+import { MultiPolyRiver } from './TestData/a';
 import { riverTwoLine } from './TestData/b';
 
 
@@ -6008,6 +6008,9 @@ export const addShuiBa = (viewer: any) => {
 // 2021-09-01 粉刷匠 九道堰相关
 let isWaterChange: boolean = false;
 let waterChangeTime: number = 0;
+if(waterChangeTime){
+    // 
+}
 export const addJdyShuimian = (viewer: any) => {
 
     // 添加一个地形
@@ -6125,6 +6128,9 @@ export const addJDYFlowLine = (viewer: any) => {
         chooseAside[1][0], chooseAside[1][1],
     ]);
     polygon = new PolygonPrimitive(positions);
+    if(polygon){
+        // 
+    }
     let polyIndex = 0;
     let tout: any = null;
 
@@ -6248,7 +6254,7 @@ export const addJDYLabel = (viewer: any) => {
             label: {
                 // 竖直的文字
                 text: `JCD${i + 1}`,
-                // font: '30px sans-serif',
+                font: '16px sans-serif',
                 // fillColor : Cesium.Color.RED,
                 fillColor: new Cesium.Color(0.22, 0.89, 0.94),
                 pixelOffset: new Cesium.Cartesian2(0, -30),
@@ -6394,40 +6400,40 @@ export const addJDYFlood = (viewer: any) => {
 export const addWaterBase = (viewer: any, poly?: number[]) => {
     const polydata = poly ? poly : shuiMian;
 
-    const colorData = {
-        min: 1,
-        max: 900,
-        deviation: 5
-    }
-    let colorI = colorData.min;
-    let maxWaterChange = 3;
-    function makeJT() { // 这是callback，参数不能内传
-        colorI = colorI + colorData.deviation;// deviationR为每次圆增加的大小
-        if (colorI >= colorData.max) {
-            colorI = colorData.min;
-            waterChangeTime++;
-            if (waterChangeTime > maxWaterChange) {
-                colorI = colorData.max;
-                isWaterChange = true;
-            }
-        }
-        const a = Math.floor(colorI / 10) * 0.01;
-        // const al = a > 0.5 ? (a - 0.5) : 0;
-        const al = a > 0.5 ? (a - 0.3) : 0;
-        const ramp = document.createElement('canvas');
-        ramp.width = 200;
-        ramp.height = 200;
-        const ctx: any = ramp.getContext('2d');
-        ctx.beginPath();
-        ctx.rect(0, 0, 200, 200);
-        ctx.closePath();
+    // const colorData = {
+    //     min: 1,
+    //     max: 900,
+    //     deviation: 5
+    // }
+    // let colorI = colorData.min;
+    // let maxWaterChange = 3;
+    // function makeJT() { // 这是callback，参数不能内传
+    //     colorI = colorI + colorData.deviation;// deviationR为每次圆增加的大小
+    //     if (colorI >= colorData.max) {
+    //         colorI = colorData.min;
+    //         waterChangeTime++;
+    //         if (waterChangeTime > maxWaterChange) {
+    //             colorI = colorData.max;
+    //             isWaterChange = true;
+    //         }
+    //     }
+    //     const a = Math.floor(colorI / 10) * 0.01;
+    //     // const al = a > 0.5 ? (a - 0.5) : 0;
+    //     const al = a > 0.5 ? (a - 0.3) : 0;
+    //     const ramp = document.createElement('canvas');
+    //     ramp.width = 200;
+    //     ramp.height = 200;
+    //     const ctx: any = ramp.getContext('2d');
+    //     ctx.beginPath();
+    //     ctx.rect(0, 0, 200, 200);
+    //     ctx.closePath();
 
-        ctx.fillStyle = `rgba(174, 128, 77, ${al})`;
-        ctx.fill();
-        ctx.stroke();
+    //     ctx.fillStyle = `rgba(174, 128, 77, ${al})`;
+    //     ctx.fill();
+    //     ctx.stroke();
 
-        return ramp;
-    }
+    //     return ramp;
+    // }
 
     viewer.entities.add({
         name: '多边形',
