@@ -310,9 +310,16 @@ export const addJDYLabel = (viewer: any) => {
 
 // arcgis蓝色底图
 export const addArcgisMap = (viewer: any) => {
-    viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-        url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
-    }))
+    // viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
+    //     url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer'
+    // }))
+
+    // 添加一个蓝色底图来加强图像的展示
+    viewer.scene.imageryLayers.addImageryProvider(
+        new Cesium.SingleTileImageryProvider({
+            url: './Models/image/dark.png'
+        })
+    )
 
     //影像
     // viewer.imageryLayers.addImageryProvider(
@@ -809,7 +816,7 @@ export const addJDYFlood = (viewer: any) => {
                 extrudedHeight: new Cesium.CallbackProperty(() => {
                     if (!isWaterChange) return 0;
                     if (tmpHeight > maxHeight) {
-                        tmpHeight = maxHeight;
+                        tmpHeight = minHeight;
                         // isWaterChange = false;
                         // waterChangeTime = 0;
                     } else {
@@ -964,24 +971,117 @@ export const flightTest02 = (viewer: any) => {
 
     // ]
 
-    const orgpositionList = [
+    // const orgpositionList = [
+    //     {
+    //         cameraHPR: { heading: 133.3609743017041, pitch: -16.369337186833643, roll: 0.1279255313695261 },
+    //         cameraHeight: { longitude: 1.815851462402374, latitude: 0.5371574042180032, height: 790.9728001576939 },
+    //         maxx: 105.10024098228838,
+    //         maxy: 31.676571373068384,
+    //         midLocation: { lon: 104.06108828795156, lat: 30.760161882449538 },
+    //         minx: 102.98100905434063,
+    //         miny: 30.763830398693845,
+    //     },
+    //     {
+    //         cameraHPR: { heading: 133.36097924256342, pitch: -16.369321301844764, roll: 0.1279079998920797 },
+    //         cameraHeight: { longitude: 1.8160036349462967, latitude: 0.537031707409364, height: 788.6189675234281 },
+    //         maxx: 105.10728557220747,
+    //         maxy: 31.668038426284337,
+    //         midLocation: { lon: 104.06974470400772, lat: 30.753009657752138 },
+    //         minx: 102.99140215347064,
+    //         miny: 30.75666723516035,
+    //     },
+    //     {
+    //         cameraHPR: { heading: 82.01556664263038, pitch: -35.94359280544416, roll: 0.20663267641945707 },
+    //         cameraHeight: { longitude: 1.8162138546486037, latitude: 0.5369248138367584, height: 1385.2726259614535 },
+    //         maxx: 104.1041762104805,
+    //         maxy: 30.78867050646143,
+    //         midLocation: { lon: 104.08115616249827, lat: 30.765918553469948 },
+    //         minx: 104.07119247193879,
+    //         miny: 30.748120249012054,
+    //     },
+    //     {
+    //         cameraHPR: { heading: 89.3537262904265, pitch: -16.100381262764472, roll: 0.17576831147889319 },
+    //         cameraHeight: { longitude: 1.8164176745610652, latitude: 0.5369542141085324, height: 974.9128577700126 },
+    //         maxx: 105.25050916065776,
+    //         maxy: 31.763510329110428,
+    //         midLocation: { lon: 104.1083764718844, lat: 30.76554939809908 },
+    //         minx: 102.89562400997526,
+    //         miny: 30.756253125361933,
+    //     },
+    //     {
+    //         cameraHPR: { heading: 6.652918163566034, pitch: -23.670164833832093, roll: 0.021378797704744146 },
+    //         cameraHeight: { longitude: 1.8161613604038636, latitude: 0.5365270736995406, height: 1941.1891017571359 },
+    //         midLocation: { lon: 104.06374491834225, lat: 30.78044342788164 },
+    //         maxx: 104.16204226936144,
+    //         maxy: 30.88199944629672,
+    //         minx: 103.99029394786989,
+    //         miny: 30.759869733757323,
+    //     },
+    // ];
+
+    const orgpositionList = [      
         {
-            cameraHPR: { heading: 133.3609743017041, pitch: -16.369337186833643, roll: 0.1279255313695261 },
-            cameraHeight: { longitude: 1.815851462402374, latitude: 0.5371574042180032, height: 790.9728001576939 },
-            maxx: 105.10024098228838,
-            maxy: 31.676571373068384,
-            midLocation: { lon: 104.06108828795156, lat: 30.760161882449538 },
-            minx: 102.98100905434063,
-            miny: 30.763830398693845,
+            cameraHPR: { heading: 153.43856517230074, pitch: -9.73252251093558, roll: 0.07660269872902929 },
+            cameraHeight: { longitude: 1.8159221413898698, latitude: 0.5371575724182873, height: 629.8668450350851 },
+            maxx: 104.98929744674714,
+            maxy: 31.580187886471403,
+            midLocation: { lon: 104.06185258937609, lat: 30.747182528672166 },
+            minx: 103.10005180524945,
+            miny: 30.763154818002352,
         },
         {
-            cameraHPR: { heading: 133.36097924256342, pitch: -16.369321301844764, roll: 0.1279079998920797 },
-            cameraHeight: { longitude: 1.8160036349462967, latitude: 0.537031707409364, height: 788.6189675234281 },
-            maxx: 105.10728557220747,
-            maxy: 31.668038426284337,
-            midLocation: { lon: 104.06974470400772, lat: 30.753009657752138 },
-            minx: 102.99140215347064,
-            miny: 30.75666723516035,
+            cameraHPR: { heading: 153.75635536528912, pitch: -20.35221838217794, roll: 0.07958389848868294 },
+            cameraHeight: { longitude: 1.8159554487735392, latitude: 0.5370804174731175, height: 708.6187781710912 },
+            maxx: 104.14247170841546,
+            maxy: 30.76731107565897,
+            midLocation: { lon: 104.05540903354549, lat: 30.756979977702905 },
+            minx: 104.04087412637821,
+            miny: 30.673801199351168,
+        },
+        {
+            cameraHPR: { heading: 115.60296054738397, pitch: -14.04675384795527, roll: 0.15695534979107897 },
+            cameraHeight: { longitude: 1.815986239931206, latitude: 0.5370132112349144, height: 585.4354460574084 },
+            maxx: 104.95869207386541,
+            maxy: 31.54319366732148,
+            midLocation: { lon: 104.07040321323709, lat: 30.759461414489753 },
+            minx: 103.13800232991416,
+            miny: 30.75943616258597,
+        },
+        {
+            cameraHPR: { heading: 132.93953739281932, pitch: -14.379020949460076, roll: 0.12757851868692632 },
+            cameraHeight: { longitude: 1.8160139551878371, latitude: 0.537032226414407, height: 636.3788298390069 },
+            maxx: 104.99939608286873,
+            maxy: 31.577130423872752,
+            midLocation: { lon: 104.06892888793773, lat: 30.754414187110854 },
+            minx: 103.10047425537704,
+            miny: 30.758473004918716,
+        },
+        {
+            cameraHPR: { heading: 50.17946324024635, pitch: -15.03168204138972, roll: 0.13437195660209675 },
+            cameraHeight: { longitude: 1.81607197310695, latitude: 0.5369331095137597, height: 643.0655123839153 },
+            maxx: 105.00767903649353,
+            maxy: 31.575664002963553,
+            midLocation: { lon: 104.07248644694882, lat: 30.777841401094058 },
+            minx: 103.09883966555482,
+            miny: 30.76537037440261,
+        },
+        {
+            cameraHPR: { heading: 5.39614970737285, pitch: -9.390672230333035, roll: 0.016105641208721135 },
+            cameraHeight: { longitude: 1.816212049752347, latitude: 0.5369430055680182, height: 607.904504551795 },
+            maxx: 104.98903601872784,
+            maxy: 31.553830525255815,
+            midLocation: { lon: 104.06490334649297, lat: 30.797634097090913 },
+            minx: 103.13353428449973,
+            miny: 30.775350825647934,
+        },
+        {
+            cameraHPR: {heading: 93.82529693886202, pitch: -18.35691281611371, roll: 0.17753733792151333},
+            cameraHeight: {longitude: 1.8162105025938122, latitude: 0.5369916292439553, height: 793.426430340166},
+            maxx: 104.30349860154776,
+            maxy: 30.86530589519751,
+            midLocation: {lon: 104.08613103627562, lat: 30.7659118898656},
+            minx: 104.07266591577401,
+            miny: 30.65291063412907,
         },
         {
             cameraHPR: { heading: 82.01556664263038, pitch: -35.94359280544416, roll: 0.20663267641945707 },
@@ -1010,7 +1110,8 @@ export const flightTest02 = (viewer: any) => {
             minx: 103.99029394786989,
             miny: 30.759869733757323,
         },
-    ];
+    ]
+
 
     const distanceArr: any = [];
     for (let i = 0; i < orgpositionList.length - 1; i++) {
@@ -1035,7 +1136,11 @@ export const flightTest02 = (viewer: any) => {
         // } else {
         //     stepArray.push(Math.round(distanceArr[i] * 10.0 / minDis));
         // }
-        stepArray.push(minStep);
+        if (i + 1 === distanceArr.length) {
+            stepArray.push(90);
+        } else {
+            stepArray.push(minStep);
+        }
     }
 
     const positionList: any = [];

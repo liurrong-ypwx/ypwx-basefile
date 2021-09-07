@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import "./JdyDemo.less";
 import * as CesiumApi from "./JdyCesiumApi";
 
+// 题外话：npm install @turf/turf
+// 地理空间分析库，处理各种地图算法
+
 let isUseArcgis = false;
 function JdyDemo(): JSX.Element {
     const id = "jdyCesiumContainer";
