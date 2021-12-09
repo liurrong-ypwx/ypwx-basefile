@@ -27,7 +27,7 @@ function TestPage(): JSX.Element {
             })
 
         calcTwoNumber();
- // eslint-disable-next-line 
+        // eslint-disable-next-line 
     }, [])
 
     // 大数相乘
@@ -124,6 +124,11 @@ function TestPage(): JSX.Element {
         return totalData;
     }
 
+    // function getNewStr(str) {
+    //     return str.replace(/(.{9})/g, "$1<br/>")
+    //  }
+ 
+
     return (
         <div className="testpage">
             <Button type="primary">test antd button</Button>
@@ -139,6 +144,22 @@ function TestPage(): JSX.Element {
                 </div>
                 <button>test button</button>
             </div>
+
+            {/* ------------2021-11-03 粉刷匠 添加前端组件学习--------- */}
+            {/* 前后翻转的两个组件框 */}
+            <div className="transform-container">
+                <div className="item-front">hello</div>
+                <div className="item-back">back</div>
+            </div>
+
+            {/* 很长的tooltip实验 */}
+            <div className="long-tooltip-test">
+                <span title="fjdsajf<br/>hdjajfjdsajfj&#10;djajfdjajfjdajj" >test1</span>
+                <hr />
+                <span title="fjdsajfhdjajfjdsajfjdjajfdjajfjdajj">test2</span>
+            </div>
+
+
 
         </div>
     )

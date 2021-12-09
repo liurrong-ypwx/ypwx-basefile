@@ -21,6 +21,7 @@ import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';
 import { PolyRiver, PloyFlood, WaterControlPoint, WaterFallCord, WaterMonitorPoint, WaterControlPointValue } from './TestData/PolyRiver';
 import { MultiPolyRiver } from './TestData/a';
 import { riverTwoLine } from './TestData/b';
+import { MultiLinePipe } from "../../pages/CesiumDemo/UgPipe/data";
 
 
 window.CESIUM_BASE_URL = './cesium/';
@@ -159,7 +160,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addTestDarkImg(viewer);
 
         // 缩放到深圳
-        // setExtent(viewer);
+        setExtent(viewer);
 
         // 添加不同的地图底图
         // addDiffBaseMap(viewer, "arcgis");
@@ -196,7 +197,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
 
 
         // 添加测试南山区建筑3dtile数据 + 附带贴地 + 附带普通建筑物3dTiles单体化
-        // addTestBlueBuilding(viewer);
+        addTestBlueBuilding(viewer);
 
         // 添加Geojson数据
         // addGeoJsonData(viewer);
@@ -303,7 +304,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         // addShuiBa(viewer);
 
         // 2021-09-01 粉刷匠 添加水面
-        addJdyShuimian(viewer);
+        // addJdyShuimian(viewer);
 
 
 
@@ -3844,42 +3845,54 @@ export const addDiffShader = (viewer: any) => {
 // 2021-04-27 粉刷匠 补充-线管
 export const addPolylineVolume = (viewer: any) => {
 
-
-    function starPositions(arms: any, rOuter: any, rInner: any) {
-        var angle = Math.PI / arms;
-        var pos = [];
-        for (var i = 0; i < 2 * arms; i++) {
-            var r = i % 2 === 0 ? rOuter : rInner;
-            var p = new Cesium.Cartesian2(
-                Math.cos(i * angle) * r,
-                Math.sin(i * angle) * r
+    function computeCircle(radius: number) {
+        var positions = [];
+        for (var i = 0; i < 360; i += 10) {
+            var radians = Cesium.Math.toRadians(i);
+            positions.push(
+                new Cesium.Cartesian2(
+                    radius * Math.cos(radians),
+                    radius * Math.sin(radians)
+                )
             );
-            pos.push(p);
         }
-        return pos;
+        return positions;
     }
 
+    // function starPositions(arms: any, rOuter: any, rInner: any) {
+    //     var angle = Math.PI / arms;
+    //     var pos = [];
+    //     for (var i = 0; i < 2 * arms; i++) {
+    //         var r = i % 2 === 0 ? rOuter : rInner;
+    //         var p = new Cesium.Cartesian2(
+    //             Math.cos(i * angle) * r,
+    //             Math.sin(i * angle) * r
+    //         );
+    //         pos.push(p);
+    //     }
+    //     return pos;
+    // }
 
-    viewer.entities.add({
-        polylineVolume: {
-            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-                -102.0,
-                15.0,
-                100000.0,
-                -105.0,
-                20.0,
-                200000.0,
-                -110.0,
-                20.0,
-                100000.0,
-            ]),
-            shape: starPositions(7, 30000.0, 20000.0),
-            outline: true,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 1,
-            material: Cesium.Color.fromRandom({ alpha: 1.0 }),
-        },
-    });
+    const sigLine = MultiLinePipe.features;
+    for (let i = 0; i < sigLine.length; i++) {
+        const coordinates = sigLine[i].geometry.coordinates;
+        for (let j = 0; j < coordinates.length; j++) {
+            const sigcoordinates = coordinates[j];
+            const sigcoordinatesOne = sigcoordinates.reduce((a, b) => { return a.concat(b) })
+            viewer.entities.add({
+                polylineVolume: {
+                    positions: Cesium.Cartesian3.fromDegreesArray(sigcoordinatesOne),
+                    shape: computeCircle(10),
+                    // outline: true,
+                    // outlineColor: Cesium.Color.WHITE,
+                    // outlineWidth: 1,
+                    material: Cesium.Color.fromRandom({ alpha: 1.0 }),
+                },
+            });
+        }
+    }
+
+   
 }
 
 // 2021-04-28 粉刷匠 添加等高线
