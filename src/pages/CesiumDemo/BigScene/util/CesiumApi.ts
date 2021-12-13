@@ -51,22 +51,28 @@ export const zoomToShenzhen = (viewer: any) => {
 
 // 添加3Dtiles地图服务
 export const addShenzhenBuilding3Dtile = (viewer: any) => {
+    // const url = "http://localhost:9000/model/d7d5f9e058cc11ecac096d8016c07366/tileset.json";
+    // var tileset = new Cesium.Cesium3DTileset({ url: url });
+    // viewer.scene.primitives.add(tileset);
+
     const tmpTileset = new Cesium.Cesium3DTileset({
-        // url: "./Models/szNanshan/tileset.json",
-        url:"http://localhost:9000/model/d7d5f9e058cc11ecac096d8016c07366/tileset.json"
+        // url: "./Models/szNanshan/tileset.json"
+        url: "./Models/tiles_jianzhua_normal/tileset.json",
+        skipLevelOfDetail: true,
+        maximumScreenSpaceError: 8, //最大的屏幕空间误差
+        maximumMemoryUsage:1024
     })
 
     // 给建筑物添加shader
     tmpTileset.readyPromise.then(function (tileset: any) {
         viewer.scene.primitives.add(tmpTileset);
 
-        // tileset.style = new Cesium.Cesium3DTileStyle({
-        //     color: {
-        //         conditions: [
-        //             ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-        //         ]
-        //     }
-        // });
+
+        // 设置3dTiles贴地
+        // set3DtilesHeight(500, tileset);
+
+        // 设置hover事件
+        // addHoverAction(tileset, viewer);
 
     })
 }
