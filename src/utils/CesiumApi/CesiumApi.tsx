@@ -13,11 +13,11 @@ import jt2 from "../../assets/image/JT2.png";
 // import yr1 from "../../assets/image/yr1.png";
 import moment from "moment";
 import { WuShader } from './MulShader';
-import CesiumNavigation from "cesium-navigation-es6";
+// import CesiumNavigation from "cesium-navigation-es6";
 import ViewShedStage from "./ViewShed.js";
 import CesiumVideo3d from "./CesiumVideo3D.js";
 import normalMap from "../../assets/image/fabric_normal.jpg";
-import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';
+// import { Wind3D } from './WindMap/Cesium-3D-Wind/wind3D';
 import { PolyRiver, PloyFlood, WaterControlPoint, WaterFallCord, WaterMonitorPoint, WaterControlPointValue } from './TestData/PolyRiver';
 import { MultiPolyRiver } from './TestData/a';
 import { riverTwoLine } from './TestData/b';
@@ -104,7 +104,7 @@ export const initMap = (domID: string, isAddBuilding: boolean) => {
         options.enableDistanceLegend = true;
         // 用于启用或禁用指南针外环。true是启用，false是禁用。默认值为true。如果将选项设置为false，则该环将可见但无效。
         options.enableCompassOuterRing = true;
-        CesiumNavigation(viewer, options);
+        // CesiumNavigation(viewer, options);
     }
 
     // 额外设置之显示帧速
@@ -4895,7 +4895,7 @@ export const addExpandCylinder = (viewer: any) => {
 // 2021-05-12 粉刷匠 添加云图
 export const addWindMap = (viewer: any) => {
     // 
-    new Wind3D(viewer);
+    // new Wind3D(viewer);
 };
 
 // 2021-05-12 粉刷匠 添加日照光阴影
