@@ -18,6 +18,7 @@ import { appReducer, defaultState } from './store/appStore/storeReducer';
 // import IframeTest from './pages/IframeTest/IframeTest';
 // import UgPipe from "./pages/CesiumDemo/UgPipe/UgPipe";
 import BigScene from './pages/CesiumDemo/BigScene/BigScene';
+import CatalogueDisplay from './pages/TestComponents/CatalogueDisplay';
 
 export const TContext = React.createContext<StoreInterface | any>(defaultState);
 
@@ -57,6 +58,7 @@ function App() {
           <Route path={"/test"} exact={true} component={TestPage} />
           <Route path={"/pipe"} exact={true} component={UgPipe} /> */}
           <Route path={"/bigScene"} exact={true} component={BigScene} />
+          <Route path={"/catecom"} exact={true} component={CatalogueDisplay} />
           {/* <GIS>
             <Route path={"/"} exact={true} component={Overview} />
             <Route path={"/overview"} exact={true} component={Overview} />
