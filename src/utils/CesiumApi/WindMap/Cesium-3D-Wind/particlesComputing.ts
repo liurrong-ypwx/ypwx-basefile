@@ -1,9 +1,9 @@
-import * as Cesium from 'cesium';
+import * as tCesium from 'cesium';
 import { CustomPrimitive } from './customPrimitive';
 import { DataProcess } from './dataProcess';
 import { Util } from './util';
 import * as gui from "./gui";
-
+const Cesium: any = tCesium;
 export class ParticlesComputing {
     windTextures: any;
     particlesTextures: any;

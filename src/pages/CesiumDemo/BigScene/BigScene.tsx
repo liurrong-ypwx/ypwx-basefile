@@ -13,14 +13,22 @@ function BigScene(props: any): JSX.Element {
 
     useEffect(() => {
         if (!view) return;
-        CesiumApi.zoomToShenzhen(view); 
-        CesiumApi.addShenzhenBuilding3Dtile(view);
+        CesiumApi.addTdt(view);
+        CesiumApi.zoomPipe(view);
+        CesiumApi.addPipe(view);
+        // CesiumApi.zoomToShenzhen(view); 
+        // CesiumApi.addPolylineVolume(view);
+        // CesiumApi.addMutTypeLine(view);
+        // CesiumApi.zoomToPara(view, {lng: 114.167, lat: 22.67, height: 1300.0})
+        // CesiumApi.addShenzhenBuilding3Dtile(view);
+        // CesiumApi.addFuseEchartGraphic(view);
 
     }, [view])
 
     return (
         <div className="big-scene">
             <div id={mapId} className="big-scene-map-container" />
+           
         </div>
     )
 }

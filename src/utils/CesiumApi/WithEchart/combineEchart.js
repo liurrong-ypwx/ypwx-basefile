@@ -1,5 +1,11 @@
-import echarts from "echarts";
+import * as techarts from "echarts";
 import * as Cesium from 'cesium';
+import 'echarts-gl';
+
+const echarts = (function (mod) {
+    mod.cesiumViewer = {};
+    return mod
+})(techarts)
 
 export function combineEcharts(viewer, option) {
 
