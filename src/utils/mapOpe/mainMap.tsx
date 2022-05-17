@@ -8,16 +8,16 @@ const mapping = require("@supermap/iclient-ol/mapping");
 
 // 初始化地图
 export const initMap = (domID: string) => {
-    const map = new Map({
-        target: domID,
-        controls: control.defaults({ attributionOptions: { collapsed: true } }),
-        view: new View({
-            center: [0, 0],
-            zoom: 2,
-            projection: 'EPSG:4326'
-        })
-    })
-    return map;
+    // const map = new Map({
+    //     target: domID,
+    //     controls: control.defaults({ attributionOptions: { collapsed: true } }),
+    //     view: new View({
+    //         center: [0, 0],
+    //         zoom: 2,
+    //         // projection: 'EPSG:4326'
+    //     })
+    // })
+    // return map;
 }
 
 // 添加supermap iserver发布的地图

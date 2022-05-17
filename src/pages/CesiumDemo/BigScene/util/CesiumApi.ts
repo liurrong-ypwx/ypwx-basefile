@@ -5,7 +5,7 @@ import { EchartPoint } from '../../../../utils/CesiumApi/WithEchart/EchartPoint'
 import { MultiLinePipe } from "../../../../pages/CesiumDemo/UgPipe/data";
 import jt from "../../../../assets/image/newDir.png";
 import { dataMId } from './testData';
-import { testDataPipe, testDataPipe4 } from './pipe2';
+import { testDataPipe } from './pipe2';
 
 
 window.CESIUM_BASE_URL = './cesium/';
@@ -259,7 +259,7 @@ export const addMutTypeLine = (viewer: any) => {
         maxR: 315,
         deviationR: 10,// 差值 差值也大 速度越快
     }
- 
+
     let r1 = data.minR;
     const imgWidth = data.imgWidth;
     const imgHeight = data.imgHeight;
@@ -325,29 +325,30 @@ export const addTdt = (viewer: any) => {
     // );
 
     // 矢量
-    viewer.imageryLayers.addImageryProvider(
-        new Cesium.WebMapTileServiceImageryProvider({
-            // url: "http://{s}.tianditu.gov.cn/vec_c/wmts?service=wmts&request=GetTile&version=1.0.0" +
-            //     "&LAYER=vec&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}" +
-            //     "&style=default&format=tiles&tk=077b9a921d8b7e0fa268c3e9146eb373",
-            // url: "http://t6.tianditu.gov.cn/vec_c/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=c&&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&FORMAT=tiles&tk=0ffbace33f0235207d70c43cbbe91e04",
-            url: "https://{s}.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=ebf64362215c081f8317203220f133eb",
-            // v "http://t{s}.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=ebf64362215c081f8317203220f133eb",
-            // 3bfc2a748fa52bf2d28e9de50989a1cd
-            layer: "tdtCva",
-            style: "default",
-            format: "tiles",
-            tileMatrixSetID: "c",
-            subdomains: ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"],
-            // tilingScheme: new Cesium.GeographicTilingScheme(),
-            // tileMatrixLabels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"],
-            // maximumLevel: 18,
-            // ellipsoid: new Cesium.Ellipsoid(6378245, 6356863.0187730473, 1 / 298.3)
-        })
-    );
+    // viewer.imageryLayers.addImageryProvider(
+    //     new Cesium.WebMapTileServiceImageryProvider({
+    //         // url: "http://{s}.tianditu.gov.cn/vec_c/wmts?service=wmts&request=GetTile&version=1.0.0" +
+    //         //     "&LAYER=vec&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}" +
+    //         //     "&style=default&format=tiles&tk=077b9a921d8b7e0fa268c3e9146eb373",
+    //         url: "http://t6.tianditu.gov.cn/vec_c/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=c&&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&FORMAT=tiles&tk=0ffbace33f0235207d70c43cbbe91e04",
+    //         // url: "https://{s}.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=ebf64362215c081f8317203220f133eb",
+    //         layer: "tdtCva",
+    //         style: "default",
+    //         format: "tiles",
+    //         tileMatrixSetID: "c",
+    //         subdomains: ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"],
+    //         tilingScheme: new Cesium.GeographicTilingScheme(),
+    //         tileMatrixLabels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"],
+    //         maximumLevel: 18,
+    //         // ellipsoid: new Cesium.Ellipsoid(6378245, 6356863.0187730473, 1 / 298.3)
+    //     })
+    // );
+
+    addGeoJsonData(viewer);
 
 
-      // 注记
+
+    // 注记
     //   viewer.imageryLayers.addImageryProvider(
     //     new Cesium.WebMapTileServiceImageryProvider({
     //         url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=077b9a921d8b7e0fa268c3e9146eb373",
@@ -360,8 +361,8 @@ export const addTdt = (viewer: any) => {
 }
 
 // 2022-05-09 粉刷匠 先试一下管道到底是什么样的
-export const addPipe=(viewer:any)=>{
-    
+export const addPipe = (viewer: any) => {
+
     // function computeCircle(radius: number) {
     //     var positions = [];
     //     for (var i = 0; i < 360; i += 10) {
@@ -426,20 +427,30 @@ export const addPipe=(viewer:any)=>{
     // }
 
     // 添加一个测试使用的图层服务
-    viewer.imageryLayers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
-        url: 'https://www.jj-zhps.cn/geoserver/jiaojiang/wms?',   //服务地址
-        layers: 'jiaojiang:ST_PS_PIPE_ZY',                    //服务图层，修改成自己发布的名称
-        parameters: {
-        service: 'WMS',
-        format: 'image/png',
-        transparent: true
-       },
-   }));
+    //     viewer.imageryLayers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
+    //         url: 'https://www.jj-zhps.cn/geoserver/jiaojiang/wms?',   //服务地址
+    //         layers: 'jiaojiang:ST_PS_PIPE_ZY',                    //服务图层，修改成自己发布的名称
+    //         parameters: {
+    //         service: 'WMS',
+    //         format: 'image/png',
+    //         transparent: true
+    //        },
+    //    }));
 
 }
 
+// 
+export const addGeoJsonData = (viewer: any) => {
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('./Models/json/SZDD.geojson', {
+        clampToGround: true,
+        stroke: Cesium.Color.BLUE,
+        strokeWidth: 1,
+        markerSymbol: '?'
+    }));
+}
+
 // 简单缩放
-export const zoomPipe=(viewer:any)=>{
+export const zoomPipe = (viewer: any) => {
     const locationSZ = { lng: testDataPipe[0], lat: testDataPipe[1], height: 1300.0 };
     const location = locationSZ;
     viewer.camera.flyTo({
