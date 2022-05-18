@@ -3,9 +3,12 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { EchartPoint } from '../../../../utils/CesiumApi/WithEchart/EchartPoint';
 // import { EchartWinds} from "../../../../utils/CesiumApi/WithEchart/EchartWinds";
 import { MultiLinePipe } from "../../../../pages/CesiumDemo/UgPipe/data";
-import jt from "../../../../assets/image/newDir.png";
-import { dataMId } from './testData';
-import { testDataPipe } from './pipe2';
+import jt from "../../../../assets/image/JT2.png";
+// import { dataMId } from './testData';
+import { szLineData, szRiverData, szSxtData } from '../DataXJG/riverData';
+import normalMap from "../../../../assets/image/fabric_normal.jpg";
+
+// import { testDataPipe } from './pipe2';
 
 
 window.CESIUM_BASE_URL = './cesium/';
@@ -29,11 +32,14 @@ export const initMap = (domID: string) => {
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
-        // terrainProvider: Cesium.createWorldTerrain(),
+        terrainProvider: Cesium.createWorldTerrain(),
     })
 
-    // viewer.scene.globe.imageryLayers.get(0).alpha = 0.0;
-    // viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1); //默认为蓝色，这里改成绿色
+    // 演示1：添加免费的osm 建筑物图层
+    // viewer.scene.primitives.add(Cesium.createOsmBuildings());
+
+    viewer.scene.globe.imageryLayers.get(0).alpha = 0.3;
+    viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1); 
 
 
     // viewer.scene.fxaa = false
@@ -49,14 +55,214 @@ export const initMap = (domID: string) => {
     // if (Cesium.FeatureDetection.supportsImageRenderingPixelated()) { // 判断是否支持图像渲染像素化处理
     viewer.resolutionScale = window.devicePixelRatio;
     // }
-
-
-
-
     // 额外设置之显示帧速
     viewer.scene.debugShowFramesPerSecond = true;
 
+    // 场景变暗
+    // changeViewerColor(viewer);
+
+    // 添加河流
+    addRiver(viewer);
+
+    // 添加建筑物设置样式
+    addGBuilding(viewer);
+
+    // 添加流动线
+    addMutTypeLine(viewer);
+
+    // 添加摄像头
+    addCamera(viewer);
+
     return viewer;
+}
+
+// 2022-05-19 粉刷匠 添加河流
+export const addRiver = (viewer: any) => {
+    const orgdata = szRiverData.features[1].geometry.rings[0];
+    const fData: any = [];
+    for (let i = 0; i < orgdata.length; i++) {
+        fData.push(orgdata[i][0]);
+        fData.push(orgdata[i][1]);
+    }
+    const data = fData;
+
+    // 背景颜色
+    const color = { r: 84, g: 220, b: 224, a: 150 };
+    const backMaterial = new Cesium.Material({
+        fabric: {
+            type: 'Color',
+            uniforms: {
+                color: Cesium.Color.fromBytes(color.r, color.g, color.b, color.a)
+            }
+        }
+    });
+    const primitiveBack = new Cesium.GroundPrimitive({// 贴地的primitive
+        geometryInstances: new Cesium.GeometryInstance({
+            geometry: new Cesium.PolygonGeometry({// 支持CircleGeometry，CorridorGeometry，EllipseGeometry，RectangleGeometry
+                // polygonHierarchy: new Cesium.PolygonHierarchy([
+                //     // Cesium.Cartesian3.fromDegreesArray(100，25，100，30，110，30)
+                //     Cesium.Cartesian3.fromDegreesArrayHeights(shuiMian)
+                // ])
+                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(data)),
+                vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            }),
+        }),
+        appearance: new Cesium.EllipsoidSurfaceAppearance({
+            aboveGround: true,
+            material: backMaterial
+        }),
+        show: true
+    })
+    viewer.scene.primitives.add(primitiveBack)
+
+    // 流动水体
+    let material: any = new Cesium.Material({
+        fabric: {
+            type: 'Water',
+            uniforms: { // 动态传递参数
+                baseWaterColor: Cesium.Color.WHITE.withAlpha(0.1), // 水体颜色
+                blendColor: Cesium.Color.DARKBLUE, // 水陆混合处颜色
+                // specularMap:"../../**/jpg", // 一张黑白图用来作为标识哪里是用水来渲染的贴图
+                normalMap: Cesium.buildModuleUrl(normalMap), // 用来生成起伏效果的水体
+                frequency: 100.0,
+                animationSpeed: 0.01,
+                amplitude: 100000
+            },
+            // source: source
+        },
+        translucent: false
+    })
+    const primitive = new Cesium.GroundPrimitive({// 贴地的primitive
+        geometryInstances: new Cesium.GeometryInstance({
+            geometry: new Cesium.PolygonGeometry({// 支持CircleGeometry，CorridorGeometry，EllipseGeometry，RectangleGeometry
+                // polygonHierarchy: new Cesium.PolygonHierarchy([
+                //     // Cesium.Cartesian3.fromDegreesArray(100，25，100，30，110，30)
+                //     Cesium.Cartesian3.fromDegreesArrayHeights(shuiMian)
+                // ])
+                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(data)),
+                vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            }),
+        }),
+        appearance: new Cesium.EllipsoidSurfaceAppearance({
+            aboveGround: true,
+            material: material
+        }),
+        show: true
+    })
+    viewer.scene.primitives.add(primitive)
+
+}
+
+// 2022-05-19 粉刷匠 添加建筑物
+export const addGBuilding = (viewer: any) => {
+
+    const tmpTileset = Cesium.createOsmBuildings();
+
+    // 给建筑物添加shader
+    // viewer.scene.primitives.add(Cesium.createOsmBuildings());
+
+    tmpTileset.readyPromise.then(function (tileset: any) {
+        viewer.scene.primitives.add(tmpTileset);
+
+        tileset.style = new Cesium.Cesium3DTileStyle({
+            color: {
+                conditions: [
+                    ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+                ]
+            }
+        });
+
+        tileset.tileVisible.addEventListener(function (tile: any) {
+            const content = tile.content;
+            const featuresLength = content.featuresLength;
+            for (let i = 0; i < featuresLength; i += 2) {
+                let feature = content.getFeature(i)
+                let model = feature.content._model
+
+                if (model && model._sourcePrograms && model._rendererResources) {
+                    Object.keys(model._sourcePrograms).forEach(key => {
+                        let program = model._sourcePrograms[key]
+                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+                        let v_position = "";
+                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+                            v_position = "v_positionEC";
+                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+                            v_position = "v_pos";
+                        }
+                        const color = `vec4(${feature.color.toString()})`;
+
+                        model._rendererResources.sourceShaders[program.fragmentShader] =
+                            "varying vec3 " + v_position + ";\n" +
+                            "void main(void){\n" +
+                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+                            "    float glowRange = 120.0;\n" +
+                            "    gl_FragColor = " + color + ";\n" +
+                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
+                            "    float time = fract(czm_frameNumber / 120.0);\n" +
+                            "    time = abs(time - 0.5) * 2.0;\n" +
+                            // "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+                            // "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+                            "    gl_FragColor.rgb += gl_FragColor.rgb ;\n" +
+                            "}\n"
+                    })
+                    model._shouldRegenerateShaders = true
+                }
+            }
+        });
+
+        // 设置3dTiles贴地
+        // set3DtilesHeight(500, tileset);
+
+        // 设置hover事件
+        // addHoverAction(tileset, viewer);
+
+    })
+}
+
+export const addCamera=(viewer:any)=>{
+        // 摄像头
+    // const sxtArr = [[104.06273, 30.77760, 490], [104.04797, 30.76234, 490], [104.06862, 30.76404, 490]];
+    const sxtArr = [];
+    const orgData = szSxtData.features;
+    for(let i=0;i<orgData.length;i++){
+        const loc = orgData[i].geometry;
+        sxtArr.push([loc.x, loc.y]);
+    }
+    for (let i = 0; i < sxtArr.length; i++) {
+        viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], sxtArr[i][2]),
+            billboard: {
+                image: './Models/image/sxt.png',
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
+            }
+        });
+    }
+}
+
+// 改变场景颜色
+export const changeViewerColor = (viewer: any) => {
+    // Simple stage to change the color
+    var fs =
+        'uniform sampler2D colorTexture;\n' +
+        'varying vec2 v_textureCoordinates;\n' +
+        'uniform float scale;\n' +
+        'uniform vec3 offset;\n' +
+        'void main() {\n' +
+        '    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n' +
+        '    gl_FragColor = vec4(color.rgb * scale + offset, 1.0);\n' +
+        '}\n';
+    viewer.scene.postProcessStages.add(new Cesium.PostProcessStage({
+        fragmentShader: fs,
+        uniforms: {
+            scale: 0.1,
+            offset: function () {
+                return new Cesium.Cartesian3(0.1, 0.2, 0.3);
+            }
+        }
+    }));
 }
 
 
@@ -253,11 +459,11 @@ export const addMutTypeLine = (viewer: any) => {
 
     // 1: 流动箭头线
     const data: any = {
-        imgWidth: 315,
-        imgHeight: 447,
+        imgWidth: 1660,
+        imgHeight: 257,
         minR: 0,
-        maxR: 315,
-        deviationR: 10,// 差值 差值也大 速度越快
+        maxR: 1660,
+        deviationR: 30,// 差值 差值也大 速度越快
     }
 
     let r1 = data.minR;
@@ -285,29 +491,37 @@ export const addMutTypeLine = (viewer: any) => {
         return ramp;
     }
 
+    const featureData = szLineData.features;
+    for (let i = 0; i < featureData.length; i++) {
+        const orgdata = featureData[i].geometry.paths[0];
+        const newLineData: any = [];
+        for (let j = 0; j < orgdata.length; j++) {
+            newLineData.push(orgdata[j][0]);
+            newLineData.push(orgdata[j][1]);
+            // newLineData.push(60);
+        }
 
-    const sigcoordinatesOne: any = [];
-    for (let i = 0; i < dataMId.length; i += 3) {
-        sigcoordinatesOne.push(dataMId[i + 1]);
-        sigcoordinatesOne.push(dataMId[i + 2]);
-        sigcoordinatesOne.push(80);
+        viewer.entities.add({
+            polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArray(newLineData),
+                width: 10,
+                clampToGround: true,
+                // 流动纹理
+                material: new Cesium.ImageMaterialProperty({
+                    image: new Cesium.CallbackProperty(makeJT, false),
+                    repeat: new Cesium.Cartesian2(10.0, 1.0),
+                    transparent: true,
+                })
+    
+            },
+        });
+
     }
 
 
-    viewer.entities.add({
-        polyline: {
-            positions: Cesium.Cartesian3.fromDegreesArrayHeights(sigcoordinatesOne),
-            width: 10,
-            // clampToGround: true,
-            // 流动纹理
-            material: new Cesium.ImageMaterialProperty({
-                image: new Cesium.CallbackProperty(makeJT, false),
-                repeat: new Cesium.Cartesian2(400.0, 1.0),
-                transparent: true,
-            })
 
-        },
-    });
+
+   
 
 
 }
@@ -451,7 +665,8 @@ export const addGeoJsonData = (viewer: any) => {
 
 // 简单缩放
 export const zoomPipe = (viewer: any) => {
-    const locationSZ = { lng: testDataPipe[0], lat: testDataPipe[1], height: 1300.0 };
+    // const locationSZ = { lng: testDataPipe[0], lat: testDataPipe[1], height: 1300.0 };
+    const locationSZ = { lng: 121.37517, lat: 31.205843, height: 13000.0 };
     const location = locationSZ;
     viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(location.lng, location.lat, location.height),
