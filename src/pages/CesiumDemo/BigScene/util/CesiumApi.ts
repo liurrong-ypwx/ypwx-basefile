@@ -7,6 +7,7 @@ import jt from "../../../../assets/image/JT2.png";
 // import { dataMId } from './testData';
 import { szLineData, szRiverData, szSxtData } from '../DataXJG/riverData';
 import normalMap from "../../../../assets/image/fabric_normal.jpg";
+import { textRiverJson0530 } from './riverData';
 
 // import { testDataPipe } from './pipe2';
 
@@ -38,8 +39,8 @@ export const initMap = (domID: string) => {
     // 演示1：添加免费的osm 建筑物图层
     // viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
-    viewer.scene.globe.imageryLayers.get(0).alpha = 0.3;
-    viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1); 
+    viewer.scene.globe.imageryLayers.get(0).alpha = 0.9;
+    viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1);
 
 
     // viewer.scene.fxaa = false
@@ -68,23 +69,27 @@ export const initMap = (domID: string) => {
     addGBuilding(viewer);
 
     // 添加流动线
-    addMutTypeLine(viewer);
+    // addMutTypeLine(viewer);
 
     // 添加摄像头
-    addCamera(viewer);
+    // addCamera(viewer);
+
+    // 添加模型
+    addShuiBa(viewer);
 
     return viewer;
 }
 
 // 2022-05-19 粉刷匠 添加河流
 export const addRiver = (viewer: any) => {
-    const orgdata = szRiverData.features[1].geometry.rings[0];
+    const orgdata = textRiverJson0530.features[0].geometry.coordinates[0][0];
     const fData: any = [];
     for (let i = 0; i < orgdata.length; i++) {
         fData.push(orgdata[i][0]);
         fData.push(orgdata[i][1]);
     }
     const data = fData;
+
 
     // 背景颜色
     const color = { r: 84, g: 220, b: 224, a: 150 };
@@ -164,52 +169,52 @@ export const addGBuilding = (viewer: any) => {
     tmpTileset.readyPromise.then(function (tileset: any) {
         viewer.scene.primitives.add(tmpTileset);
 
-        tileset.style = new Cesium.Cesium3DTileStyle({
-            color: {
-                conditions: [
-                    ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
-                ]
-            }
-        });
+        // tileset.style = new Cesium.Cesium3DTileStyle({
+        //     color: {
+        //         conditions: [
+        //             ['true', 'rgba(0, 127.5, 255 ,1)']//'rgb(127, 59, 8)']
+        //         ]
+        //     }
+        // });
 
-        tileset.tileVisible.addEventListener(function (tile: any) {
-            const content = tile.content;
-            const featuresLength = content.featuresLength;
-            for (let i = 0; i < featuresLength; i += 2) {
-                let feature = content.getFeature(i)
-                let model = feature.content._model
+        // tileset.tileVisible.addEventListener(function (tile: any) {
+        //     const content = tile.content;
+        //     const featuresLength = content.featuresLength;
+        //     for (let i = 0; i < featuresLength; i += 2) {
+        //         let feature = content.getFeature(i)
+        //         let model = feature.content._model
 
-                if (model && model._sourcePrograms && model._rendererResources) {
-                    Object.keys(model._sourcePrograms).forEach(key => {
-                        let program = model._sourcePrograms[key]
-                        let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
-                        let v_position = "";
-                        if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
-                            v_position = "v_positionEC";
-                        } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
-                            v_position = "v_pos";
-                        }
-                        const color = `vec4(${feature.color.toString()})`;
+        //         if (model && model._sourcePrograms && model._rendererResources) {
+        //             Object.keys(model._sourcePrograms).forEach(key => {
+        //                 let program = model._sourcePrograms[key]
+        //                 let fragmentShader = model._rendererResources.sourceShaders[program.fragmentShader];
+        //                 let v_position = "";
+        //                 if (fragmentShader.indexOf(" v_positionEC;") !== -1) {
+        //                     v_position = "v_positionEC";
+        //                 } else if (fragmentShader.indexOf(" v_pos;") !== -1) {
+        //                     v_position = "v_pos";
+        //                 }
+        //                 const color = `vec4(${feature.color.toString()})`;
 
-                        model._rendererResources.sourceShaders[program.fragmentShader] =
-                            "varying vec3 " + v_position + ";\n" +
-                            "void main(void){\n" +
-                            "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
-                            "    float glowRange = 120.0;\n" +
-                            "    gl_FragColor = " + color + ";\n" +
-                            // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
-                            "    gl_FragColor *= vec4(vec3(position.z / 80.0), 1.0);\n" +
-                            "    float time = fract(czm_frameNumber / 120.0);\n" +
-                            "    time = abs(time - 0.5) * 2.0;\n" +
-                            // "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
-                            // "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
-                            "    gl_FragColor.rgb += gl_FragColor.rgb ;\n" +
-                            "}\n"
-                    })
-                    model._shouldRegenerateShaders = true
-                }
-            }
-        });
+        //                 model._rendererResources.sourceShaders[program.fragmentShader] =
+        //                     "varying vec3 " + v_position + ";\n" +
+        //                     "void main(void){\n" +
+        //                     "    vec4 position = czm_inverseModelView * vec4(" + v_position + ",1);\n" +
+        //                     "    float glowRange = 120.0;\n" +
+        //                     "    gl_FragColor = " + color + ";\n" +
+        //                     // "    gl_FragColor = vec4(0.2,  0.5, 1.0, 1.0);\n" +
+        //                     "    gl_FragColor *= vec4(vec3(position.z / 200.0), 1);\n" +
+        //                     "    float time = fract(czm_frameNumber / 120.0);\n" +
+        //                     "    time = abs(time - 0.5) * 2.0;\n" +
+        //                     // "    float diff = step(0.005, abs( clamp(position.z / glowRange, 0.0, 1.0) - time));\n" +
+        //                     // "    gl_FragColor.rgb += gl_FragColor.rgb * (1.0 - diff);\n" +
+        //                     "    gl_FragColor.rgb += gl_FragColor.rgb ;\n" +
+        //                     "}\n"
+        //             })
+        //             model._shouldRegenerateShaders = true
+        //         }
+        //     }
+        // });
 
         // 设置3dTiles贴地
         // set3DtilesHeight(500, tileset);
@@ -220,12 +225,12 @@ export const addGBuilding = (viewer: any) => {
     })
 }
 
-export const addCamera=(viewer:any)=>{
-        // 摄像头
+export const addCamera = (viewer: any) => {
+    // 摄像头
     // const sxtArr = [[104.06273, 30.77760, 490], [104.04797, 30.76234, 490], [104.06862, 30.76404, 490]];
     const sxtArr = [];
     const orgData = szSxtData.features;
-    for(let i=0;i<orgData.length;i++){
+    for (let i = 0; i < orgData.length; i++) {
         const loc = orgData[i].geometry;
         sxtArr.push([loc.x, loc.y]);
     }
@@ -512,7 +517,7 @@ export const addMutTypeLine = (viewer: any) => {
                     repeat: new Cesium.Cartesian2(10.0, 1.0),
                     transparent: true,
                 })
-    
+
             },
         });
 
@@ -521,7 +526,7 @@ export const addMutTypeLine = (viewer: any) => {
 
 
 
-   
+
 
 
 }
@@ -666,7 +671,8 @@ export const addGeoJsonData = (viewer: any) => {
 // 简单缩放
 export const zoomPipe = (viewer: any) => {
     // const locationSZ = { lng: testDataPipe[0], lat: testDataPipe[1], height: 1300.0 };
-    const locationSZ = { lng: 121.37517, lat: 31.205843, height: 13000.0 };
+    // 121.364952802734749, 31.188761707341701
+    const locationSZ = { lng: 121.364952802734749, lat: 31.188761707341701, height: 1300.0 };
     const location = locationSZ;
     viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(location.lng, location.lat, location.height),
@@ -676,4 +682,49 @@ export const zoomPipe = (viewer: any) => {
             roll: 0.0
         }
     });
+}
+
+// 2021-08-16 粉刷匠 添加水坝
+export const addShuiBa = (viewer: any) => {
+    const airplaneUrl = "./Models/House4.glb";
+
+    // 此方法问题在于缩放的时候不能随着缩放
+    // viewer.entities.add({
+    //     position: Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100),
+    //     model: {
+    //         uri: airplaneUrl,
+    //         minimumPixelSize: 128,
+    //         maximumScale: 20000,
+    //     },
+    //     // orientation: new Cesium.VelocityOrientationProperty(positionProperty)
+    // });
+
+    // flyToPoint(viewer, { lng: 111.02660, lat: 23.42913, height: 100 });
+
+    const WaterControlPoint = [
+        121.364952802734749, 31.188761707341701, 20, 90,
+    ]
+
+    for (let i = 0; i < WaterControlPoint.length; i += 4) {
+        // const cord = [104.04486, 30.77336, 504];
+        const cord = [WaterControlPoint[i], WaterControlPoint[i + 1], WaterControlPoint[i + 2]];
+        const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
+        const newHeading = Cesium.Math.toRadians(WaterControlPoint[i + 3]); //初始heading值赋0
+        const newPitch = Cesium.Math.toRadians(0);
+        const newRoll = Cesium.Math.toRadians(0);
+        const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+
+        const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+            url: airplaneUrl, // 模型地址
+            modelMatrix,
+        }));
+
+        // todo:平移,可使用偷懒方法，修改Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100); 
+
+        // 放大一点
+        curModel.scale = 3;
+    }
+
+
 }
