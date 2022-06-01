@@ -5,9 +5,12 @@ import { EchartPoint } from '../../../../utils/CesiumApi/WithEchart/EchartPoint'
 import { MultiLinePipe } from "../../../../pages/CesiumDemo/UgPipe/data";
 import jt from "../../../../assets/image/JT2.png";
 // import { dataMId } from './testData';
-import { szLineData, szRiverData, szSxtData } from '../DataXJG/riverData';
+// import { szLineData, szSxtData } from '../DataXJG/riverData';
 import normalMap from "../../../../assets/image/fabric_normal.jpg";
 import { textRiverJson0530 } from './riverData';
+// import { ColorArr } from './testColor';
+import { testLine, treePoint, xiaoqu } from './xiaoqu';
+import { glbLoc } from './glbloc';
 
 // import { testDataPipe } from './pipe2';
 
@@ -39,7 +42,7 @@ export const initMap = (domID: string) => {
     // 演示1：添加免费的osm 建筑物图层
     // viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
-    viewer.scene.globe.imageryLayers.get(0).alpha = 0.9;
+    viewer.scene.globe.imageryLayers.get(0).alpha = 0.4;
     viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1);
 
 
@@ -68,14 +71,23 @@ export const initMap = (domID: string) => {
     // 添加建筑物设置样式
     addGBuilding(viewer);
 
+    // 添加管道
+    // addPipe(viewer);
+
     // 添加流动线
     // addMutTypeLine(viewer);
 
     // 添加摄像头
-    // addCamera(viewer);
+    addCamera(viewer);
 
-    // 添加模型
-    addShuiBa(viewer);
+    // 添加建筑模型
+    addJianzhu1(viewer);
+
+    // 添加小区的边界线
+    addXiaoqu(viewer);
+
+    // 添加水体周边的草坪
+    addCaoPing(viewer);
 
     return viewer;
 }
@@ -129,8 +141,8 @@ export const addRiver = (viewer: any) => {
                 blendColor: Cesium.Color.DARKBLUE, // 水陆混合处颜色
                 // specularMap:"../../**/jpg", // 一张黑白图用来作为标识哪里是用水来渲染的贴图
                 normalMap: Cesium.buildModuleUrl(normalMap), // 用来生成起伏效果的水体
-                frequency: 100.0,
-                animationSpeed: 0.01,
+                frequency: 1000.0,
+                animationSpeed: 0.1,
                 amplitude: 100000
             },
             // source: source
@@ -161,7 +173,20 @@ export const addRiver = (viewer: any) => {
 // 2022-05-19 粉刷匠 添加建筑物
 export const addGBuilding = (viewer: any) => {
 
-    const tmpTileset = Cesium.createOsmBuildings();
+    // const tmpTileset = Cesium.createOsmBuildings();
+
+    // http://localhost:9003/model/tIk209L0g/tileset.json
+    // http://localhost:9003/model/teOukBqr4/tileset.json
+    // http://localhost:9003/model/tkVIcAoHG/tileset.json
+    // http://localhost:9003/model/t9ODc8PCR/tileset.json
+
+    const tmpTileset = new Cesium.Cesium3DTileset({
+        url: ' http://localhost:9003/model/t9ODc8PCR/tileset.json',
+        // 控制切片视角显示的数量，可调整性能
+        maximumScreenSpaceError: 2,
+        // maximumNumberOfLoadedTiles: 100000,
+    })
+
 
     // 给建筑物添加shader
     // viewer.scene.primitives.add(Cesium.createOsmBuildings());
@@ -217,7 +242,7 @@ export const addGBuilding = (viewer: any) => {
         // });
 
         // 设置3dTiles贴地
-        // set3DtilesHeight(500, tileset);
+        set3DtilesHeight(20, tileset);
 
         // 设置hover事件
         // addHoverAction(tileset, viewer);
@@ -229,16 +254,21 @@ export const addCamera = (viewer: any) => {
     // 摄像头
     // const sxtArr = [[104.06273, 30.77760, 490], [104.04797, 30.76234, 490], [104.06862, 30.76404, 490]];
     const sxtArr = [];
-    const orgData = szSxtData.features;
+
+    const orgData = treePoint.features;
     for (let i = 0; i < orgData.length; i++) {
-        const loc = orgData[i].geometry;
-        sxtArr.push([loc.x, loc.y]);
+        const loc = orgData[i].geometry.coordinates;
+        sxtArr.push([loc[0], loc[1]]);
     }
-    for (let i = 0; i < sxtArr.length; i++) {
+    const tmpArr = ['sxt', 'l0', 'l1', 'l2', 'l3', 'l4', 'l5', 'l6'];
+    for (let i = 0; i < sxtArr.length; i += 4) {
+    // const index = Math.floor(Math.random() * (tmpArr.length));
+        const index = 0;
+
         viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], sxtArr[i][2]),
-            billboard: {
-                image: './Models/image/sxt.png',
+            billboard: {                
+                image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
                 scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
@@ -496,25 +526,25 @@ export const addMutTypeLine = (viewer: any) => {
         return ramp;
     }
 
-    const featureData = szLineData.features;
+    const featureData = testLine.features;
     for (let i = 0; i < featureData.length; i++) {
-        const orgdata = featureData[i].geometry.paths[0];
+        const orgdata = featureData[i].geometry.coordinates[0];
         const newLineData: any = [];
         for (let j = 0; j < orgdata.length; j++) {
             newLineData.push(orgdata[j][0]);
             newLineData.push(orgdata[j][1]);
-            // newLineData.push(60);
+            newLineData.push(22);
         }
 
         viewer.entities.add({
             polyline: {
-                positions: Cesium.Cartesian3.fromDegreesArray(newLineData),
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights(newLineData),
                 width: 10,
-                clampToGround: true,
+                // clampToGround: true,
                 // 流动纹理
                 material: new Cesium.ImageMaterialProperty({
                     image: new Cesium.CallbackProperty(makeJT, false),
-                    repeat: new Cesium.Cartesian2(10.0, 1.0),
+                    repeat: new Cesium.Cartesian2(50.0, 1.0),
                     transparent: true,
                 })
 
@@ -522,12 +552,6 @@ export const addMutTypeLine = (viewer: any) => {
         });
 
     }
-
-
-
-
-
-
 
 }
 
@@ -596,41 +620,21 @@ export const addPipe = (viewer: any) => {
     //     return positions;
     // }
 
-    // const sigLine = testDataPipe4;
-    // for (let i = 0; i < sigLine.length; i += 4) {
+    // const featureData = testLine.features;
 
+    // for (let i = 0; i < featureData.length; i++) {
+    //     const orgdata = featureData[i].geometry.coordinates[0];
+    //     const newLineData: any = [];
+    //     for (let j = 0; j < orgdata.length; j++) {
+    //         newLineData.push(orgdata[j][0]);
+    //         newLineData.push(orgdata[j][1]);
+    //         newLineData.push(19);
+    //     }
 
-    //     // const orglng1 = sigLine[i];
-    //     // const orglat1 = sigLine[i + 1];
-    //     // const orglng2 = sigLine[i + 2];
-    //     // const orglat2 = sigLine[i + 3];
-
-    //     const lng1 = sigLine[i];
-    //     const lat1 = sigLine[i + 1];
-    //     const lng2 = sigLine[i + 2];
-    //     const lat2 = sigLine[i + 3];
-
-    //     // lat84
-    //     // const a1 = 0.0002;
-    //     // const b1 = 1;
-    //     // const c1 = 0;
-
-    //     // // lng84
-    //     // const a2 = 0.00001;
-    //     // const b2 = 0;
-    //     // const c2 =  1;
-
-    //     // // a + b*x  + c*y   x:lat54 y:lng54
-
-    //     // const lng1 = a2 + b2 * orglat1 + c2 * orglng1;
-    //     // const lat1 = a1 + b1 * orglat1 + c1 * orglng1;
-    //     // const lng2 = a2 + b2 * orglat2 + c2 * orglng2;
-    //     // const lat2 = a1 + b1 * orglat2 + c1 * orglng2;
-
-    //     const sigcoordinatesOne = [lng1, lat1, lng2, lat2]
+    //     const sigcoordinatesOne = newLineData;
     //     viewer.entities.add({
     //         polylineVolume: {
-    //             positions: Cesium.Cartesian3.fromDegreesArray(sigcoordinatesOne),
+    //             positions: Cesium.Cartesian3.fromDegreesArrayHeights(sigcoordinatesOne),
     //             shape: computeCircle(0.5),
     //             // outline: true,
     //             // outlineColor: Cesium.Color.WHITE,
@@ -638,8 +642,7 @@ export const addPipe = (viewer: any) => {
     //             // material: Cesium.Color.fromRandom({ alpha: 1.0 }),
     //             // .withAlpha(0.95),
     //             material: Cesium.Color.fromCssColorString("#ff0000"),
-    //             heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
-
+    //             // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
     //         },
     //     });
 
@@ -685,21 +688,65 @@ export const zoomPipe = (viewer: any) => {
 }
 
 // 2021-08-16 粉刷匠 添加水坝
-export const addShuiBa = (viewer: any) => {
+export const addJianzhu1 = (viewer: any) => {
     const airplaneUrl = "./Models/House4.glb";
+    const newHouse = "./Models/newHouse.glb";
+    const newHouse2 = "./Models/newHouse2.glb";
+    const glbArr = [airplaneUrl, newHouse, newHouse2];
 
-    // 此方法问题在于缩放的时候不能随着缩放
-    // viewer.entities.add({
-    //     position: Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100),
-    //     model: {
-    //         uri: airplaneUrl,
-    //         minimumPixelSize: 128,
-    //         maximumScale: 20000,
-    //     },
-    //     // orientation: new Cesium.VelocityOrientationProperty(positionProperty)
-    // });
+    const loc1 = glbLoc.features;
+    const WaterControlPoint = [];
+    for (let i = 0; i < loc1.length; i++) {
+        const sigLoc = loc1[i].geometry.coordinates;
+        WaterControlPoint.push(sigLoc[0]);
+        WaterControlPoint.push(sigLoc[1]);
+        WaterControlPoint.push(20);
+        WaterControlPoint.push(90);
+    }   
 
-    // flyToPoint(viewer, { lng: 111.02660, lat: 23.42913, height: 100 });
+    // const WaterControlPoint = [
+    //     121.364952802734749, 31.188761707341701, 20, 90,
+    // ]
+
+    for (let i = 0; i < WaterControlPoint.length; i += 4) {
+        // const cord = [104.04486, 30.77336, 504];
+
+        // const index = Math.floor(Math.random() * 3);
+        const cord = [WaterControlPoint[i], WaterControlPoint[i + 1], WaterControlPoint[i + 2]];
+        const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
+        const newHeading = Cesium.Math.toRadians(WaterControlPoint[i + 3]); //初始heading值赋0
+        const newPitch = Cesium.Math.toRadians(0);
+        const newRoll = Cesium.Math.toRadians(0);
+        const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+
+        const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+            url: glbArr[0], // 模型地址
+            modelMatrix,
+        }));
+
+        // todo:平移,可使用偷懒方法，修改Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100); 
+
+        // 放大一点
+        curModel.scale = 2;
+    }
+
+
+}
+
+// 添加草坪，同上
+export const addCaoPing= (viewer: any) => {
+    const airplaneUrl = "./Models/send.glb";
+
+    // const loc1 = glbLoc.features;
+    // const WaterControlPoint = [];
+    // for (let i = 0; i < loc1.length; i++) {
+    //     const sigLoc = loc1[i].geometry.coordinates;
+    //     WaterControlPoint.push(sigLoc[0]);
+    //     WaterControlPoint.push(sigLoc[1]);
+    //     WaterControlPoint.push(20);
+    //     WaterControlPoint.push(90);
+    // }   
 
     const WaterControlPoint = [
         121.364952802734749, 31.188761707341701, 20, 90,
@@ -707,6 +754,8 @@ export const addShuiBa = (viewer: any) => {
 
     for (let i = 0; i < WaterControlPoint.length; i += 4) {
         // const cord = [104.04486, 30.77336, 504];
+
+        // const index = Math.floor(Math.random() * 3);
         const cord = [WaterControlPoint[i], WaterControlPoint[i + 1], WaterControlPoint[i + 2]];
         const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
         const newHeading = Cesium.Math.toRadians(WaterControlPoint[i + 3]); //初始heading值赋0
@@ -723,8 +772,88 @@ export const addShuiBa = (viewer: any) => {
         // todo:平移,可使用偷懒方法，修改Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100); 
 
         // 放大一点
-        curModel.scale = 3;
+        curModel.scale = 2;
     }
 
 
+}
+
+// 添加小区
+export const addXiaoqu = (viewer: any) => {
+    const data = {
+        minR: 1,
+        maxR: 100,
+        deviationR: 5,// 差值 差值也大 速度越快
+    }
+    let r1 = data.minR;
+    
+    function makeImg() { // 这是callback，参数不能内传  
+        r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
+        if (r1 >= data.maxR) {
+            r1 = data.minR;
+        }
+        const ramp = getColorRamp([0, 0, 0, 0, 0, 0.54, 1.0], true, r1)
+        return ramp;
+    }
+
+    const xiaoqiData = xiaoqu.features;
+    for (let i = 0; i < xiaoqiData.length; i++) {
+        const cord = xiaoqiData[i].geometry.coordinates[0][0];
+        const tmpCord: any = [];
+        const minimumHeights = [];
+        const maximumHeights = [];
+        for (let j = 0; j < cord.length; j++) {
+            tmpCord.push(cord[j][0]);
+            tmpCord.push(cord[j][1]);
+            tmpCord.push(0);
+            minimumHeights.push(20);
+            maximumHeights.push(30);
+        }
+
+        // 添加动态墙
+        viewer.entities.add({
+            name: `wall${i}`,
+            wall: {
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights(tmpCord),
+                minimumHeights: minimumHeights,
+                maximumHeights: maximumHeights,
+                // maximumHeights: new Cesium.CallbackProperty(changeR1, false),
+                material: new Cesium.ImageMaterialProperty({
+                    // image: getColorRamp([0, 0, 0, 0, 0, 0.54, 1.0], true),
+                    image: new Cesium.CallbackProperty(makeImg, false),
+                    transparent: true
+                })
+                // outline: true,
+            }
+        })
+    }
+
+
+
+
+}
+
+// 获取颜色渐变条带
+const getColorRamp = (elevationRamp: any, isTransparent?: boolean, height?: number) => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 1;
+    ramp.height = 100;
+    const ctx: any = ramp.getContext('2d');
+
+    const values = elevationRamp;
+    const grd = ctx.createLinearGradient(0, 0, 0, 100);
+
+    // const colorIndex = Math.floor(Math.random() * (ColorArr.length));
+    // grd.addColorStop(values[0], '#000000'); //black
+    // grd.addColorStop(values[1], '#2747E0'); //blue
+    // grd.addColorStop(values[2], '#D33B7D'); //pink
+    // grd.addColorStop(values[3], '#D33038'); //red
+    // grd.addColorStop(values[4], '#FF9742'); //orange
+    // grd.addColorStop(values[5], '#ffd700'); //yellow
+    grd.addColorStop(height ? (1 - height * 0.01) : values[5], 'transparent'); //yellow
+    grd.addColorStop(values[6], '#00FFFF'); //white
+
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 1, 100);
+    return ramp;
 }
