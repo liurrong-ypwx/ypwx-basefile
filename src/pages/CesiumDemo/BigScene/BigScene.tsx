@@ -4,6 +4,7 @@ import * as CesiumApi from "./util/CesiumApi";
 import { Popover, Modal } from "antd";
 import bz_img from "../../../assets/image/bzAll.png";
 import dm_img from "../../../assets/image/dmAll.png";
+import ai_img from "../../../assets/image/ai2.jpg";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 
@@ -15,6 +16,7 @@ function BigScene(props: any): JSX.Element {
     const [isShowTip, setIsShowTip] = useState(false);
     const [tipContent, setTipContent] = useState<any>(null);
     const [isShowModal, setIsShowModal] = useState(false);
+    const [modalType, setModalType] = useState(1);
 
 
     useEffect(() => {
@@ -48,7 +50,7 @@ function BigScene(props: any): JSX.Element {
             const type = property.name.substring(typeIndex + 4)
             // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
 
-            if (+type === 2) {
+            if (+type === 0) {
                 const tmpContent = (
                     <div className="field-container field-container-l1">
                         <img src={bz_img} alt="" />
@@ -73,7 +75,25 @@ function BigScene(props: any): JSX.Element {
 
     const clickCallBack = (hoverInfo: any) => {
         setIsShowTip(false);
-        setIsShowModal(true);
+
+        if (!hoverInfo || !hoverInfo.pickedFeature) return;
+        const property: any = hoverInfo.pickedFeature.id;
+        if (!property) return;
+
+        const name = property.name;
+        const typeIndex = property.name.indexOf('type');
+        const type = property.name.substring(typeIndex + 4)
+        if (name.indexOf('ai') !== -1) {
+            setIsShowModal(true);
+            setModalType(1);
+        }
+
+        if (+type === 0) {
+            setIsShowModal(true);
+            setModalType(2);
+        }
+
+
     }
 
     const addBookMark = () => {
@@ -92,12 +112,14 @@ function BigScene(props: any): JSX.Element {
                 centered={true}
                 className={`js-modal-container-lrr`}
             >
-                <video id="my_video_1" className="video-js vjs-default-skin" width="100%" height="100%"
-                    controls preload="none" poster='http://video-js.zencoder.com/oceans-clip.jpg'
-                    autoPlay={true}
-                    data-setup='{ "aspectRatio":"640:267", "playbackRates": [1, 1.5, 2] }'>
-                    <source src='http://192.168.0.104:3001/tv.mp4' type='video/mp4' />
-                </video>
+                {
+                    modalType === 2 ? <video id="my_video_1" className="video-js vjs-default-skin" width="100%" height="100%"
+                        controls preload="none" poster='http://video-js.zencoder.com/oceans-clip.jpg'
+                        autoPlay={true}
+                        data-setup='{ "aspectRatio":"640:267", "playbackRates": [1, 1.5, 2] }'>
+                        <source src='http://192.168.0.104:3001/tv.mp4' type='video/mp4' />
+                    </video> : <img src={ai_img} alt="" />
+                }
             </Modal>
 
             <div id={mapId} className="big-scene-map-container" />

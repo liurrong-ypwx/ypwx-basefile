@@ -11,7 +11,7 @@ import { textRiverJson0530 } from './riverData';
 // import { ColorArr } from './testColor';
 import { sendPoint, shuiweiDian, testFly, testLine, testPoint, xiaoqu } from './xiaoqu';
 import { glbLoc } from './glbloc';
-import { makeVirticelLine } from '../../../../utils/CesiumApi/CesiumApi';
+// import { makeVirticelLine } from '../../../../utils/CesiumApi/CesiumApi';
 
 // import { testDataPipe } from './pipe2';
 
@@ -72,7 +72,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     addRiver(viewer);
 
     // 添加建筑物设置样式
-    addGBuilding(viewer);
+    // addGBuilding(viewer);
 
     // 添加管道
     // addPipe(viewer);
@@ -84,10 +84,10 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     addCamera(viewer);
 
     // 添加建筑模型
-    addJianzhu1(viewer);
+    // addJianzhu1(viewer);
 
     // 添加小区的边界线
-    addXiaoqu(viewer);
+    // addXiaoqu(viewer);
 
     // 添加水体周边的草坪
     // addCaoPing(viewer);
@@ -100,10 +100,13 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
 
 
     // 添加水位监测点
-    // addShuiwei(viewer);
+    addShuiwei(viewer);
 
     // 添加雷达扫描图
-    addSeveralCircle(viewer);
+    // addSeveralCircle(viewer);
+
+    // 添加AI告警点
+    addAIPoint(viewer);
 
 
     return viewer;
@@ -282,26 +285,96 @@ export const addCamera = (viewer: any) => {
         const loc = orgData[i].geometry.coordinates;
         sxtArr.push([loc[0], loc[1]]);
     }
-    const tmpArr = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'];
+    const tmpArr = ['o1', 'o2', 'o5', 'o6'];
     // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
-    for (let i = 0; i < sxtArr.length; i++) {
-        const index = Math.floor(Math.random() * 6);
-        // // const index = 0;
+    const nameArr = ['视频', '人员', '水位', '事件'];
 
-        // debugger
-
+    for (let i = 0; i < sxtArr.length; i += 3) {
+        const index = Math.floor(Math.random() * 4);
+        const textShow = nameArr[index];
         viewer.entities.add({
-            id: `map-point${i}-type${index}`,
-            name: `map-point${i}-type${index}`,
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1]),
+            id: `map-no-point${i}no-type${index}`,
+            name: `map-no-point${i}-type${index}`,
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1],15),
             billboard: {
                 image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
                 // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
-            }
+            },
+            label: {
+                // 竖直的文字
+                // text: '测\n试\n文\n字',
+                text: textShow,
+                font: `16px sans-serif`,
+                // fillColor : Cesium.Color.RED,
+                fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
+                pixelOffset: new Cesium.Cartesian2(0, -80),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
         });
     }
+}
+
+export const addAIPoint = (viewer: any) => {
+    // 摄像头
+    const sxtArr = [];
+
+    const orgData = testPoint.features;
+    for (let i = 0; i < orgData.length; i++) {
+        const loc = orgData[i].geometry.coordinates;
+        sxtArr.push([loc[0], loc[1]]);
+    }
+
+    const featureArr: any = [];
+
+    for (let i = 2; i < sxtArr.length; i += 6) {
+        const index = Math.floor(Math.random() * 4);
+        const sigEntity = new Cesium.Entity({
+            id: `map-no-point${i}no-type${index}`,
+            name: `map-ai-point${i}-type${index}`,
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 15),
+            billboard: {
+                image: `./Models/image/ai.png`,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                scale: 0.6,
+                // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
+            },
+            label: {
+                // 竖直的文字
+                // text: '测\n试\n文\n字',
+                text: `AI预警`,
+                font: `16px sans-serif`,
+                // fillColor : Cesium.Color.RED,
+                fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
+                pixelOffset: new Cesium.Cartesian2(0, -90),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        })
+        featureArr.push(sigEntity);
+        viewer.entities.add(sigEntity);
+    }
+
+    // console.log(featureArr);
+
+    const min = 0.60;
+    const max = 0.75;
+    const step = 0.02;
+    let flag = false;
+
+    const changeSize = () => {
+        for (let i = 0; i < featureArr.length; i++) {
+            const tmpScale = featureArr[i].billboard.scale > max ? min : featureArr[i].billboard.scale + step;
+            featureArr[i].billboard.scale = tmpScale;
+            featureArr[i].label.fillColor = flag ? Cesium.Color.fromCssColorString('#87CEFA') : Cesium.Color.fromCssColorString('#FF0000');
+        }
+        flag = !flag;
+    }
+
+    setInterval(() => {
+        changeSize();
+    }, 200);
 }
 
 // 改变场景颜色
@@ -965,7 +1038,7 @@ export const addMouseClick = (viewer: any, callBack: any) => {
         if (!pickedFeature.id) return;
         const featureName = pickedFeature.id.name;
         if (!featureName) return;
-        if (featureName.indexOf("map-point") === -1) return;
+        if (featureName.indexOf("map") === -1) return;
         const position = movement.position;
 
         callBack({
@@ -993,71 +1066,75 @@ export const addShuiwei = (viewer: any) => {
     const myCustomDataSource = new Cesium.CustomDataSource("shuiweiEntityCollection");
     viewer.dataSources.add(myCustomDataSource);
 
-    for (let i = 0; i < pointArr.length; i++) {
+    const tmpArr = ['o3', 'o4'];
+    // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
 
-        const value = 2 + Math.random();
-        const midNum = 2.8;
-        const color = value < midNum ? null : "#FFA500";
-        const textShow = value < midNum ? `水位:${value.toFixed(3)}` : `告警！\n水位:${value.toFixed(1)} `;
-        const sigEntity = new Cesium.Entity({
-            position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
+    let flag = false;
+    for (let i = 0; i < pointArr.length; i += 2) {
+
+        const index = flag ? 0 : 1;
+        const textShow = flag ? "某某某泵闸" : "某某某断面";
+        flag = !flag;
+
+        viewer.entities.add({
+            id: `map-point${i}-type${index}`,
+            name: `map-point${i}-type${index}`,
+            position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], 15),
             billboard: {
-                image: makeVirticelLine(color), // default: undefined  
-                width: 50,
-                height: 50
+                image: `./Models/image/${tmpArr[index]}.png`,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
             },
             label: {
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
                 text: textShow,
-                font: `${value < midNum ? 16 : 20}px sans-serif`,
+                font: `16px sans-serif`,
                 // fillColor : Cesium.Color.RED,
-                fillColor: value < midNum ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
-                pixelOffset: new Cesium.Cartesian2(0, -30),
+                fillColor: index ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
+                pixelOffset: new Cesium.Cartesian2(0, -80),
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },
-        })
-
-        myCustomDataSource.entities.add(sigEntity);
+        });
     }
 
-    const updateData = () => {
-        myCustomDataSource.entities.removeAll();
-        for (let i = 0; i < pointArr.length; i++) {
-            const value = 2 + Math.random();
-            const midNum = 2.8;
-            const color = value < midNum ? null : "#FFA500";
-            const textShow = value < midNum ? `水位:${value.toFixed(3)}` : `告警！\n水位:${value.toFixed(1)} `;
-            const sigEntity = new Cesium.Entity({
-                position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
-                billboard: {
-                    // image: makeVirticelLine(), // default: undefined  
-                    image: makeVirticelLine(color), // default: undefined  
+    // const updateData = () => {
+    //     myCustomDataSource.entities.removeAll();
+    //     for (let i = 0; i < pointArr.length; i++) {
+    //         const value = 2 + Math.random();
+    //         const midNum = 2.8;
+    //         const color = value < midNum ? null : "#FFA500";
+    //         const textShow = value < midNum ? `水位:${value.toFixed(3)}` : `告警！\n水位:${value.toFixed(1)} `;
+    //         const sigEntity = new Cesium.Entity({
+    //             position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
+    //             billboard: {
+    //                 // image: makeVirticelLine(), // default: undefined  
+    //                 image: makeVirticelLine(color), // default: undefined  
 
-                    width: 50,
-                    height: 50
-                },
-                label: {
-                    // 竖直的文字
-                    // text: '测\n试\n文\n字',
-                    text: textShow,
-                    font: `${value < midNum ? 16 : 20}px sans-serif`,
-                    // fillColor : Cesium.Color.RED,
-                    fillColor: value < midNum ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
-                    pixelOffset: new Cesium.Cartesian2(0, -30),
-                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM
-                },
-            })
+    //                 width: 50,
+    //                 height: 50
+    //             },
+    //             label: {
+    //                 // 竖直的文字
+    //                 // text: '测\n试\n文\n字',
+    //                 text: textShow,
+    //                 font: `${value < midNum ? 16 : 20}px sans-serif`,
+    //                 // fillColor : Cesium.Color.RED,
+    //                 fillColor: value < midNum ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
+    //                 pixelOffset: new Cesium.Cartesian2(0, -30),
+    //                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+    //             },
+    //         })
 
-            myCustomDataSource.entities.add(sigEntity);
-        }
-    }
+    //         myCustomDataSource.entities.add(sigEntity);
+    //     }
+    // }
 
-    setInterval(() => {
-        updateData();
-    }, 10000);
+    // setInterval(() => {
+    //     updateData();
+    // }, 10000);
 
-    // myEntityCollection.entities.add(new Cesium.Entity(options));
 
 
 
