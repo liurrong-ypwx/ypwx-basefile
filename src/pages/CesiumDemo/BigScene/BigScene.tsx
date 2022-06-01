@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "./BigScene.less";
 import * as CesiumApi from "./util/CesiumApi";
-import { Popover } from "antd";
+import { Popover, Modal } from "antd";
 import bz_img from "../../../assets/image/bzAll.png";
 import dm_img from "../../../assets/image/dmAll.png";
+import videojs from "video.js";
+import "video.js/dist/video-js.css";
 
 function BigScene(props: any): JSX.Element {
     const mapId = "ID_BIG_SCENE";
@@ -12,9 +14,11 @@ function BigScene(props: any): JSX.Element {
     const [tipY, setTipY] = useState(100);
     const [isShowTip, setIsShowTip] = useState(false);
     const [tipContent, setTipContent] = useState<any>(null);
+    const [isShowModal, setIsShowModal] = useState(false);
+
 
     useEffect(() => {
-        const tmpView = CesiumApi.initMap(mapId, hoverCallBack);
+        const tmpView = CesiumApi.initMap(mapId, hoverCallBack, clickCallBack);
         setView(tmpView);
     }, []);
 
@@ -67,16 +71,35 @@ function BigScene(props: any): JSX.Element {
         }
     }
 
+    const clickCallBack = (hoverInfo: any) => {
+        setIsShowTip(false);
+        setIsShowModal(true);
+    }
+
     const addBookMark = () => {
         if (!view) return;
-        const info = CesiumApi.getCurrentCameraInfo(view);
-        console.log(info);
-
-        
+        // const info = CesiumApi.getCurrentCameraInfo(view);
+        // console.log(info);        
     }
 
     return (
         <div className="big-scene">
+
+            <Modal
+                visible={isShowModal}
+                footer={null}
+                onCancel={() => { setIsShowModal(false) }}
+                centered={true}
+                className={`js-modal-container-lrr`}
+            >
+                <video id="my_video_1" className="video-js vjs-default-skin" width="100%" height="100%"
+                    controls preload="none" poster='http://video-js.zencoder.com/oceans-clip.jpg'
+                    autoPlay={true}
+                    data-setup='{ "aspectRatio":"640:267", "playbackRates": [1, 1.5, 2] }'>
+                    <source src='http://192.168.0.104:3001/tv.mp4' type='video/mp4' />
+                </video>
+            </Modal>
+
             <div id={mapId} className="big-scene-map-container" />
 
             <div className="bg-top" />

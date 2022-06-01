@@ -22,7 +22,7 @@ Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOi
 
 
 // 初始化地图
-export const initMap = (domID: string, callBack?: any) => {
+export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
 
     if (!document.getElementById(domID)) return;
 
@@ -44,7 +44,7 @@ export const initMap = (domID: string, callBack?: any) => {
     // 演示1：添加免费的osm 建筑物图层
     // viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
-    viewer.scene.globe.imageryLayers.get(0).alpha = 0.4;
+    viewer.scene.globe.imageryLayers.get(0).alpha = 0.6;
     viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1);
 
     // viewer.cesiumWidget.creditContainer.style.display = "none";
@@ -69,10 +69,10 @@ export const initMap = (domID: string, callBack?: any) => {
     // changeViewerColor(viewer);
 
     // 添加河流
-    // addRiver(viewer);
+    addRiver(viewer);
 
     // 添加建筑物设置样式
-    // addGBuilding(viewer);
+    addGBuilding(viewer);
 
     // 添加管道
     // addPipe(viewer);
@@ -81,25 +81,29 @@ export const initMap = (domID: string, callBack?: any) => {
     // addMutTypeLine(viewer);
 
     // 添加摄像头
-    // addCamera(viewer);
+    addCamera(viewer);
 
     // 添加建筑模型
-    // addJianzhu1(viewer);
+    addJianzhu1(viewer);
 
     // 添加小区的边界线
-    // addXiaoqu(viewer);
+    addXiaoqu(viewer);
 
     // 添加水体周边的草坪
     // addCaoPing(viewer);
 
     // 添加鼠标hover事件
-    // addMouseHover(viewer, callBack);
+    addMouseHover(viewer, callBack);
+
+    // 添加鼠标click事件
+    addMouseClick(viewer, callBackClick);
+
 
     // 添加水位监测点
     // addShuiwei(viewer);
 
     // 添加雷达扫描图
-    // addSeveralCircle(viewer);
+    addSeveralCircle(viewer);
 
 
     return viewer;
@@ -937,6 +941,41 @@ export const addMouseHover = (viewer: any, callBack: any) => {
         // console.log(windowPosition, pickedFeature);
 
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+}
+
+// 添加鼠标点击事件
+export const addMouseClick = (viewer: any, callBack: any) => {
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+
+    // 注册鼠标点击事件
+    handler.setInputAction((movement: any) => {
+
+        // Pick a new feature
+        const pickedFeature = viewer.scene.pick(movement.position);
+        if (!Cesium.defined(pickedFeature)) {
+            callBack({
+                show: false
+            })
+            return;
+        }
+
+        if (!pickedFeature.id) return;
+        const featureName = pickedFeature.id.name;
+        if (!featureName) return;
+        if (featureName.indexOf("map-point") === -1) return;
+        const position = movement.position;
+
+        callBack({
+            show: true,
+            position,
+            pickedFeature
+        });
+        // console.log(windowPosition, pickedFeature);
+
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 }
 
