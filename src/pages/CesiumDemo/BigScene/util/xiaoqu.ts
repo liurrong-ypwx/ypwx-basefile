@@ -85,3 +85,70 @@ export const treePoint = {
     ]
 }
 
+
+export const sendPoint = {
+    "type": "FeatureCollection",
+    "name": "testSend",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    "features": [
+        { "type": "Feature", "properties": { "id": 1 }, "geometry": { "type": "Point", "coordinates": [121.365009930681509, 31.208548419915857] } },
+        { "type": "Feature", "properties": { "id": 2 }, "geometry": { "type": "Point", "coordinates": [121.365052108114924, 31.208581011162995] } },
+        { "type": "Feature", "properties": { "id": 3 }, "geometry": { "type": "Point", "coordinates": [121.365086617024474, 31.20862127103484] } },
+        { "type": "Feature", "properties": { "id": 4 }, "geometry": { "type": "Point", "coordinates": [121.365126877369391, 31.20866153087529] } },
+        { "type": "Feature", "properties": { "id": 5 }, "geometry": { "type": "Point", "coordinates": [121.365167137686015, 31.208697956424317] } },
+        { "type": "Feature", "properties": { "id": 6 }, "geometry": { "type": "Point", "coordinates": [121.365203563853925, 31.208753553451434] } },
+        { "type": "Feature", "properties": { "id": 7 }, "geometry": { "type": "Point", "coordinates": [121.365247658503222, 31.208795730416696] } },
+        { "type": "Feature", "properties": { "id": 8 }, "geometry": { "type": "Point", "coordinates": [121.365284084515437, 31.208830238840907] } },
+        { "type": "Feature", "properties": { "id": 9 }, "geometry": { "type": "Point", "coordinates": [121.365320510555975, 31.208868581556562] } },
+        { "type": "Feature", "properties": { "id": 10 }, "geometry": { "type": "Point", "coordinates": [121.365358853755779, 31.208908841407489] } },
+        { "type": "Feature", "properties": { "id": 11 }, "geometry": { "type": "Point", "coordinates": [121.365401031203362, 31.208943349800336] } },
+        { "type": "Feature", "properties": { "id": 12 }, "geometry": { "type": "Point", "coordinates": [121.36543554007045, 31.208977858235009] } },
+        { "type": "Feature", "properties": { "id": 13 }, "geometry": { "type": "Point", "coordinates": [121.365473883298577, 31.209021952377356] } },
+        { "type": "Feature", "properties": { "id": 14 }, "geometry": { "type": "Point", "coordinates": [121.365512226427597, 31.209052626499677] } },
+        { "type": "Feature", "properties": { "id": 15 }, "geometry": { "type": "Point", "coordinates": [121.365550569627388, 31.209092886350593] } },
+        { "type": "Feature", "properties": { "id": 16 }, "geometry": { "type": "Point", "coordinates": [121.365588912827192, 31.209133146201502] } },
+        { "type": "Feature", "properties": { "id": 17 }, "geometry": { "type": "Point", "coordinates": [121.365657930547229, 31.209200245925114] } },
+        { "type": "Feature", "properties": { "id": 18 }, "geometry": { "type": "Point", "coordinates": [121.365736534063672, 31.209276931325054] } },
+        { "type": "Feature", "properties": { "id": 19 }, "geometry": { "type": "Point", "coordinates": [121.36580171749344, 31.209344031069584] } },
+        { "type": "Feature", "properties": { "id": 20 }, "geometry": { "type": "Point", "coordinates": [121.365857315183433, 31.20940921372069] } },
+        { "type": "Feature", "properties": { "id": 21 }, "geometry": { "type": "Point", "coordinates": [121.365924415772483, 31.209478230600478] } },
+        { "type": "Feature", "properties": { "id": 22 }, "geometry": { "type": "Point", "coordinates": [121.365980013519106, 31.209551081834448] } },
+        { "type": "Feature", "properties": { "id": 23 }, "geometry": { "type": "Point", "coordinates": [121.366045196963043, 31.209620098724699] } },
+        { "type": "Feature", "properties": { "id": 24 }, "geometry": { "type": "Point", "coordinates": [121.36611038044947, 31.20969486705209] } },
+        { "type": "Feature", "properties": { "id": 25 }, "geometry": { "type": "Point", "coordinates": [121.365121123612596, 31.208347119009055] } },
+        { "type": "Feature", "properties": { "id": 26 }, "geometry": { "type": "Point", "coordinates": [121.36515563247967, 31.208381627443735] } },
+        { "type": "Feature", "properties": { "id": 27 }, "geometry": { "type": "Point", "coordinates": [121.365190141360898, 31.208418053024143] } },
+        { "type": "Feature", "properties": { "id": 28 }, "geometry": { "type": "Point", "coordinates": [121.365228484518241, 31.208452561437916] } },
+        { "type": "Feature", "properties": { "id": 29 }, "geometry": { "type": "Point", "coordinates": [121.365264910530399, 31.208487069862127] } },
+        { "type": "Feature", "properties": { "id": 30 }, "geometry": { "type": "Point", "coordinates": [121.365314756700045, 31.208540749670327] } },
+        { "type": "Feature", "properties": { "id": 31 }, "geometry": { "type": "Point", "coordinates": [121.365362685724577, 31.208594429488979] } },
+        { "type": "Feature", "properties": { "id": 32 }, "geometry": { "type": "Point", "coordinates": [121.3654125318659, 31.208644275005739] } },
+        { "type": "Feature", "properties": { "id": 33 }, "geometry": { "type": "Point", "coordinates": [121.365466212339953, 31.20869987193873] } },
+        { "type": "Feature", "properties": { "id": 34 }, "geometry": { "type": "Point", "coordinates": [121.365514141307855, 31.208745883174512] } }
+    ]
+}
+
+// 河道两边交叉点
+export const testPoint = {
+    "type": "FeatureCollection",
+    "name": "testpoint",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    "features": [
+        { "type": "Feature", "properties": { "id": 1 }, "geometry": { "type": "Point", "coordinates": [121.3705899947484, 31.220223412835345] } },
+        { "type": "Feature", "properties": { "id": 2 }, "geometry": { "type": "Point", "coordinates": [121.37097421642541, 31.216869076176049] } },
+        { "type": "Feature", "properties": { "id": 3 }, "geometry": { "type": "Point", "coordinates": [121.369072901000891, 31.214208485753876] } },
+        { "type": "Feature", "properties": { "id": 4 }, "geometry": { "type": "Point", "coordinates": [121.368314106652051, 31.211507839043911] } },
+        { "type": "Feature", "properties": { "id": 5 }, "geometry": { "type": "Point", "coordinates": [121.365840712573572, 31.209869510863996] } },
+        { "type": "Feature", "properties": { "id": 6 }, "geometry": { "type": "Point", "coordinates": [121.364938814534568, 31.207577831053651] } },
+        { "type": "Feature", "properties": { "id": 7 }, "geometry": { "type": "Point", "coordinates": [121.361608171085578, 31.206552388737169] } },
+        { "type": "Feature", "properties": { "id": 8 }, "geometry": { "type": "Point", "coordinates": [121.360992708511674, 31.203606352639849] } },
+        { "type": "Feature", "properties": { "id": 9 }, "geometry": { "type": "Point", "coordinates": [121.360330517827876, 31.199923890545019] } },
+        { "type": "Feature", "properties": { "id": 10 }, "geometry": { "type": "Point", "coordinates": [121.362664958235328, 31.197757568066969] } },
+        { "type": "Feature", "properties": { "id": 11 }, "geometry": { "type": "Point", "coordinates": [121.363381739217104, 31.195098985648876] } },
+        { "type": "Feature", "properties": { "id": 12 }, "geometry": { "type": "Point", "coordinates": [121.365573004454205, 31.193137044064613] } },
+        { "type": "Feature", "properties": { "id": 13 }, "geometry": { "type": "Point", "coordinates": [121.364671314487481, 31.190804446577999] } }
+    ]
+}
+    
+
+

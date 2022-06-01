@@ -1,12 +1,66 @@
-.big-scene{
+.big-scene {
     width: 100%;
     height: 100%;
+    position: relative;
+    overflow: hidden;
 
-    .big-scene-map-container{
+    .tip-cord {
+        position: absolute;
+    }
+
+    .big-scene-map-container {
         width: 100%;
         height: 100%;
+        overflow: hidden;
+
     }
-    .testColor{
+
+    .testColor {
         color: #8ac3c3;
     }
+}
+
+.jj-ys-tip {
+
+    .ant-popover-content .ant-popover-inner {
+        background: #333333;
+        border: .02rem solid #4b8cdb;
+        padding: 0;
+    }
+
+    .ant-popover-inner-content {
+        padding: 0;
+    }
+
+    .ant-popover-arrow .ant-popover-arrow-content {
+        background: #4b8cdb;
+
+    }
+
+    .ant-popover-arrow-content::before {
+        background-color: transparent;
+    }
+
+    .field-container {
+        &.field-container-l1 {
+            width: 7.23rem;
+            height: 4rem;
+
+            img{
+                width: 100%;
+                height: 100%;
+            }
+
+        }
+
+        &.field-container-l2 {
+            width: 5.28rem;
+            height: 3.99rem;
+            img{
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+
 }

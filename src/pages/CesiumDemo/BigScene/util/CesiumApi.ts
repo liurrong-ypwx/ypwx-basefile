@@ -9,7 +9,7 @@ import jt from "../../../../assets/image/JT2.png";
 import normalMap from "../../../../assets/image/fabric_normal.jpg";
 import { textRiverJson0530 } from './riverData';
 // import { ColorArr } from './testColor';
-import { testLine, treePoint, xiaoqu } from './xiaoqu';
+import { sendPoint, testLine, testPoint, xiaoqu } from './xiaoqu';
 import { glbLoc } from './glbloc';
 
 // import { testDataPipe } from './pipe2';
@@ -21,7 +21,7 @@ Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOi
 
 
 // 初始化地图
-export const initMap = (domID: string) => {
+export const initMap = (domID: string, callBack?: any) => {
 
     if (!document.getElementById(domID)) return;
 
@@ -69,7 +69,7 @@ export const initMap = (domID: string) => {
     addRiver(viewer);
 
     // 添加建筑物设置样式
-    addGBuilding(viewer);
+    // addGBuilding(viewer);
 
     // 添加管道
     // addPipe(viewer);
@@ -81,13 +81,16 @@ export const initMap = (domID: string) => {
     addCamera(viewer);
 
     // 添加建筑模型
-    addJianzhu1(viewer);
+    // addJianzhu1(viewer);
 
     // 添加小区的边界线
-    addXiaoqu(viewer);
+    // addXiaoqu(viewer);
 
     // 添加水体周边的草坪
-    addCaoPing(viewer);
+    // addCaoPing(viewer);
+
+    // 添加鼠标hover事件
+    addMouseHover(viewer, callBack);
 
     return viewer;
 }
@@ -179,9 +182,14 @@ export const addGBuilding = (viewer: any) => {
     // http://localhost:9003/model/teOukBqr4/tileset.json
     // http://localhost:9003/model/tkVIcAoHG/tileset.json
     // http://localhost:9003/model/t9ODc8PCR/tileset.json
+    // http://localhost:9003/model/tyxIFBw68/tileset.json
+    // http://localhost:9003/model/tiHZ3wvdE/tileset.json
+    // http://localhost:9003/model/tdXBdddQ6/tileset.json
+    // http://localhost:9003/model/tNMZjFYSa/tileset.json
+    // http://localhost:9003/model/tUFIgmo9U/tileset.json
 
     const tmpTileset = new Cesium.Cesium3DTileset({
-        url: ' http://localhost:9003/model/t9ODc8PCR/tileset.json',
+        url: ' http://localhost:9003/model/tUFIgmo9U/tileset.json',
         // 控制切片视角显示的数量，可调整性能
         maximumScreenSpaceError: 2,
         // maximumNumberOfLoadedTiles: 100000,
@@ -255,23 +263,28 @@ export const addCamera = (viewer: any) => {
     // const sxtArr = [[104.06273, 30.77760, 490], [104.04797, 30.76234, 490], [104.06862, 30.76404, 490]];
     const sxtArr = [];
 
-    const orgData = treePoint.features;
+    const orgData = testPoint.features;
     for (let i = 0; i < orgData.length; i++) {
         const loc = orgData[i].geometry.coordinates;
         sxtArr.push([loc[0], loc[1]]);
     }
-    const tmpArr = ['sxt', 'l0', 'l1', 'l2', 'l3', 'l4', 'l5', 'l6'];
-    for (let i = 0; i < sxtArr.length; i += 4) {
-    // const index = Math.floor(Math.random() * (tmpArr.length));
-        const index = 0;
+    const tmpArr = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'];
+    // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
+    for (let i = 0; i < sxtArr.length; i++) {
+        const index = Math.floor(Math.random() * 6);
+        // // const index = 0;
+
+        // debugger
 
         viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], sxtArr[i][2]),
-            billboard: {                
+            id: `map-point${i}-type${index}`,
+            name: `map-point${i}-type${index}`,
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1]),
+            billboard: {
                 image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
-                scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
+                // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
             }
         });
     }
@@ -702,7 +715,7 @@ export const addJianzhu1 = (viewer: any) => {
         WaterControlPoint.push(sigLoc[1]);
         WaterControlPoint.push(20);
         WaterControlPoint.push(90);
-    }   
+    }
 
     // const WaterControlPoint = [
     //     121.364952802734749, 31.188761707341701, 20, 90,
@@ -735,22 +748,22 @@ export const addJianzhu1 = (viewer: any) => {
 }
 
 // 添加草坪，同上
-export const addCaoPing= (viewer: any) => {
+export const addCaoPing = (viewer: any) => {
     const airplaneUrl = "./Models/send.glb";
 
-    // const loc1 = glbLoc.features;
-    // const WaterControlPoint = [];
-    // for (let i = 0; i < loc1.length; i++) {
-    //     const sigLoc = loc1[i].geometry.coordinates;
-    //     WaterControlPoint.push(sigLoc[0]);
-    //     WaterControlPoint.push(sigLoc[1]);
-    //     WaterControlPoint.push(20);
-    //     WaterControlPoint.push(90);
-    // }   
+    const loc1 = sendPoint.features;
+    const WaterControlPoint = [];
+    for (let i = 0; i < loc1.length; i++) {
+        const sigLoc = loc1[i].geometry.coordinates;
+        WaterControlPoint.push(sigLoc[0]);
+        WaterControlPoint.push(sigLoc[1]);
+        WaterControlPoint.push(10);
+        WaterControlPoint.push(45);
+    }
 
-    const WaterControlPoint = [
-        121.364952802734749, 31.188761707341701, 20, 90,
-    ]
+    // const WaterControlPoint = [
+    //     121.364952802734749, 31.188761707341701, 20, 90,
+    // ]
 
     for (let i = 0; i < WaterControlPoint.length; i += 4) {
         // const cord = [104.04486, 30.77336, 504];
@@ -786,7 +799,7 @@ export const addXiaoqu = (viewer: any) => {
         deviationR: 5,// 差值 差值也大 速度越快
     }
     let r1 = data.minR;
-    
+
     function makeImg() { // 这是callback，参数不能内传  
         r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
         if (r1 >= data.maxR) {
@@ -856,4 +869,39 @@ const getColorRamp = (elevationRamp: any, isTransparent?: boolean, height?: numb
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 1, 100);
     return ramp;
+}
+
+// 添加鼠标点击事件
+export const addMouseHover = (viewer: any, callBack: any) => {
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+
+    // 注册鼠标移动事件
+    handler.setInputAction((movement: any) => {
+
+        // Pick a new feature
+        const pickedFeature = viewer.scene.pick(movement.endPosition);
+        if (!Cesium.defined(pickedFeature)) {
+            callBack({
+                show: false
+            })
+            return;
+        }
+
+        if (!pickedFeature.id) return;
+        const featureName = pickedFeature.id.name;
+        if (!featureName) return;
+        if (featureName.indexOf("map-point") === -1) return;
+        const position = movement.endPosition;
+
+        callBack({
+            show: true,
+            position,
+            pickedFeature
+        });
+        // console.log(windowPosition, pickedFeature);
+
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
 }
