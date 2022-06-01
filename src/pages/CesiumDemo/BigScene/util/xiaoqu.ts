@@ -149,6 +149,113 @@ export const testPoint = {
         { "type": "Feature", "properties": { "id": 13 }, "geometry": { "type": "Point", "coordinates": [121.364671314487481, 31.190804446577999] } }
     ]
 }
-    
+
+
+export const shuiweiDian = {
+    "type": "FeatureCollection",
+    "name": "shuiweidian",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    "features": [
+        { "type": "Feature", "properties": { "id": 1 }, "geometry": { "type": "Point", "coordinates": [121.370356945534695, 31.2216923417709] } },
+        { "type": "Feature", "properties": { "id": 2 }, "geometry": { "type": "Point", "coordinates": [121.371292487312758, 31.218302823041899] } },
+        { "type": "Feature", "properties": { "id": 3 }, "geometry": { "type": "Point", "coordinates": [121.369145248738519, 31.21342561605935] } },
+        { "type": "Feature", "properties": { "id": 4 }, "geometry": { "type": "Point", "coordinates": [121.367381457154082, 31.21097934774841] } },
+        { "type": "Feature", "properties": { "id": 5 }, "geometry": { "type": "Point", "coordinates": [121.364942828846907, 31.20831069421294] } },
+        { "type": "Feature", "properties": { "id": 7 }, "geometry": { "type": "Point", "coordinates": [121.363692843147177, 31.207352128171848] } },
+        { "type": "Feature", "properties": { "id": 8 }, "geometry": { "type": "Point", "coordinates": [121.361729676460698, 31.205987131127078] } },
+        { "type": "Feature", "properties": { "id": 9 }, "geometry": { "type": "Point", "coordinates": [121.360410663972829, 31.203732574954561] } },
+        { "type": "Feature", "properties": { "id": 10 }, "geometry": { "type": "Point", "coordinates": [121.360686709667974, 31.200588454470171] } },
+        { "type": "Feature", "properties": { "id": 11 }, "geometry": { "type": "Point", "coordinates": [121.361591592320309, 31.199254116116016] } },
+        { "type": "Feature", "properties": { "id": 12 }, "geometry": { "type": "Point", "coordinates": [121.362358437015487, 31.197444326376345] } }
+    ]
+}
+
+
+
+export const testFly = [
+    {
+        cameraHPR: { heading: 333.72085175715546, pitch: -16.226407182138306, roll: 359.9214401670276 },
+        cameraHeight: { longitude: 2.11837274141491, latitude: 0.544272193550629, height: 711.3263536761191 },
+        maxx: 122.38262294596959,
+        maxy: 32.03785690417966,
+        midLocation: { lon: 121.36245477933001, lat: 31.2042787809012 },
+        minx: 120.3650120912953,
+        miny: 31.19073326141005,
+    },
+    {
+        cameraHPR: { heading: 332.71936195120725, pitch: -12.145427511801888, roll: 359.92013649306864 },
+        cameraHeight: { longitude: 2.118229740841822, latitude: 0.5444471591354888, height: 211.31691948864352 },
+        maxx: 121.9132910594544,
+        maxy: 31.66067489856797,
+        midLocation: { lon: 121.36090007396513, lat: 31.202398217626094 },
+        minx: 120.8179573191987,
+        miny: 31.196686384790038,
+    },
+    {
+        cameraHPR: { heading: 332.7193619607864, pitch: -12.145427425491823, roll: 359.9201364475384 },
+        cameraHeight: { longitude: 2.1181551877072873, latitude: 0.5445423247564044, height: 63.58321940620242 },
+        maxx: 121.66112060358833,
+        maxy: 31.45597430584575,
+        midLocation: { lon: 121.35993152578686, lat: 31.20234555797197 },
+        minx: 121.06158461514813,
+        miny: 31.20062747617848,
+    },
+    {
+        cameraHPR: { heading: 348.31358737460914, pitch: -3.9832146943208175, roll: 359.9654208495312 },
+        cameraHeight: { longitude: 2.1181452845110833, latitude: 0.5445768221423228, height: 47.01964389068711 },
+        maxx: 121.61847612546758,
+        maxy: 31.422139009429177,
+        midLocation: { lon: 121.35934882906332, lat: 31.207922176919677 },
+        minx: 121.10309427057649,
+        miny: 31.202970654715596,
+    },
+    {
+        cameraHPR: { heading: 19.5244412454812, pitch: -5.343622211716657, roll: 0.057169626757279234 },
+        cameraHeight: { longitude: 2.11815153594676, latitude: 0.5446154951458771, height: 96.89252548274247 },
+        maxx: 121.73144230015237,
+        maxy: 31.520081360158997,
+        midLocation: { lon: 121.36477967043072, lat: 31.21298278891835 },
+        minx: 120.99084445765209,
+        miny: 31.205853929090168,
+    },
+    {
+        cameraHPR: { heading: 21.845897131357468, pitch: -7.044022597459673, roll: 0.06386790755885577 },
+        cameraHeight: { longitude: 2.1182057523616615, latitude: 0.544671171434933, height: 105.6930923559216 },
+        maxx: 121.75107023570891,
+        maxy: 31.537280805976174,
+        midLocation: { lon: 121.36759182325635, lat: 31.214524018348087 },
+        minx: 120.97742926560394,
+        miny: 31.208956139989784,
+    },
+    {
+        cameraHPR: { heading: 14.871551955028758, pitch: -10.104741390398955, roll: 0.04441869354718526 },
+        cameraHeight: { longitude: 2.118272291648492, latitude: 0.5447370055238552, height: 152.38497033481508 },
+        maxx: 121.83287379231047,
+        maxy: 31.607134850947205,
+        midLocation: { lon: 121.37036619111318, lat: 31.218588009753915 },
+        minx: 120.90325054961683,
+        miny: 31.21342404570964,
+
+    },
+    {
+        cameraHPR: { heading: 321.9599234110439, pitch: -34.590492528547884, roll: 359.87232290621085 },
+        cameraHeight: { longitude: 2.118395062246062, latitude: 0.5447301542448003, height: 583.1676803978427 },
+        maxx: 121.37544851394769,
+        maxy: 31.22849565831937,
+        midLocation: { lon: 121.36962717320364, lat: 31.2167462878541 },
+        minx: 121.35583059865783,
+        miny: 31.211833127815808,
+    },
+    {
+        cameraHPR: { heading: 343.5587514264453, pitch: -42.411362388211586, roll: 359.9345621187254 },
+        cameraHeight: { longitude: 2.118260062896549, latitude: 0.5445200268043484, height: 1180.8236484502768 },
+        maxx: 121.37509153336974,
+        maxy: 31.22279082791474,
+        midLocation: { lon: 121.36352181161126, lat: 31.209882701424856 },
+        minx: 121.3456871762101,
+        miny: 31.203070718178797,
+    }
+]
+
 
 

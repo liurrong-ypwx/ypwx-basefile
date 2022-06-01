@@ -9,8 +9,9 @@ import jt from "../../../../assets/image/JT2.png";
 import normalMap from "../../../../assets/image/fabric_normal.jpg";
 import { textRiverJson0530 } from './riverData';
 // import { ColorArr } from './testColor';
-import { sendPoint, testLine, testPoint, xiaoqu } from './xiaoqu';
+import { sendPoint, shuiweiDian, testFly, testLine, testPoint, xiaoqu } from './xiaoqu';
 import { glbLoc } from './glbloc';
+import { makeVirticelLine } from '../../../../utils/CesiumApi/CesiumApi';
 
 // import { testDataPipe } from './pipe2';
 
@@ -27,15 +28,16 @@ export const initMap = (domID: string, callBack?: any) => {
 
     const viewer = new Cesium.Viewer(domID, {
         geocoder: false,
-        homeButton: true,
+        homeButton: false,
         sceneModePicker: false,
-        baseLayerPicker: true,
+        baseLayerPicker: false,
         navigationHelpButton: false,
         animation: false,
         fullscreenButton: false,
         vrButton: false,
         selectionIndicator: false,
         infoBox: false,
+        timeline: false,
         terrainProvider: Cesium.createWorldTerrain(),
     })
 
@@ -45,6 +47,7 @@ export const initMap = (domID: string, callBack?: any) => {
     viewer.scene.globe.imageryLayers.get(0).alpha = 0.4;
     viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1);
 
+    // viewer.cesiumWidget.creditContainer.style.display = "none";
 
     // viewer.scene.fxaa = false
     viewer.scene.postProcessStages.fxaa.enabled = true;
@@ -60,13 +63,13 @@ export const initMap = (domID: string, callBack?: any) => {
     viewer.resolutionScale = window.devicePixelRatio;
     // }
     // 额外设置之显示帧速
-    viewer.scene.debugShowFramesPerSecond = true;
+    // viewer.scene.debugShowFramesPerSecond = true;
 
     // 场景变暗
     // changeViewerColor(viewer);
 
     // 添加河流
-    addRiver(viewer);
+    // addRiver(viewer);
 
     // 添加建筑物设置样式
     // addGBuilding(viewer);
@@ -78,7 +81,7 @@ export const initMap = (domID: string, callBack?: any) => {
     // addMutTypeLine(viewer);
 
     // 添加摄像头
-    addCamera(viewer);
+    // addCamera(viewer);
 
     // 添加建筑模型
     // addJianzhu1(viewer);
@@ -90,7 +93,14 @@ export const initMap = (domID: string, callBack?: any) => {
     // addCaoPing(viewer);
 
     // 添加鼠标hover事件
-    addMouseHover(viewer, callBack);
+    // addMouseHover(viewer, callBack);
+
+    // 添加水位监测点
+    // addShuiwei(viewer);
+
+    // 添加雷达扫描图
+    // addSeveralCircle(viewer);
+
 
     return viewer;
 }
@@ -316,6 +326,7 @@ export const changeViewerColor = (viewer: any) => {
 
 // 缩放到深圳
 export const zoomToShenzhen = (viewer: any) => {
+    // 121.367381457154082, 31.21097934774841
     const locationSZ = { lng: 114.167, lat: 22.67, height: 130000.0 };
     const location = locationSZ;
     viewer.camera.flyTo({
@@ -688,16 +699,39 @@ export const addGeoJsonData = (viewer: any) => {
 export const zoomPipe = (viewer: any) => {
     // const locationSZ = { lng: testDataPipe[0], lat: testDataPipe[1], height: 1300.0 };
     // 121.364952802734749, 31.188761707341701
-    const locationSZ = { lng: 121.364952802734749, lat: 31.188761707341701, height: 1300.0 };
-    const location = locationSZ;
+    // 121.367381457154082, 31.21097934774841
+    // const locationSZ = { lng: 121.367381457154082, lat: 31.21097934774841, height: 1300.0 };
+    // const location = locationSZ;
+    // viewer.camera.flyTo({
+    //     destination: Cesium.Cartesian3.fromDegrees(location.lng, location.lat, location.height),
+    //     orientation: {
+    //         heading: Cesium.Math.toRadians(30),
+    //         pitch: Cesium.Math.toRadians(-90),
+    //         roll: 0.0
+    //     }
+    // });
+
+    if (!viewer) return;
+
+    const cameraInfo = {
+        cameraHPR: { heading: 15.481062760908197, pitch: -31.18818128741477, roll: 0.05321288363450053 },
+        cameraHeight: { longitude: 2.118106804333249, latitude: 0.544476750437641, height: 916.2803963905053 },
+        maxx: 121.3871614437298,
+        maxy: 31.22969948665354,
+        midLocation: { lon: 121.36282102810752, lat: 31.209379261905365 },
+        minx: 121.34852574213636,
+        miny: 31.20198658012191,
+    }
+
     viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(location.lng, location.lat, location.height),
+        destination: Cesium.Cartesian3.fromRadians(cameraInfo.cameraHeight.longitude, cameraInfo.cameraHeight.latitude, cameraInfo.cameraHeight.height),
         orientation: {
-            heading: Cesium.Math.toRadians(0),
-            pitch: Cesium.Math.toRadians(-90),
-            roll: 0.0
+            heading: Cesium.Math.toRadians(cameraInfo.cameraHPR.heading),
+            pitch: Cesium.Math.toRadians(cameraInfo.cameraHPR.pitch),
+            roll: Cesium.Math.toRadians(cameraInfo.cameraHPR.roll)
         }
     });
+
 }
 
 // 2021-08-16 粉刷匠 添加水坝
@@ -903,5 +937,392 @@ export const addMouseHover = (viewer: any, callBack: any) => {
         // console.log(windowPosition, pickedFeature);
 
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+}
+
+// 添加水位监测点
+export const addShuiwei = (viewer: any) => {
+    // const pointArr = [[113.91, 22.52, 100], [113.89, 22.50, 100], [113.95, 22.57, 100]]
+
+    const orgData = shuiweiDian.features;
+    const pointArr: any = [];
+    for (let i = 0; i < orgData.length; i++) {
+        const loc = orgData[i].geometry.coordinates;
+        pointArr.push([loc[0], loc[1], 20]);
+    }
+
+    const myCustomDataSource = new Cesium.CustomDataSource("shuiweiEntityCollection");
+    viewer.dataSources.add(myCustomDataSource);
+
+    for (let i = 0; i < pointArr.length; i++) {
+
+        const value = 2 + Math.random();
+        const midNum = 2.8;
+        const color = value < midNum ? null : "#FFA500";
+        const textShow = value < midNum ? `水位:${value.toFixed(3)}` : `告警！\n水位:${value.toFixed(1)} `;
+        const sigEntity = new Cesium.Entity({
+            position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
+            billboard: {
+                image: makeVirticelLine(color), // default: undefined  
+                width: 50,
+                height: 50
+            },
+            label: {
+                // 竖直的文字
+                // text: '测\n试\n文\n字',
+                text: textShow,
+                font: `${value < midNum ? 16 : 20}px sans-serif`,
+                // fillColor : Cesium.Color.RED,
+                fillColor: value < midNum ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
+                pixelOffset: new Cesium.Cartesian2(0, -30),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        })
+
+        myCustomDataSource.entities.add(sigEntity);
+    }
+
+    const updateData = () => {
+        myCustomDataSource.entities.removeAll();
+        for (let i = 0; i < pointArr.length; i++) {
+            const value = 2 + Math.random();
+            const midNum = 2.8;
+            const color = value < midNum ? null : "#FFA500";
+            const textShow = value < midNum ? `水位:${value.toFixed(3)}` : `告警！\n水位:${value.toFixed(1)} `;
+            const sigEntity = new Cesium.Entity({
+                position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], pointArr[i][2]),
+                billboard: {
+                    // image: makeVirticelLine(), // default: undefined  
+                    image: makeVirticelLine(color), // default: undefined  
+
+                    width: 50,
+                    height: 50
+                },
+                label: {
+                    // 竖直的文字
+                    // text: '测\n试\n文\n字',
+                    text: textShow,
+                    font: `${value < midNum ? 16 : 20}px sans-serif`,
+                    // fillColor : Cesium.Color.RED,
+                    fillColor: value < midNum ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
+                    pixelOffset: new Cesium.Cartesian2(0, -30),
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+                },
+            })
+
+            myCustomDataSource.entities.add(sigEntity);
+        }
+    }
+
+    setInterval(() => {
+        updateData();
+    }, 10000);
+
+    // myEntityCollection.entities.add(new Cesium.Entity(options));
+
+
+
+}
+
+
+// 获取渐变色颜色的环
+const getColorCircle2 = (color: any, isTransparent?: boolean) => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 100;
+    ramp.height = 100;
+    const ctx: any = ramp.getContext('2d');
+
+    // const values = elevationRamp;
+    const grd = ctx.createRadialGradient(50, 50, 50, 50, 50, 0);
+    grd.addColorStop(1, 'transparent'); //black
+    // grd.addColorStop(0.1, 'rgba(225,255,255,0.1)'); //black
+    // grd.addColorStop(0, "rgba(225,255,255,0.7)");
+
+    grd.addColorStop(0.1, 'rgba(0,206,209,0.1)'); //black
+    grd.addColorStop(0, "rgba(0,206,209,0.7)");
+
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 100, 100);
+    return ramp;
+}
+
+// 获取颜色环
+const getColorCircle = (color: any, deg: number, isTransparent?: boolean) => {
+    const ramp = document.createElement('canvas');
+    ramp.width = 100;
+    ramp.height = 100;
+    const ctx: any = ramp.getContext('2d');
+
+    // const values = elevationRamp;
+    const grd = ctx.createLinearGradient(55, 25, 100, 50);
+    grd.addColorStop(0, 'transparent'); //black
+    // grd.addColorStop(0.5, 'rgba(225,255,255,0.5)'); //orange
+    // grd.addColorStop(1, 'rgba(225,255,255,1)'); //yellow
+    grd.addColorStop(0.5, 'rgba(0,206,209,0.5)'); //orange
+    grd.addColorStop(1, 'rgba(0,206,209,1)'); //yellow
+
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.moveTo(50, 50);
+    ctx.arc(50, 50, 50, -90 / 180 * Math.PI, 0 / 180 * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = 'transparent';
+    // ctx.strokeStyle = 'rgba(225,255,255,1)';
+    ctx.strokeStyle = 'rgba(0,206,209,1)';
+
+    ctx.beginPath();
+    ctx.arc(50, 50, 50, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.stroke();
+    return ramp;
+}
+
+export const addSeveralCircle = (viewer: any) => {
+    const orgData = shuiweiDian.features;
+    const pointArr: any = [];
+    for (let i = 0; i < orgData.length; i++) {
+        const loc = orgData[i].geometry.coordinates;
+        pointArr.push([loc[0], loc[1], 20]);
+    }
+
+    for (let i = 0; i < pointArr.length; i += 3) {
+        const isCir = i % 2;
+        if (isCir) {
+            showTestCircleScan(viewer, pointArr[i]);
+        } else {
+            showTestCircleScan2(viewer, pointArr[i]);
+        }
+    }
+}
+
+// 添加一个圆扫描--测试
+export const showTestCircleScan = (viewer: any, loc: any) => {
+
+    let rotation = Cesium.Math.toRadians(30);
+    function getRotationValue() {
+        rotation += 0.01;
+        // rotation += 0.0;
+        return rotation;
+    }
+
+    // 旋转的 圆
+    viewer.entities.add({
+        name: "a rotate ellipse ",
+        position: Cesium.Cartesian3.fromDegrees(loc[0], loc[1], 100),
+        ellipse: {
+            semiMinorAxis: 250,
+            semiMajorAxis: 250,
+            // height: 200,
+            //颜色回调
+            material: new Cesium.ImageMaterialProperty({
+                image: getColorCircle("()", 90, true),
+                transparent: true,
+            }),
+            rotation: new Cesium.CallbackProperty(getRotationValue, false),
+            stRotation: new Cesium.CallbackProperty(getRotationValue, false),
+            outline: false, // height must be set for outline to display
+            numberOfVerticalLines: 100
+        },
+        description: '测试数据'
+    });
+}
+
+// 添加一个圆扩散--测试
+export const showTestCircleScan2 = (viewer: any, loc: any) => {
+
+    const data = {
+        minR: 20,
+        maxR: 200,
+        deviationR: 2,// 差值 差值也大 速度越快
+    }
+    let r1 = data.minR;
+    let r2 = data.minR;
+
+    function changeR1() { // 这是callback，参数不能内传
+        r1 = r1 + data.deviationR;// deviationR为每次圆增加的大小
+        if (r1 >= data.maxR) {
+            r1 = data.minR;
+        }
+        return r1;
+    }
+
+    function changeR2() {
+        r2 = r2 + data.deviationR;
+        if (r2 >= data.maxR) {
+            r2 = data.minR;
+        }
+        return r2;
+    }
+
+    // 旋转的 圆
+    viewer.entities.add({
+        name: "a rotate ellipse ",
+        position: Cesium.Cartesian3.fromDegrees(loc[0], loc[1], 100),
+        ellipse: {
+            semiMinorAxis: new Cesium.CallbackProperty(changeR1, false),
+            semiMajorAxis: new Cesium.CallbackProperty(changeR2, false),
+            // height: 200,
+            //颜色回调
+            material: new Cesium.ImageMaterialProperty({
+                image: getColorCircle2("()", true),
+                transparent: true,
+            }),
+            // rotation: new Cesium.CallbackProperty(getRotationValue, false),
+            // stRotation: new Cesium.CallbackProperty(getRotationValue, false),
+            outline: false, // height must be set for outline to display
+            numberOfVerticalLines: 100
+        },
+        description: '测试数据'
+    });
+}
+
+// 2021-04-20 粉刷匠 获取当前场景经纬度范围
+export const getCurrentCameraInfo = (viewer: any) => {
+
+    // 经纬度范围
+    let params: any = {};
+    let extend = viewer.camera.computeViewRectangle();
+    if (typeof extend === "undefined") {
+        //2D下会可能拾取不到坐标，extend返回undefined,所以做以下转换
+        let canvas = viewer.scene.canvas;
+        let upperLeft = new Cesium.Cartesian2(0, 0);//canvas左上角坐标转2d坐标
+        let lowerRight = new Cesium.Cartesian2(
+            canvas.clientWidth,
+            canvas.clientHeight
+        );// canvas右下角坐标转2d坐标
+
+        let ellipsoid = viewer.scene.globe.ellipsoid;
+        let upperLeft3 = viewer.camera.pickEllipsoid(
+            upperLeft,
+            ellipsoid
+        );// 2D转3D世界坐标
+
+        let lowerRight3 = viewer.camera.pickEllipsoid(
+            lowerRight,
+            ellipsoid
+        );// 2D转3D世界坐标
+
+        let upperLeftCartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(
+            upperLeft3
+        );// 3D世界坐标转弧度
+        let lowerRightCartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(
+            lowerRight3
+        );// 3D世界坐标转弧度
+
+        let minx = Cesium.Math.toDegrees(upperLeftCartographic.longitude);//弧度转经纬度
+        let maxx = Cesium.Math.toDegrees(lowerRightCartographic.longitude);//弧度转经纬度
+
+        let miny = Cesium.Math.toDegrees(lowerRightCartographic.latitude);//弧度转经纬度
+        let maxy = Cesium.Math.toDegrees(upperLeftCartographic.latitude);//弧度转经纬度
+
+        // console.log("经度：" + minx + "----" + maxx);
+        // console.log("纬度：" + miny + "----" + maxy);
+
+        params.minx = minx;
+        params.maxx = maxx;
+        params.miny = miny;
+        params.maxy = maxy;
+    } else {
+        //3D获取方式
+        params.maxx = Cesium.Math.toDegrees(extend.east);
+        params.maxy = Cesium.Math.toDegrees(extend.north);
+
+        params.minx = Cesium.Math.toDegrees(extend.west);
+        params.miny = Cesium.Math.toDegrees(extend.south);
+    }
+
+    // 相机参数
+    const camera = viewer.camera;
+    const heading = Cesium.Math.toDegrees(camera.heading)
+    const pitch = Cesium.Math.toDegrees(camera.pitch)//Cesium.Math.toDegrees作用是把弧度转换成度数
+    const roll = Cesium.Math.toDegrees(camera.roll)
+    params["cameraHPR"] = {
+        heading,
+        pitch,
+        roll
+    }
+
+    // 获取中心点坐标与相机高度
+    const result = viewer.camera.pickEllipsoid(new Cesium.Cartesian2(viewer.canvas.clientWidth / 2, viewer.canvas.clientHeight / 2));
+    const curPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(result);
+    const lon = curPosition.longitude * 180 / Math.PI;
+    const lat = curPosition.latitude * 180 / Math.PI;
+
+    const scene = viewer.scene;
+    const ellipsoid = scene.globe.ellipsoid;
+    const height = ellipsoid.cartesianToCartographic(viewer.camera.position).height;
+    const clongitude = Number(viewer.camera.positionCartographic.longitude);
+    const clatitude = Number(viewer.camera.positionCartographic.latitude);
+    params["midLocation"] = {
+        "lon": lon,
+        "lat": lat,
+    }
+    params["cameraHeight"] = {
+        "longitude": clongitude,
+        "latitude": clatitude,
+        "height": height
+    }
+    return params;// 返回屏幕所在经纬度范围
+}
+
+export const addTestFlightLine = (viewer: any) => {
+    // const positionList = testFlightData2;
+
+    // const positionList = testFly;
+    const positionList = testFly;
+    // const positionList: any = [];
+    // const insetIndex = 5;
+    // for (let i = 0; i < orgList.length - 1; i++) {
+    //     positionList.push(orgList[i]);
+    //     const nowPoint = orgList[i + 1];
+    //     const nextPoint = orgList[i + 1];
+    //     for (let j = 0; j < insetIndex - 1; j++) {
+    //         positionList.push({
+    //             cameraHPR: {
+    //                 heading: (nextPoint.cameraHPR.heading - nowPoint.cameraHPR.heading) * (j + 1) / insetIndex,
+    //                 pitch: (nextPoint.cameraHPR.pitch - nowPoint.cameraHPR.pitch) * (j + 1) / insetIndex,
+    //                 roll: (nextPoint.cameraHPR.roll - nowPoint.cameraHPR.roll) * (j + 1) / insetIndex,
+    //             },
+    //             cameraHeight: {
+    //                 longitude: (nextPoint.cameraHeight.longitude - nowPoint.cameraHeight.longitude) * (j + 1) / insetIndex,
+    //                 latitude:(nextPoint.cameraHeight.latitude - nowPoint.cameraHeight.latitude) * (j + 1) / insetIndex,
+    //                 height: (nextPoint.cameraHeight.height - nowPoint.cameraHeight.height) * (j + 1) / insetIndex,
+    //             },
+    //         })
+    //     }
+    // }
+
+    let count = 0;
+    fly();
+
+    function fly() {
+        if (count >= positionList.length) {
+            return;
+        }
+        const cameraInfo = positionList[count];
+
+        viewer.camera.flyTo({
+            duration: 1,
+
+            destination: Cesium.Cartesian3.fromRadians(cameraInfo.cameraHeight.longitude, cameraInfo.cameraHeight.latitude, cameraInfo.cameraHeight.height),
+            orientation: {
+                heading: Cesium.Math.toRadians(cameraInfo.cameraHPR.heading),
+                pitch: Cesium.Math.toRadians(cameraInfo.cameraHPR.pitch),
+                roll: Cesium.Math.toRadians(cameraInfo.cameraHPR.roll)
+            },
+            // orientation: {
+            //     heading: Cesium.Math.toRadians(0.0),
+            //     pitch: Cesium.Math.toRadians(-90.0),
+            //     roll: Cesium.Math.toRadians(0.0)
+            // },
+            complete: function () {
+                fly();
+            }
+        });
+        count++;
+    }
+
 
 }

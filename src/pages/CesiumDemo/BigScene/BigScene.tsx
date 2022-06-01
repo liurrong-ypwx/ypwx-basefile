@@ -67,9 +67,50 @@ function BigScene(props: any): JSX.Element {
         }
     }
 
+    const addBookMark = () => {
+        if (!view) return;
+        const info = CesiumApi.getCurrentCameraInfo(view);
+        console.log(info);
+
+        
+    }
+
     return (
         <div className="big-scene">
             <div id={mapId} className="big-scene-map-container" />
+
+            <div className="bg-top" />
+
+            <div className="mid-display-number">
+                <div className="sig-block">
+                    <div>本年预警</div>
+                    <div>1090</div>
+                </div>
+                <div className="sig-block">
+                    <div>当月预警</div>
+                    <div>398</div>
+                </div>
+                <div className="sig-block">
+                    <div>当日预警</div>
+                    <div>9</div>
+                </div>
+            </div>
+
+            <div className="left-win">
+                <div className=" left-win-img left-win-img1" />
+                <div className="left-win-img left-win-img2" />
+            </div>
+
+            <div className="right-win">
+                <div className=" right-win-img right-win-img1" />
+            </div>
+
+            <div className="test-btn-group" style={{ display: "none" }}>
+                <div className="sig-btn" onClick={() => { addBookMark() }}  >点击获取当前相机信息</div>
+                <div className="sig-btn" onClick={() => { CesiumApi.addTestFlightLine(view) }}>测试飞行</div>
+
+            </div>
+
             <Popover placement="top" visible={isShowTip} content={tipContent} overlayClassName={`jj-ys-tip`}>
                 <span className="tip-cord" style={{ left: tipX, top: tipY - 20 }} />
             </Popover>

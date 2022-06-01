@@ -996,17 +996,20 @@ export const addMulTypePoint = (viewer: any) => {
 }
 
 // 2021-04-14 粉刷匠 添加各类点集合 ---子函数---创建竖直线
-export const makeVirticelLine = () => {
+export const makeVirticelLine = (color?: any) => {
+
+    const tmpColor = color ? color : "#5BD5DE";
+
     const ramp = document.createElement('canvas');
     ramp.width = 100;
     ramp.height = 100;
     const ctx: any = ramp.getContext('2d');
     ctx.beginPath();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 5;
     ctx.arc(50, 90, 10, 0, 2 * Math.PI);
-    ctx.fillStyle = "#5BD5DE";// 设置填充颜色
+    ctx.fillStyle = tmpColor;// 设置填充颜色
     ctx.fill();//开始填充
-    ctx.strokeStyle = "#5BD5DE";//将线条颜色设置为蓝色
+    ctx.strokeStyle = tmpColor;//将线条颜色设置为蓝色
     ctx.stroke();//stroke() 方法默认颜色是黑色（如果没有上面一行，则会是黑色）。
 
     ctx.moveTo(50, 80);
