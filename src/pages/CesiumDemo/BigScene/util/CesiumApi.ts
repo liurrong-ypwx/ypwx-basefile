@@ -69,7 +69,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // changeViewerColor(viewer);
 
     // 添加河流
-    addRiver(viewer);
+    // addRiver(viewer);
 
     // 添加建筑物设置样式
     // addGBuilding(viewer);
@@ -81,7 +81,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // addMutTypeLine(viewer);
 
     // 添加摄像头
-    addCamera(viewer);
+    // addCamera(viewer);
 
     // 添加建筑模型
     // addJianzhu1(viewer);
@@ -93,20 +93,20 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // addCaoPing(viewer);
 
     // 添加鼠标hover事件
-    addMouseHover(viewer, callBack);
+    // addMouseHover(viewer, callBack);
 
     // 添加鼠标click事件
-    addMouseClick(viewer, callBackClick);
+    // addMouseClick(viewer, callBackClick);
 
 
     // 添加水位监测点
-    addShuiwei(viewer);
+    // addShuiwei(viewer);
 
     // 添加雷达扫描图
     // addSeveralCircle(viewer);
 
     // 添加AI告警点
-    addAIPoint(viewer);
+    // addAIPoint(viewer);
 
 
     return viewer;

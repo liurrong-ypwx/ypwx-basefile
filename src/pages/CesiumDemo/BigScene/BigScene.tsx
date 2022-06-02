@@ -18,6 +18,8 @@ function BigScene(props: any): JSX.Element {
     const [isShowModal, setIsShowModal] = useState(false);
     const [modalType, setModalType] = useState(1);
 
+    const [isShowWin, setIsShowWin] = useState(true);
+
 
     useEffect(() => {
         const tmpView = CesiumApi.initMap(mapId, hoverCallBack, clickCallBack);
@@ -126,6 +128,8 @@ function BigScene(props: any): JSX.Element {
 
             <div className="bg-top" />
 
+            <div className="btn" onClick={() => { setIsShowWin(!isShowWin) }} >{isShowWin ? "收起" : "展开"}</div>
+
             <div className="mid-display-number">
                 <div className="sig-block">
                     <div>本年预警</div>
@@ -141,12 +145,12 @@ function BigScene(props: any): JSX.Element {
                 </div>
             </div>
 
-            <div className="left-win">
+            <div className={`left-win ${isShowWin ? "" : "win-hide"}`}>
                 <div className=" left-win-img left-win-img1" />
                 <div className="left-win-img left-win-img2" />
             </div>
 
-            <div className="right-win">
+            <div className={`right-win ${isShowWin ? "" : "win-hide"}`}>
                 <div className=" right-win-img right-win-img1" />
             </div>
 

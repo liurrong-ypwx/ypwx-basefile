@@ -16,14 +16,84 @@
         margin-top: -.05rem;
     }
 
-    .right-win{
+    .btn {
+        cursor: pointer;
+        position: absolute;
+        top: .3rem;
+        right: .2rem;
+        width: .9rem;
+        height: .4rem;
+        line-height: .4rem;
+        text-align: center;
+        background: rgba(21, 28, 38, 0.7);
+
+        font-size: .18rem;
+
+        color: #FFFFFF;
+
+        &:hover {
+            background: rgba(21, 28, 38, 0.9);
+
+
+        }
+    }
+
+    @keyframes rightIn {
+        0% {
+            right: -810px;
+        }
+
+        100% {
+            right: 0;
+        }
+    }
+
+    @keyframes rightOut {
+        0% {
+            right: 0;
+        }
+
+        100% {
+            right: -810px;
+        }
+    }
+
+    @keyframes leftIn {
+        0% {
+            left: -810px;
+        }
+
+        100% {
+            left: 0;
+        }
+    }
+
+    @keyframes leftOut {
+        0% {
+            left: 0;
+        }
+
+        100% {
+            left: -810px;
+        }
+    }
+
+    .right-win {
         width: 18%;
         padding: 0 auto;
         position: absolute;
         top: .8rem;
+        animation: rightIn 1s;
         right: 0;
         background: #151C26;
         height: calc(100% - 1.6rem);
+        opacity: .85;
+
+        &.win-hide {
+            animation: rightOut 1s;
+            right: -810px;
+            // display: none;
+        }
 
         .right-win-img1 {
             width: 100%;
@@ -39,9 +109,16 @@
         padding: 0 auto;
         position: absolute;
         top: .8rem;
+        animation: leftIn 1s;
         left: 0;
         background: #151C26;
         height: calc(100% - 1.6rem);
+        opacity: .85;
+
+        &.win-hide {
+            animation: leftOut 1s;
+            left: -810px;
+        }
 
         .left-win-img2 {
             width: 100%;
@@ -180,20 +257,22 @@
 
 }
 
-.cesium-widget-credits{ /* 去除logo */
-    display:none !important;
-} 
+.cesium-widget-credits {
+    /* 去除logo */
+    display: none !important;
+}
 
 
-.js-modal-container-lrr{
+.js-modal-container-lrr {
     width: 10rem !important;
     height: 7rem;
     padding: 0;
-    .ant-modal-body{
+
+    .ant-modal-body {
         padding: 0;
     }
 
-    .js-modal-title{
+    .js-modal-title {
         color: #77b5ff;
         font-size: .18rem;
     }
