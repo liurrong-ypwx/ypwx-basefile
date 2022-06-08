@@ -577,7 +577,8 @@ export const addCamera = (viewer: any) => {
                 text: textShow,
                 font: `16px sans-serif`,
                 // fillColor : Cesium.Color.RED,
-                fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
+                // fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
+                fillColor: Cesium.Color.fromCssColorString('#FFFFFF'),
                 pixelOffset: new Cesium.Cartesian2(0, -80),
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },
@@ -623,7 +624,9 @@ export const addAIPoint = (viewer: any) => {
                 text: `${nameArr[index]}`,
                 font: `20px sans-serif`,
                 // fillColor : Cesium.Color.RED,
-                fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
+                // fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
+                fillColor: Cesium.Color.fromCssColorString('#FFFFFF'),
+
                 pixelOffset: new Cesium.Cartesian2(0, -120),
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },
@@ -641,7 +644,7 @@ export const addAIPoint = (viewer: any) => {
         for (let i = 0; i < featureArr.length; i++) {
             const tmpScale = featureArr[i].billboard.scale > max ? min : featureArr[i].billboard.scale + step;
             featureArr[i].billboard.scale = tmpScale;
-            featureArr[i].label.fillColor = flag ? Cesium.Color.fromCssColorString('#87CEFA') : Cesium.Color.fromCssColorString('#FF0000');
+            featureArr[i].label.fillColor = flag ? Cesium.Color.fromCssColorString('#FFFFFF') : Cesium.Color.fromCssColorString('#FF0000');
         }
         flag = !flag;
     }
@@ -1391,7 +1394,8 @@ export const addShuiwei = (viewer: any) => {
                 text: textShow,
                 font: `16px sans-serif`,
                 // fillColor : Cesium.Color.RED,
-                fillColor: index ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
+                // fillColor: index ? new Cesium.Color(0.22, 0.89, 0.94) : Cesium.Color.fromCssColorString('#FFA500'),
+                fillColor: Cesium.Color.fromCssColorString("#FFFFFF"),
                 pixelOffset: new Cesium.Cartesian2(0, -80),
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },

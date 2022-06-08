@@ -6,7 +6,7 @@ export const newFourPoint = {
         { "type": "Feature", "properties": { "id": 1 }, "geometry": { "type": "Point", "coordinates": [121.365755989284201, 31.209051748428221] } },
         { "type": "Feature", "properties": { "id": 2 }, "geometry": { "type": "Point", "coordinates": [121.366380414851032, 31.209805905655672] } },
         { "type": "Feature", "properties": { "id": 3 }, "geometry": { "type": "Point", "coordinates": [121.365179598195141, 31.208571424739056] } },
-        { "type": "Feature", "properties": { "id": 4 }, "geometry": { "type": "Point", "coordinates": [121.364959979455293, 31.208578266467884] } }
+        { "type": "Feature", "properties": { "id": 4 }, "geometry": { "type": "Point", "coordinates": [121.364879979455293, 31.208458266467884] } }
     ]
 }
 
