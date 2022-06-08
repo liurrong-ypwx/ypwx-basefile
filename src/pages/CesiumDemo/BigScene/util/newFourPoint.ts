@@ -9,3 +9,15 @@ export const newFourPoint = {
         { "type": "Feature", "properties": { "id": 4 }, "geometry": { "type": "Point", "coordinates": [121.364688502570931, 31.208839827272673] } }
     ]
 }
+
+
+export const newBuildingLabel = {
+    "type": "FeatureCollection",
+    "name": "newBuildingLabel",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    "features": [
+        { "type": "Feature", "properties": { "id": 1 }, "geometry": { "type": "Point", "coordinates": [121.365122087479207, 31.209064131502057] } },
+        { "type": "Feature", "properties": { "id": 2 }, "geometry": { "type": "Point", "coordinates": [121.36499172616864, 31.209681453134049] } },
+        { "type": "Feature", "properties": { "id": 3 }, "geometry": { "type": "Point", "coordinates": [121.365471013781175, 31.20986166221709] } }
+    ]
+}

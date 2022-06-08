@@ -8,6 +8,7 @@ import ai_img from "../../../assets/image/ai2.jpg";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import tl from "../../../assets/image/tuli.png";
+import { PointViewArr } from "./util/pointView";
 
 function BigScene(props: any): JSX.Element {
     const mapId = "ID_BIG_SCENE";
@@ -19,32 +20,42 @@ function BigScene(props: any): JSX.Element {
     const [isShowModal, setIsShowModal] = useState(false);
     const [modalType, setModalType] = useState(1);
     const [isShowWin, setIsShowWin] = useState(true);
+    const [pointView, setPointView] = useState(4);
 
-    useEffect(()=>{
-        if(!isShowModal) return;
+    useEffect(() => {
+        if (!isShowTip) return;
         setTimeout(() => {
-            setIsShowModal(false);
+            setIsShowTip(false);
         }, 3000);
-    },[isShowModal])
+    }, [isShowTip])
+
+    useEffect(() => {
+        if (!view) return;
+        CesiumApi.zoomPipe(view, PointViewArr[pointView].cameraInfo);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pointView, view])
 
 
     useEffect(() => {
         const tmpView = CesiumApi.initMap(mapId, hoverCallBack, clickCallBack);
         setView(tmpView);
+        window.document.addEventListener('keyup', keyDown);
     }, []);
+
+    const keyDown = (e: any) => {
+   
+        const code = +e.key;
+        if (code >= 0 && code < 5) {
+            setPointView(code);
+        } else {
+            setPointView(4);
+        }
+    }
 
     useEffect(() => {
         if (!view) return;
         CesiumApi.addTdt(view);
-        CesiumApi.zoomPipe(view);
         CesiumApi.addPipe(view);
-        // CesiumApi.zoomToShenzhen(view); 
-        // CesiumApi.addPolylineVolume(view);
-        // CesiumApi.addMutTypeLine(view);
-        // CesiumApi.zoomToPara(view, {lng: 114.167, lat: 22.67, height: 1300.0})
-        // CesiumApi.addShenzhenBuilding3Dtile(view);
-        // CesiumApi.addFuseEchartGraphic(view);
-
     }, [view])
 
     const hoverCallBack = (hoverInfo: any) => {
@@ -108,7 +119,7 @@ function BigScene(props: any): JSX.Element {
     const addBookMark = () => {
         if (!view) return;
         const info = CesiumApi.getCurrentCameraInfo(view);
-        console.log(info);        
+        console.log(info);
     }
 
     const marks: any = {
@@ -184,7 +195,7 @@ function BigScene(props: any): JSX.Element {
 
     useEffect(() => {
         if (!view) return;
-        CesiumApi.addSunShadow(view,sliderValue);
+        CesiumApi.addSunShadow(view, sliderValue);
     }, [sliderValue, view])
 
     return (
@@ -251,12 +262,22 @@ function BigScene(props: any): JSX.Element {
                 <span className="tip-cord" style={{ left: tipX, top: tipY - 20 }} />
             </Popover>
 
+            <div className="label-container" style={{ display: "none" }}>
+                {
+                    PointViewArr.map((item: any, index: any) => {
+                        return (
+                            <div className="sig-label" key={index} onClick={() => { setPointView(index) }} >{item.text}</div>
+                        )
+                    })
+                }
+            </div>
+
             <div className="time-slider-shadow">
                 <div className="tss-text">一天时间变化</div>
                 <div className="tss-choose">
                     <Slider className="slider-lrr"
                         marks={marks}
-                        defaultValue={10}
+                        defaultValue={15}
                         max={18}
                         min={8}
                         step={1}

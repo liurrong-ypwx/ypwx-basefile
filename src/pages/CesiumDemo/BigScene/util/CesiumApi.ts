@@ -13,7 +13,7 @@ import { sendPoint, shuiweiDian, testFly, testLine, testPoint, xiaoqu } from './
 import { glbLoc } from './glbloc';
 import { newTreePoint } from './newTreePoint';
 import { newFourPoint } from './newFourPoint';
-// import { makeVirticelLine } from '../../../../utils/CesiumApi/CesiumApi';
+import { makeVirticelLine } from '../../../../utils/CesiumApi/CesiumApi';
 
 // import { testDataPipe } from './pipe2';
 
@@ -79,7 +79,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // 添加流动线
     // addMutTypeLine(viewer);
 
-  
+
 
     // 添加建筑模型
     // addJianzhu1(viewer);
@@ -111,17 +111,211 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
 
     // 添加道路线
     addRoad(viewer);
-
     // 添加河流
     addRiver(viewer);
 
+    // 添加一个建筑标记,移入信息展示
+    addQxsyDth(null, viewer);
 
+    // 添加天地图注记
+    addTdtLabel(viewer);
+    // 添加附件的大楼注记
+    addBuildingLabel(viewer);
+    // 添加lupai
+    addRoadLabel(viewer);
 
     return viewer;
 }
 
+export const addBuildingLabel = (viewer: any) => {
+
+    const data = [
+        { text: "长宁区房地产\n交易中心大楼", "geometry": { "type": "Point", "coordinates": [121.365122087479207, 31.209064131502057, 35] } },
+        { text: "上海市公积金\n管理中心", "geometry": { "type": "Point", "coordinates": [121.36499172616864, 31.209681453134049, 35] } },
+        { text: "浙江建安", "geometry": { "type": "Point", "coordinates": [121.365471013781175, 31.20986166221709, 40] } }
+    ]
+
+    for (let i = 0; i < data.length; i++) {
+        // 添加一个文字标签
+        const sigEntity = new Cesium.Entity({
+            position: Cesium.Cartesian3.fromDegrees(data[i].geometry.coordinates[0], data[i].geometry.coordinates[1], data[i].geometry.coordinates[2]),
+            billboard: {
+                image: makeVirticelLine("#EB5CE6"), // default: undefined  
+                width: 50,
+                height: 50
+            },
+            label: {
+                text: data[i].text,
+                font: `18px sans-serif`,
+                // fillColor : Cesium.Color.RED,
+                // fillColor: new Cesium.Color(0.22, 0.89, 0.94),
+                fillColor: Cesium.Color.fromCssColorString("#FFFFFF"),
+                pixelOffset: new Cesium.Cartesian2(0, -30),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        })
+        viewer.entities.add(sigEntity);
+    }
+
+}
+
+export const addTdtLabel = (viewer: any) => {
+    const TDU_Key = "077b9a921d8b7e0fa268c3e9146eb373";
+    const TDT_CVA_W = "http://{s}.tianditu.gov.cn/cva_w/wmts?service=wmts&request=GetTile&version=1.0.0" +
+        "&LAYER=cva&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}" +
+        "&style=default.jpg&tk=" + TDU_Key;
+
+    let cia = new Cesium.WebMapTileServiceImageryProvider({   //调用影响中文注记服务
+        url: TDT_CVA_W,
+        layer: "cia_w",
+        style: "default",
+        format: "tiles",
+        tileMatrixSetID: "GoogleMapsCompatible",
+        subdomains: ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"],//天地图8个服务器
+        minimumLevel: 0,
+        maximumLevel: 18,
+    })
+    viewer.imageryLayers.addImageryProvider(cia)//添加到cesium图层上
+}
+
+// 2021-04-15 粉刷匠 倾斜摄影模型的单体化
+export const addQxsyDth = (tileset: any, viewer: any) => {
+    // 箱子纹理: 为了找位置
+    // const boxEntity = new Cesium.Entity({
+    //     id: "boxID01",
+    //     name: 'Red box with black outline',
+    //     position: Cesium.Cartesian3.fromDegrees(121.365100, 31.208988, 20),
+    //     box: {
+    //         dimensions: new Cesium.Cartesian3(30, 30, 100),
+    //         // 渐变纹理
+    //         material: new Cesium.ImageMaterialProperty({
+    //             image: getColorRamp([0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0], true),
+    //             transparent: true,
+    //         }),
+    //         outline: true,
+    //         outlineColor: Cesium.Color.BLACK
+    //     }
+    // });
+    // viewer.entities.add(boxEntity);
+
+    // 首先添加primite模型    
+    const center = Cesium.Cartesian3.fromDegrees(121.365100, 31.208988, 20)
+    const dimensions = new Cesium.Cartesian3(40, 40, 100)// 盒子的长、宽、高
+    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+    const hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(
+        new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0.0, 0.0)// 中心点水平旋转90度
+    );
+    const hpr = Cesium.Matrix4.fromRotationTranslation(
+        hprRotation,
+        new Cesium.Cartesian3(0.0, 0.0, 0.0)// 不平移
+    );
+    Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+    viewer.scene.primitives.add(
+        new Cesium.ClassificationPrimitive({
+            geometryInstances: new Cesium.GeometryInstance({
+                geometry: Cesium.BoxGeometry.fromDimensions({
+                    vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+                    dimensions: dimensions
+                    // maximum: Cesium.Cartesian3.fromDegrees(108.9598, 34.2202, 130),
+                    // minimum: Cesium.Cartesian3.fromDegrees(108.9585, 34.2190, 30)
+                }),
+                modelMatrix: modelMatrix, // 提供位置与姿态参数
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        Cesium.Color.fromCssColorString("#F26419").withAlpha(0)
+                    ),
+                    show: new Cesium.ShowGeometryInstanceAttribute(true),
+                },
+                id: "dayanta",
+            }),
+            classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+        })
+    );
+    let currentObjectId: any = null;
+    let currentPrimitive: any = null;
+    let currentColor: any = null;
+    let currentShow: any = null;
+    let attributes: any = null;
+
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function (movement) {
+        const pickedObject = viewer.scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+            if (pickedObject.id === currentObjectId) {
+                return;
+            }
+
+            if (Cesium.defined(currentObjectId)) {
+                attributes = currentPrimitive.getGeometryInstanceAttributes(
+                    currentObjectId
+                );
+                attributes.color = currentColor;
+                attributes.show = currentShow;
+                currentObjectId = undefined;
+                currentPrimitive = undefined;
+                currentColor = undefined;
+                currentShow = undefined;
+            }
+        }
+
+        if (
+            Cesium.defined(pickedObject) &&
+            Cesium.defined(pickedObject.primitive) &&
+            Cesium.defined(pickedObject.id) &&
+            Cesium.defined(pickedObject.primitive.getGeometryInstanceAttributes)
+        ) {
+            currentObjectId = pickedObject.id;
+            currentPrimitive = pickedObject.primitive;
+            attributes = currentPrimitive.getGeometryInstanceAttributes(
+                currentObjectId
+            );
+            currentColor = attributes.color;
+            currentShow = attributes.show;
+            if (!viewer.scene.invertClassification) {
+                attributes.color = [255, 0, 255, 128];
+            }
+            attributes.show = [1];
+        } else if (Cesium.defined(currentObjectId)) {
+            attributes = currentPrimitive.getGeometryInstanceAttributes(
+                currentObjectId
+            );
+            attributes.color = currentColor;
+            attributes.show = currentShow;
+            currentObjectId = undefined;
+            currentPrimitive = undefined;
+            currentColor = undefined;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+
+}
+
+export const addRoadLabel=(viewer:any)=>{
+    if (!viewer) return;
+
+    const airplaneUrl = "./Models/lupai.glb";
+    // 121.365011848222991, 31.208602099985505
+    const cord = [121.364630, 31.208467, 30];
+    const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
+    const newHeading = Cesium.Math.toRadians(45); // 初始heading值赋0
+    const newPitch = Cesium.Math.toRadians(0);
+    const newRoll = Cesium.Math.toRadians(0);
+    const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+    const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+
+    const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+        url: airplaneUrl, // 模型地址
+        // disableDepthTestDistance:50000,
+        // heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        modelMatrix,
+    }));
+
+    // 放大一点
+    curModel.scale = 4;
+}
+
 // 2022-06-08 粉刷匠 添加道路
-export const addRoad=(viewer:any)=>{
+export const addRoad = (viewer: any) => {
     if (!viewer) return;
 
     const airplaneUrl = "./Models/road.glb";
@@ -343,7 +537,7 @@ export const addGBuilding = (viewer: any) => {
 
         // 设置hover事件
         // addHoverAction(tileset, viewer);
-        
+
 
     })
 }
@@ -368,16 +562,16 @@ export const addCamera = (viewer: any) => {
         viewer.entities.add({
             id: `map-no-point${i}no-type${index}`,
             name: `map-no-point${i}-type${index}`,
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1],25),
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 25),
             billboard: {
-                disableDepthTestDistance:50000,
+                disableDepthTestDistance: 50000,
                 image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
                 // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
             },
             label: {
-                disableDepthTestDistance:50000,
+                disableDepthTestDistance: 50000,
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
                 text: textShow,
@@ -410,7 +604,7 @@ export const addAIPoint = (viewer: any) => {
             name: `map-ai-point${i}-type${index}`,
             position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20),
             billboard: {
-                disableDepthTestDistance:50000,
+                disableDepthTestDistance: 50000,
                 image: `./Models/image/ai.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 scale: 0.6,
@@ -418,10 +612,10 @@ export const addAIPoint = (viewer: any) => {
                 // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
             },
             label: {
-                disableDepthTestDistance:50000,
+                disableDepthTestDistance: 50000,
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
-                text: `AI预警`,
+                text: `哈密路监测点`,
                 font: `16px sans-serif`,
                 // fillColor : Cesium.Color.RED,
                 fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
@@ -848,7 +1042,7 @@ export const addGeoJsonData = (viewer: any) => {
 }
 
 // 简单缩放
-export const zoomPipe = (viewer: any) => {
+export const zoomPipe = (viewer: any, ocameraInfo?: any) => {
     // const locationSZ = { lng: testDataPipe[0], lat: testDataPipe[1], height: 1300.0 };
     // 121.364952802734749, 31.188761707341701
     // 121.367381457154082, 31.21097934774841
@@ -865,7 +1059,7 @@ export const zoomPipe = (viewer: any) => {
 
     if (!viewer) return;
 
-    const cameraInfo = {
+    const cameraInfo = ocameraInfo ? ocameraInfo : {
         // cameraHPR: { heading: 15.481062760908197, pitch: -31.18818128741477, roll: 0.05321288363450053 },
         // cameraHeight: { longitude: 2.118106804333249, latitude: 0.544476750437641, height: 916.2803963905053 },
         // maxx: 121.3871614437298,
@@ -1171,7 +1365,7 @@ export const addShuiwei = (viewer: any) => {
     for (let i = 1; i < 3; i++) {
 
         const index = flag ? 0 : 1;
-        const textShow = flag ? "北新泾泵闸" : "天山西路绥宁路";
+        const textShow = flag ? "北新泾" : "天山西路绥宁路";
         flag = !flag;
 
         viewer.entities.add({
@@ -1179,7 +1373,7 @@ export const addShuiwei = (viewer: any) => {
             name: `map-point${i}-type${index}`,
             position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], 15),
             billboard: {
-                disableDepthTestDistance:50000,
+                disableDepthTestDistance: 50000,
                 image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
@@ -1188,7 +1382,7 @@ export const addShuiwei = (viewer: any) => {
             label: {
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
-                disableDepthTestDistance:50000,
+                disableDepthTestDistance: 50000,
                 text: textShow,
                 font: `16px sans-serif`,
                 // fillColor : Cesium.Color.RED,
