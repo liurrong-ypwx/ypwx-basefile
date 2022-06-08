@@ -11,6 +11,8 @@ import { textRiverJson0530 } from './riverData';
 // import { ColorArr } from './testColor';
 import { sendPoint, shuiweiDian, testFly, testLine, testPoint, xiaoqu } from './xiaoqu';
 import { glbLoc } from './glbloc';
+import { newTreePoint } from './newTreePoint';
+import { newFourPoint } from './newFourPoint';
 // import { makeVirticelLine } from '../../../../utils/CesiumApi/CesiumApi';
 
 // import { testDataPipe } from './pipe2';
@@ -44,8 +46,8 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // 演示1：添加免费的osm 建筑物图层
     // viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
-    viewer.scene.globe.imageryLayers.get(0).alpha = 0.6;
-    viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1);
+    // viewer.scene.globe.imageryLayers.get(0).alpha = 0.9;
+    // viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 1);
 
     // viewer.cesiumWidget.creditContainer.style.display = "none";
 
@@ -66,13 +68,10 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // viewer.scene.debugShowFramesPerSecond = true;
 
     // 场景变暗
-    // changeViewerColor(viewer);
-
-    // 添加河流
-    addRiver(viewer);
+    changeViewerColor(viewer);
 
     // 添加建筑物设置样式
-    addGBuilding(viewer);
+    // addGBuilding(viewer);
 
     // 添加管道
     // addPipe(viewer);
@@ -80,36 +79,100 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // 添加流动线
     // addMutTypeLine(viewer);
 
-    // 添加摄像头
-    addCamera(viewer);
+  
 
     // 添加建筑模型
-    addJianzhu1(viewer);
+    // addJianzhu1(viewer);
 
     // 添加小区的边界线
-    addXiaoqu(viewer);
+    // addXiaoqu(viewer);
 
     // 添加水体周边的草坪
     // addCaoPing(viewer);
 
     // 添加鼠标hover事件
-    addMouseHover(viewer, callBack);
+    // addMouseHover(viewer, callBack);
 
     // 添加鼠标click事件
-    addMouseClick(viewer, callBackClick);
+    // addMouseClick(viewer, callBackClick);
 
+    // 添加雷达扫描图
+    // addSeveralCircle(viewer);
 
     // 添加水位监测点
     addShuiwei(viewer);
-
-    // 添加雷达扫描图
-    addSeveralCircle(viewer);
-
-    // 添加AI告警点
+    // 添加摄像头
+    addCamera(viewer);
+    // 添加AI告警点 
     addAIPoint(viewer);
+
+    // 添加树木点
+    addTree(viewer);
+
+    // 添加道路线
+    addRoad(viewer);
+
+    // 添加河流
+    addRiver(viewer);
+
 
 
     return viewer;
+}
+
+// 2022-06-08 粉刷匠 添加道路
+export const addRoad=(viewer:any)=>{
+
+    const airplaneUrl = "./Models/road.glb";
+    const cord = [121.364978, 31.207834, 19];
+    const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
+    const newHeading = Cesium.Math.toRadians(-13); // 初始heading值赋0
+    const newPitch = Cesium.Math.toRadians(0);
+    const newRoll = Cesium.Math.toRadians(0);
+    const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+    const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+
+    const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+        url: airplaneUrl, // 模型地址
+        modelMatrix,
+    }));
+
+    // 放大一点
+    curModel.scale = 8;
+}
+
+// 2022-06-08 粉刷匠 添加树木点
+export const addTree = (viewer: any) => {
+    const airplaneUrl = "./Models/tree_simple.glb";
+    const loc1 = newTreePoint.features;
+    const WaterControlPoint = [];
+    for (let i = 0; i < loc1.length; i++) {
+        const sigLoc = loc1[i].geometry.coordinates;
+        WaterControlPoint.push(sigLoc[0]);
+        WaterControlPoint.push(sigLoc[1]);
+        WaterControlPoint.push(17);
+        WaterControlPoint.push(45);
+    }
+
+    for (let i = 0; i < WaterControlPoint.length; i += 4) {
+        const cord = [WaterControlPoint[i], WaterControlPoint[i + 1], WaterControlPoint[i + 2]];
+        const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
+        const newHeading = Cesium.Math.toRadians(WaterControlPoint[i + 3]); // 初始heading值赋0
+        const newPitch = Cesium.Math.toRadians(0);
+        const newRoll = Cesium.Math.toRadians(0);
+        const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+
+        const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+            url: airplaneUrl, // 模型地址
+            modelMatrix,
+        }));
+
+        // todo:平移,可使用偷懒方法，修改Cesium.Cartesian3.fromDegrees(110.95, 23.40, 100); 
+
+        // 放大一点
+        curModel.scale = 7;
+    }
 }
 
 // 2022-05-19 粉刷匠 添加河流
@@ -124,7 +187,10 @@ export const addRiver = (viewer: any) => {
 
 
     // 背景颜色
-    const color = { r: 84, g: 220, b: 224, a: 150 };
+    // const color = { r: 84, g: 220, b: 224, a: 150 };
+    const color = { r: 47, g: 90, b: 65, a: 250 };
+    // const color ={ r: 174, g: 128, b: 77, a: 150 }
+
     const backMaterial = new Cesium.Material({
         fabric: {
             type: 'Color',
@@ -157,8 +223,10 @@ export const addRiver = (viewer: any) => {
         fabric: {
             type: 'Water',
             uniforms: { // 动态传递参数
-                baseWaterColor: Cesium.Color.WHITE.withAlpha(0.1), // 水体颜色
-                blendColor: Cesium.Color.DARKBLUE, // 水陆混合处颜色
+                // baseWaterColor: Cesium.Color.BLUE.withAlpha(0.5), // 水体颜色
+                baseWaterColor: Cesium.Color.fromCssColorString("#2F4F4F").withAlpha(0.2),
+                // blendColor: Cesium.Color.DARKBLUE, // 水陆混合处颜色
+                blendColor: Cesium.Color.fromBytes(color.r, color.g, color.b, color.a),
                 // specularMap:"../../**/jpg", // 一张黑白图用来作为标识哪里是用水来渲染的贴图
                 normalMap: Cesium.buildModuleUrl(normalMap), // 用来生成起伏效果的水体
                 frequency: 1000.0,
@@ -204,9 +272,10 @@ export const addGBuilding = (viewer: any) => {
     // http://localhost:9003/model/tdXBdddQ6/tileset.json
     // http://localhost:9003/model/tNMZjFYSa/tileset.json
     // http://localhost:9003/model/tUFIgmo9U/tileset.json
+    // http://localhost:9003/model/tT57hO2UY/tileset.json
 
     const tmpTileset = new Cesium.Cesium3DTileset({
-        url: ' http://localhost:9003/model/tUFIgmo9U/tileset.json',
+        url: ' http://localhost:9003/model/tT57hO2UY/tileset.json',
         // 控制切片视角显示的数量，可调整性能
         maximumScreenSpaceError: 2,
         // maximumNumberOfLoadedTiles: 100000,
@@ -267,42 +336,45 @@ export const addGBuilding = (viewer: any) => {
         // });
 
         // 设置3dTiles贴地
-        set3DtilesHeight(20, tileset);
+        set3DtilesHeight(18, tileset);
 
         // 设置hover事件
         // addHoverAction(tileset, viewer);
+        
 
     })
 }
 
 export const addCamera = (viewer: any) => {
-    // 摄像头
-    // const sxtArr = [[104.06273, 30.77760, 490], [104.04797, 30.76234, 490], [104.06862, 30.76404, 490]];
     const sxtArr = [];
 
-    const orgData = testPoint.features;
+    const orgData = newFourPoint.features;
     for (let i = 0; i < orgData.length; i++) {
         const loc = orgData[i].geometry.coordinates;
         sxtArr.push([loc[0], loc[1]]);
     }
-    const tmpArr = ['o1', 'o2', 'o5', 'o6'];
+    const tmpArr = ['o2'];
     // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
-    const nameArr = ['视频', '人员', '水位', '事件'];
+    // const nameArr = ['视频', '人员', '水位', '事件'];
+    const nameArr = ['王晓洲'];
 
-    for (let i = 0; i < sxtArr.length; i += 3) {
-        const index = Math.floor(Math.random() * 4);
+
+    for (let i = 3; i < 4; i++) {
+        const index = 0;
         const textShow = nameArr[index];
         viewer.entities.add({
             id: `map-no-point${i}no-type${index}`,
             name: `map-no-point${i}-type${index}`,
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1],15),
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1],25),
             billboard: {
+                disableDepthTestDistance:50000,
                 image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
                 // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
             },
             label: {
+                disableDepthTestDistance:50000,
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
                 text: textShow,
@@ -320,7 +392,7 @@ export const addAIPoint = (viewer: any) => {
     // 摄像头
     const sxtArr = [];
 
-    const orgData = testPoint.features;
+    const orgData = newFourPoint.features;
     for (let i = 0; i < orgData.length; i++) {
         const loc = orgData[i].geometry.coordinates;
         sxtArr.push([loc[0], loc[1]]);
@@ -328,13 +400,14 @@ export const addAIPoint = (viewer: any) => {
 
     const featureArr: any = [];
 
-    for (let i = 2; i < sxtArr.length; i += 6) {
+    for (let i = 0; i < 1; i++) {
         const index = Math.floor(Math.random() * 4);
         const sigEntity = new Cesium.Entity({
             id: `map-no-point${i}no-type${index}`,
             name: `map-ai-point${i}-type${index}`,
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 15),
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20),
             billboard: {
+                disableDepthTestDistance:50000,
                 image: `./Models/image/ai.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 scale: 0.6,
@@ -342,6 +415,7 @@ export const addAIPoint = (viewer: any) => {
                 // scaleByDistance: new Cesium.NearFarScalar(500, 0.11, 2000, 0.1)
             },
             label: {
+                disableDepthTestDistance:50000,
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
                 text: `AI预警`,
@@ -355,8 +429,6 @@ export const addAIPoint = (viewer: any) => {
         featureArr.push(sigEntity);
         viewer.entities.add(sigEntity);
     }
-
-    // console.log(featureArr);
 
     const min = 0.60;
     const max = 0.75;
@@ -392,9 +464,9 @@ export const changeViewerColor = (viewer: any) => {
     viewer.scene.postProcessStages.add(new Cesium.PostProcessStage({
         fragmentShader: fs,
         uniforms: {
-            scale: 0.1,
+            scale: 1,
             offset: function () {
-                return new Cesium.Cartesian3(0.1, 0.2, 0.3);
+                return new Cesium.Cartesian3(0.2, 0.2, 0.3);
             }
         }
     }));
@@ -791,13 +863,37 @@ export const zoomPipe = (viewer: any) => {
     if (!viewer) return;
 
     const cameraInfo = {
-        cameraHPR: { heading: 15.481062760908197, pitch: -31.18818128741477, roll: 0.05321288363450053 },
-        cameraHeight: { longitude: 2.118106804333249, latitude: 0.544476750437641, height: 916.2803963905053 },
-        maxx: 121.3871614437298,
-        maxy: 31.22969948665354,
-        midLocation: { lon: 121.36282102810752, lat: 31.209379261905365 },
-        minx: 121.34852574213636,
-        miny: 31.20198658012191,
+        // cameraHPR: { heading: 15.481062760908197, pitch: -31.18818128741477, roll: 0.05321288363450053 },
+        // cameraHeight: { longitude: 2.118106804333249, latitude: 0.544476750437641, height: 916.2803963905053 },
+        // maxx: 121.3871614437298,
+        // maxy: 31.22969948665354,
+        // midLocation: { lon: 121.36282102810752, lat: 31.209379261905365 },
+        // minx: 121.34852574213636,
+        // miny: 31.20198658012191,
+
+        // cameraHPR: { heading: 24.118465637356074, pitch: -15.207435156071249, roll: 0.07216103251978853 },
+        // cameraHeight: { longitude: 2.118211242712677, latitude: 0.5446742723728493, height: 69.5328270168534 },
+        // maxx: 121.67810751944543,
+        // maxy: 31.475226233372293,
+        // midLocation: { lon: 121.36566124498057, lat: 31.20964283770574 },
+        // minx: 121.05102112974993,
+        // miny: 31.208213907708743,
+
+        // cameraHPR: { heading: 25.42852171934043, pitch: -20.307716977990143, roll: 0.0780415210755247 },
+        // cameraHeight: { longitude: 2.1182079059714667, latitude: 0.5446731035625492, height: 87.65892938602643 },
+        // maxx: 121.37502699272494,
+        // maxy: 31.218884438895664,
+        // midLocation: { lon: 121.3654405196692, lat: 31.209399615898352 },
+        // minx: 121.36351706427872,
+        // miny: 31.2081297438934,
+
+        cameraHPR: { heading: 25.428521615561984, pitch: -20.307716388156546, roll: 0.07804182009544941 },
+        cameraHeight: { longitude: 2.1182100389663496, latitude: 0.5446767533423199, height: 87.72783749796466 },
+        maxx: 121.3751576163834,
+        maxy: 31.21910254324854,
+        midLocation: { lon: 121.36556357277105, lat: 31.20961024975844 },
+        minx: 121.36363859984772,
+        miny: 31.20833937944793,
     }
 
     viewer.camera.flyTo({
@@ -1054,9 +1150,8 @@ export const addMouseClick = (viewer: any, callBack: any) => {
 
 // 添加水位监测点
 export const addShuiwei = (viewer: any) => {
-    // const pointArr = [[113.91, 22.52, 100], [113.89, 22.50, 100], [113.95, 22.57, 100]]
 
-    const orgData = shuiweiDian.features;
+    const orgData = newFourPoint.features;
     const pointArr: any = [];
     for (let i = 0; i < orgData.length; i++) {
         const loc = orgData[i].geometry.coordinates;
@@ -1070,10 +1165,10 @@ export const addShuiwei = (viewer: any) => {
     // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
 
     let flag = false;
-    for (let i = 0; i < pointArr.length; i += 2) {
+    for (let i = 1; i < 3; i++) {
 
         const index = flag ? 0 : 1;
-        const textShow = flag ? "某某某泵闸" : "某某某断面";
+        const textShow = flag ? "北新泾泵闸" : "天山西路绥宁路";
         flag = !flag;
 
         viewer.entities.add({
@@ -1081,6 +1176,7 @@ export const addShuiwei = (viewer: any) => {
             name: `map-point${i}-type${index}`,
             position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], 15),
             billboard: {
+                disableDepthTestDistance:50000,
                 image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
@@ -1089,6 +1185,7 @@ export const addShuiwei = (viewer: any) => {
             label: {
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
+                disableDepthTestDistance:50000,
                 text: textShow,
                 font: `16px sans-serif`,
                 // fillColor : Cesium.Color.RED,
@@ -1441,4 +1538,15 @@ export const addTestFlightLine = (viewer: any) => {
     }
 
 
+}
+
+
+// 2021-05-12 粉刷匠 添加日照光阴影
+export const addSunShadow = (viewer: any, houro?: number) => {
+    viewer.scene.globe.enableLighting = true;
+    viewer.shadows = true;
+    const hour = houro ? houro - 8 : 0;
+    // 有时候需要看一天的阴影变化，可以通过设置时间的方法，示例如下，注意北京东八区
+    const utc = Cesium.JulianDate.fromDate(new Date(`2022/06/07 ${hour?.toString().padStart(2, '0')}:00:00`));// UTC
+    viewer.clockViewModel.currentTime = Cesium.JulianDate.addHours(utc, 8, new Cesium.JulianDate());//北京时间=UTC+8=GMT+8
 }

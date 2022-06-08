@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "./BigScene.less";
 import * as CesiumApi from "./util/CesiumApi";
-import { Popover, Modal } from "antd";
+import { Popover, Modal, Slider } from "antd";
 import bz_img from "../../../assets/image/bzAll.png";
 import dm_img from "../../../assets/image/dmAll.png";
 import ai_img from "../../../assets/image/ai2.jpg";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
+import tl from "../../../assets/image/tuli.png";
 
 function BigScene(props: any): JSX.Element {
     const mapId = "ID_BIG_SCENE";
@@ -100,9 +101,85 @@ function BigScene(props: any): JSX.Element {
 
     const addBookMark = () => {
         if (!view) return;
-        // const info = CesiumApi.getCurrentCameraInfo(view);
-        // console.log(info);        
+        const info = CesiumApi.getCurrentCameraInfo(view);
+        console.log(info);        
     }
+
+    const marks: any = {
+        8: {
+            style: {
+                color: '#ffffff',
+            },
+            label: <strong>08:00</strong>,
+        },
+        // 1: '01:00',
+        // 2: '02:00',
+        // 3: '03:00',
+        // 4: '04:00',
+        // 5: '05:00',
+        10: {
+            style: {
+                color: '#ffffff',
+            },
+            label: <strong>10:00</strong>,
+        },
+        // 7: '07:00',
+        // 8: '08:00',
+        // 9: '09:00',
+        // 10: '10:00',
+        // 11: '11:00',
+        12: {
+            style: {
+                color: '#ffffff',
+            },
+            label: <strong>12:00</strong>,
+        },
+        14: {
+            style: {
+                color: '#ffffff',
+            },
+            label: <strong>14:00</strong>,
+        },
+        16: {
+            style: {
+                color: '#ffffff',
+            },
+            label: <strong>16:00</strong>,
+        },
+        // 13: '13:00',
+        // 14: '14:00',
+        // 15: '15:00',
+        // 16: '16:00',
+        // 17: '17:00',
+        18: {
+            style: {
+                color: '#ffffff',
+            },
+            label: <strong>18:00</strong>,
+        },
+        // 19: '19:00',
+        // 20: '20:00',
+        // 21: '21:00',
+        // 22: '22:00',
+        // 23: {
+        //     style: {
+        //         color: '#f50',
+        //     },
+        //     label: <strong>23:00</strong>,
+        // },
+    };
+
+    const formatter: any = (value: number) => `${value.toString().padStart(2, '0')}:00`;
+
+    const [sliderValue, setSliderValue] = useState(10);
+    const onChangeSlider = (value: any) => {
+        setSliderValue(value);
+    }
+
+    useEffect(() => {
+        if (!view) return;
+        CesiumApi.addSunShadow(view,sliderValue);
+    }, [sliderValue, view])
 
     return (
         <div className="big-scene">
@@ -130,7 +207,11 @@ function BigScene(props: any): JSX.Element {
 
             <div className="btn" onClick={() => { setIsShowWin(!isShowWin) }} >{isShowWin ? "收起" : "展开"}</div>
 
-            <div className="mid-display-number">
+            <div className="map-legend">
+                <img src={tl} alt="" />
+            </div>
+
+            <div className="mid-display-number" style={{ display: "none" }}>
                 <div className="sig-block">
                     <div>本年预警</div>
                     <div>1090</div>
@@ -154,7 +235,7 @@ function BigScene(props: any): JSX.Element {
                 <div className=" right-win-img right-win-img1" />
             </div>
 
-            <div className="test-btn-group" style={{ display: "none" }}>
+            <div className="test-btn-group" >
                 <div className="sig-btn" onClick={() => { addBookMark() }}  >点击获取当前相机信息</div>
                 <div className="sig-btn" onClick={() => { CesiumApi.addTestFlightLine(view) }}>测试飞行</div>
 
@@ -163,6 +244,21 @@ function BigScene(props: any): JSX.Element {
             <Popover placement="top" visible={isShowTip} content={tipContent} overlayClassName={`jj-ys-tip`}>
                 <span className="tip-cord" style={{ left: tipX, top: tipY - 20 }} />
             </Popover>
+
+            <div className="time-slider-shadow">
+                <div className="tss-text">一天时间变化</div>
+                <div className="tss-choose">
+                    <Slider className="slider-lrr"
+                        marks={marks}
+                        defaultValue={10}
+                        max={18}
+                        min={8}
+                        step={1}
+                        tipFormatter={formatter}
+                        onChange={onChangeSlider}
+                    />
+                </div>
+            </div>
         </div>
     )
 }
