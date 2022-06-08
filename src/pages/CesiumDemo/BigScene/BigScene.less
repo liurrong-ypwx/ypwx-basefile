@@ -6,16 +6,18 @@
 
     .bg-top {
         position: absolute;
+        z-index: 2;
         top: 0;
         left: 0;
         width: 100%;
         height: 1.57rem;
-        background: url(../../../assets/image/topImg001.png);
+        background: url(../../../assets/image/demo/topImg001.png);
         background-repeat: no-repeat;
-        background-size: 100% 40%;
+        background-size: 100% 50%;
     }
 
     .btn {
+        z-index: 2;
         cursor: pointer;
         position: absolute;
         top: .3rem;
@@ -24,14 +26,14 @@
         height: .4rem;
         line-height: .4rem;
         text-align: center;
-        background: rgba(21, 28, 38, 0.7);
+        background: rgba(12, 109, 244, 0.7);
 
         font-size: .18rem;
 
         color: #FFFFFF;
 
         &:hover {
-            background: rgba(21, 28, 38, 0.9);
+            background: rgba(58, 133, 239, 0.9);
 
 
         }
@@ -85,9 +87,11 @@
         animation: rightIn 1s;
         right: 0;
         // background: #151C26;
-        background-color: #122032;
+        // background-color: #122032;
         height: calc(100% - 1.6rem);
-        opacity: .85;
+        // opacity: .85;
+        z-index: 2;
+
 
         &.win-hide {
             animation: rightOut 1s;
@@ -97,8 +101,9 @@
 
         .right-win-img1 {
             width: 100%;
-            height: 6rem;
-            background: url(../../../assets/image/right1_001.png);
+            // height: 6rem;
+            height: 100%;
+            background: url(../../../assets/image/demo/right001.png);
             background-repeat: no-repeat;
             background-size: 100%;
         }
@@ -131,6 +136,7 @@
         opacity: .9;
         position: absolute;
         bottom: .8rem;
+        z-index: 2;
 
         img {
             width: 1.13rem;
@@ -140,7 +146,7 @@
         right: 19%;
 
         &.map-legend-left {
-            right: 0;
+            right: .2rem;
         }
     }
 
@@ -164,7 +170,8 @@
         animation: leftIn 1s;
         left: 0;
         height: calc(100% - 1.6rem);
-        opacity: .85;
+        // opacity: .85;
+        z-index: 2;
 
         &.win-hide {
             animation: leftOut 1s;
@@ -172,26 +179,29 @@
         }
 
         .left-win-img2 {
-            height: calc(100% - 2.1rem);
-            margin-top: .05rem;
-            background-color: #122032;
+            // height: calc(100% - 2.1rem);
+            height: 100%;
+            // margin-top: .05rem;
+            // background-color: #122032;
 
             .real-img {
                 width: 100%;
-                height: 2rem;
-                background-size: 100% auto !important;
-                background-repeat: no-repeat;
-                background: url(../../../assets/image/left1_001.png);
+                // height: 2rem;
+                height: 100%;
+                background-size: 100%  !important;
+                background: url(../../../assets/image/demo/left001.png);
+            background-repeat:no-repeat !important;
+
             }
         }
 
-        .left-win-img1 {
-            width: 100%;
-            height: 2rem;
-            background: url(../../../assets/image/left2_001.png);
-            background-repeat: no-repeat;
-            background-size: 100%;
-        }
+        // .left-win-img1 {
+        //     width: 100%;
+        //     height: 2rem;
+        //     background: url(../../../assets/image/left2_001.png);
+        //     background-repeat: no-repeat;
+        //     background-size: 100%;
+        // }
     }
 
     .mid-display-number {
@@ -221,19 +231,22 @@
                 height: 100%;
             }
 
+            z-index: 2;
+            width: 1.55rem;
+            height: 1.02rem;
+            background-size:1.55rem 1.02rem !important;
+            background-repeat:no-repeat !important;
             &.sig-block1{
-                img{
-                    width: 1rem;
-                    height: 100%;
-                }
+                background: url(../../../assets/image/demo/n1.png);
+            }
+            &.sig-block2{
+                background: url(../../../assets/image/demo/n2.png);
+            }
+            &.sig-block3{
+                background: url(../../../assets/image/demo/n3.png);
             }
 
-            &.sig-block2{
-                img{
-                    width: 0.7rem;
-                    height: 100%;
-                }
-            }
+           
 
             & :last-child {
                 height: 1rem;
@@ -257,6 +270,18 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
+
+        &.big-scene-map-container-mask {
+                z-index: 1;
+                position: absolute;
+                // background: url(../../../assets/image/bg.png);
+                background-image: radial-gradient(rgba(255, 255, 255, 0), #000000);
+                background-size: 100%;
+                left: 0;
+                top: 0;
+                // opacity: 0.5;
+                pointer-events: none;
+            }
 
     }
 
@@ -365,6 +390,7 @@
         &.sig-img2{
             width: 35%;
             margin-left: 30%;
+            margin-top: 30%;
         }
     }
 }

@@ -7,7 +7,7 @@ import dm_img from "../../../assets/image/dmimg.png";
 import ai_img from "../../../assets/image/ai3.png";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import tl from "../../../assets/image/tuli.png";
+import tl from "../../../assets/image/demo/legend.png";
 import { PointViewArr } from "./util/pointView";
 
 import number1 from "../../../assets/image/number1.png";
@@ -33,7 +33,7 @@ function BigScene(props: any): JSX.Element {
         if (!isShowTip) return;
         setTimeout(() => {
             setIsShowTip(false);
-        }, 3000);
+        }, 6000);
     }, [isShowTip])
 
     useEffect(() => {
@@ -248,6 +248,8 @@ function BigScene(props: any): JSX.Element {
             </Modal>
 
             <div id={mapId} className="big-scene-map-container" />
+            <div className="big-scene-map-container big-scene-map-container-mask " />
+
 
             <div className="bg-top"   />
 
@@ -258,18 +260,18 @@ function BigScene(props: any): JSX.Element {
             </div>
 
             <div className="mid-display-number"  >
-                <div className="sig-block sig-block1">
-                    <div>本年预警</div>
+                <div className="sig-block sig-block1" />
+                    {/* <div>本年预警</div>
                     <div><img src={number1} alt="" /></div>
-                </div>
-                <div className="sig-block sig-block2">
-                    <div>当月预警</div>
+                </div> */}
+                <div className="sig-block sig-block2" />
+                    {/* <div>当月预警</div>
                     <div><img src={number2} alt="" /></div>
-                </div>
-                <div className="sig-block sig-block3">
-                    <div>当日预警</div>
+                </div> */}
+                <div className="sig-block sig-block3" />
+                    {/* <div>当日预警</div>
                     <div><img src={number3} alt="" /></div>
-                </div>
+                </div> */}
             </div>
 
             <div className={`left-win ${isShowWin ? "" : "win-hide"}`}>

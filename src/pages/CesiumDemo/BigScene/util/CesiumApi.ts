@@ -562,7 +562,7 @@ export const addCamera = (viewer: any) => {
         viewer.entities.add({
             id: `map-no-point${i}no-type${index}`,
             name: `map-no-point${i}-type${index}`,
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 25),
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20),
             billboard: {
                 disableDepthTestDistance: 50000,
                 image: `./Models/image/${tmpArr[index]}.png`,
@@ -607,7 +607,7 @@ export const addAIPoint = (viewer: any) => {
         const sigEntity = new Cesium.Entity({
             id: `map-no-point${i}no-type${index}`,
             name: `map-point${i}-${tmpArr[i]}-type${index}`,
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20),
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 22),
             billboard: {
                 disableDepthTestDistance: 50000,
                 image: `./Models/image/${tmpArr[index]}.png`,
@@ -621,10 +621,10 @@ export const addAIPoint = (viewer: any) => {
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
                 text: `${nameArr[index]}`,
-                font: `16px sans-serif`,
+                font: `20px sans-serif`,
                 // fillColor : Cesium.Color.RED,
                 fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
-                pixelOffset: new Cesium.Cartesian2(0, -90),
+                pixelOffset: new Cesium.Cartesian2(0, -120),
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },
         })
