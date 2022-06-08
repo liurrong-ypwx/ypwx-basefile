@@ -3,7 +3,7 @@ import "./BigScene.less";
 import * as CesiumApi from "./util/CesiumApi";
 import { Popover, Modal, Slider } from "antd";
 import bz_img from "../../../assets/image/bzAll.png";
-import dm_img from "../../../assets/image/dmAll.png";
+import dm_img from "../../../assets/image/dmimg.png";
 import ai_img from "../../../assets/image/ai2.jpg";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
