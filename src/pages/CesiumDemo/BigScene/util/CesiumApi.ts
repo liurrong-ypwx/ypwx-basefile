@@ -71,7 +71,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     changeViewerColor(viewer);
 
     // 添加建筑物设置样式
-    // addGBuilding(viewer);
+    addGBuilding(viewer);
 
     // 添加管道
     // addPipe(viewer);
@@ -91,10 +91,10 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // addCaoPing(viewer);
 
     // 添加鼠标hover事件
-    // addMouseHover(viewer, callBack);
+    addMouseHover(viewer, callBack);
 
     // 添加鼠标click事件
-    // addMouseClick(viewer, callBackClick);
+    addMouseClick(viewer, callBackClick);
 
     // 添加雷达扫描图
     // addSeveralCircle(viewer);
@@ -122,9 +122,10 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
 
 // 2022-06-08 粉刷匠 添加道路
 export const addRoad=(viewer:any)=>{
+    if (!viewer) return;
 
     const airplaneUrl = "./Models/road.glb";
-    const cord = [121.364978, 31.207834, 19];
+    const cord = [121.364978, 31.207834, 20.5];
     const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
     const newHeading = Cesium.Math.toRadians(-13); // 初始heading值赋0
     const newPitch = Cesium.Math.toRadians(0);
@@ -134,6 +135,8 @@ export const addRoad=(viewer:any)=>{
 
     const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
         url: airplaneUrl, // 模型地址
+        // disableDepthTestDistance:50000,
+        // heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
         modelMatrix,
     }));
 

@@ -18,8 +18,14 @@ function BigScene(props: any): JSX.Element {
     const [tipContent, setTipContent] = useState<any>(null);
     const [isShowModal, setIsShowModal] = useState(false);
     const [modalType, setModalType] = useState(1);
-
     const [isShowWin, setIsShowWin] = useState(true);
+
+    useEffect(()=>{
+        if(!isShowModal) return;
+        setTimeout(() => {
+            setIsShowModal(false);
+        }, 3000);
+    },[isShowModal])
 
 
     useEffect(() => {
@@ -207,7 +213,7 @@ function BigScene(props: any): JSX.Element {
 
             <div className="btn" onClick={() => { setIsShowWin(!isShowWin) }} >{isShowWin ? "收起" : "展开"}</div>
 
-            <div className="map-legend">
+            <div className={`map-legend ${isShowWin ? "" : "map-legend-left"}`}>
                 <img src={tl} alt="" />
             </div>
 
