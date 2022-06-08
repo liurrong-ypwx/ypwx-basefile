@@ -132,7 +132,7 @@ export const addBuildingLabel = (viewer: any) => {
     const data = [
         { text: "长宁区房地产\n交易中心大楼", "geometry": { "type": "Point", "coordinates": [121.365122087479207, 31.209064131502057, 35] } },
         { text: "上海市公积金\n管理中心", "geometry": { "type": "Point", "coordinates": [121.36499172616864, 31.209681453134049, 35] } },
-        { text: "浙江建安", "geometry": { "type": "Point", "coordinates": [121.365471013781175, 31.20986166221709, 40] } }
+        { text: "浙江建安\n ", "geometry": { "type": "Point", "coordinates": [121.365471013781175, 31.20986166221709, 40] } }
     ]
 
     for (let i = 0; i < data.length; i++) {
@@ -156,16 +156,19 @@ export const addBuildingLabel = (viewer: any) => {
         })
         viewer.entities.add(sigEntity);
 
-        // const sigEntity2 = new Cesium.Entity({
-        //     position: Cesium.Cartesian3.fromDegrees(data[i].geometry.coordinates[0], data[i].geometry.coordinates[1], data[i].geometry.coordinates[2] + 10),
-        //     billboard: {
-        //         // image: makeVirticelLine("#EB5CE6"), // default: undefined  
-        //         image: `./Models/image/textbg2.png`,
-        //         width: 150,
-        //         height: 50
-        //     },
-        // })
-        // viewer.entities.add(sigEntity2);
+        const offsetText = (i === 2 ? 0 : 0);
+        const sigEntity2 = new Cesium.Entity({
+            position: Cesium.Cartesian3.fromDegrees(data[i].geometry.coordinates[0], data[i].geometry.coordinates[1], data[i].geometry.coordinates[2] + offsetText),
+            billboard: {
+                // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+                image: `./Models/image/textbg3.png`,
+                width: 150,
+                height: 50,
+                pixelOffset: new Cesium.Cartesian2(0, -30),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        })
+        viewer.entities.add(sigEntity2);
     }
 
 }
@@ -594,6 +597,20 @@ export const addCamera = (viewer: any) => {
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },
         });
+
+        const offsetText = 0;
+        const sigEntity2 = new Cesium.Entity({
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20 + offsetText),
+            billboard: {
+                // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+                image: `./Models/image/textbg_g.png`,
+                width: 100,
+                height: 40,
+                pixelOffset: new Cesium.Cartesian2(0, -70),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        })
+        viewer.entities.add(sigEntity2);
     }
 }
 
@@ -612,7 +629,7 @@ export const addAIPoint = (viewer: any) => {
     const tmpArr = ['ai','dmd'];
     // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
     // const nameArr = ['视频', '人员', '水位', '事件'];
-    const nameArr = ['哈密路监测点', '天山西路绥宁路'];
+    const nameArr = ['哈密路监控点', '天山西路绥宁路'];
 
     for (let i = 0; i < 2; i++) {
         const index = i;
@@ -644,6 +661,20 @@ export const addAIPoint = (viewer: any) => {
         })
         featureArr.push(sigEntity);
         viewer.entities.add(sigEntity);
+
+        // const offsetText = 0;
+        const sigEntity2 = new Cesium.Entity({
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 22),
+            billboard: {
+                // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+                image: `./Models/image/${i === 0 ? "textbg_p" : "textbg_lb"}.png`,
+                width: 160,
+                height: 50,
+                pixelOffset: new Cesium.Cartesian2(0, -105),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        })
+        viewer.entities.add(sigEntity2);
     }
 
     const min = 0.60;
@@ -1411,6 +1442,20 @@ export const addShuiwei = (viewer: any) => {
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },
         });
+
+        const offsetText = 0;
+        const sigEntity2 = new Cesium.Entity({
+            position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], 15 + offsetText),
+            billboard: {
+                // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+                image: `./Models/image/textbg_y.png`,
+                width: 100,
+                height: 40,
+                pixelOffset: new Cesium.Cartesian2(0, -70),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+            },
+        })
+        viewer.entities.add(sigEntity2);
     }
 
     // const updateData = () => {
