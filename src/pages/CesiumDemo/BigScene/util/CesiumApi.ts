@@ -155,6 +155,17 @@ export const addBuildingLabel = (viewer: any) => {
             },
         })
         viewer.entities.add(sigEntity);
+
+        // const sigEntity2 = new Cesium.Entity({
+        //     position: Cesium.Cartesian3.fromDegrees(data[i].geometry.coordinates[0], data[i].geometry.coordinates[1], data[i].geometry.coordinates[2] + 10),
+        //     billboard: {
+        //         // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+        //         image: `./Models/image/textbg2.png`,
+        //         width: 150,
+        //         height: 50
+        //     },
+        // })
+        // viewer.entities.add(sigEntity2);
     }
 
 }

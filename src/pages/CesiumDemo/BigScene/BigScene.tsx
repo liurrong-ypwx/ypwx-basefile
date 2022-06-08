@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./BigScene.less";
 import * as CesiumApi from "./util/CesiumApi";
 import { Popover, Modal, Slider } from "antd";
-import bz_img from "../../../assets/image/bzAll.png";
+import bz_img from "../../../assets/image/bzAll3.png";
 import dm_img from "../../../assets/image/dmimg.png";
 import ai_img from "../../../assets/image/ai3.png";
 import videojs from "video.js";
@@ -13,7 +13,7 @@ import { PointViewArr } from "./util/pointView";
 import number1 from "../../../assets/image/number1.png";
 import number2 from "../../../assets/image/number2.png";
 import number3 from "../../../assets/image/number3.png";
-import dmClick from "../../../assets/image/dmClick.png";
+import dmClick from "../../../assets/image/dmClick2.png";
 
 
 
