@@ -10,10 +10,9 @@
         left: 0;
         width: 100%;
         height: 1.57rem;
-        background: url(../../../assets/image/topImg.png);
-        background-size: 100%;
+        background: url(../../../assets/image/topImg001.png);
         background-repeat: no-repeat;
-        margin-top: -.05rem;
+        background-size: 100% 40%;
     }
 
     .btn {
@@ -85,7 +84,8 @@
         top: .8rem;
         animation: rightIn 1s;
         right: 0;
-        background: #151C26;
+        // background: #151C26;
+        background-color: #122032;
         height: calc(100% - 1.6rem);
         opacity: .85;
 
@@ -98,13 +98,13 @@
         .right-win-img1 {
             width: 100%;
             height: 6rem;
-            background: url(../../../assets/image/right1.png);
+            background: url(../../../assets/image/right1_001.png);
             background-repeat: no-repeat;
             background-size: 100%;
         }
     }
 
-    .label-container{
+    .label-container {
         position: absolute;
         bottom: .2rem;
         right: 0;
@@ -112,7 +112,7 @@
         flex-direction: row;
         align-items: center;
 
-        .sig-label{
+        .sig-label {
             width: .7rem;
             height: .4rem;
             background: #4b8cdb;
@@ -121,7 +121,7 @@
             line-height: .4rem;
             text-align: center;
 
-            &:hover{
+            &:hover {
                 background: #77b5ff;
             }
         }
@@ -163,7 +163,6 @@
         top: .8rem;
         animation: leftIn 1s;
         left: 0;
-        background: #151C26;
         height: calc(100% - 1.6rem);
         opacity: .85;
 
@@ -173,17 +172,23 @@
         }
 
         .left-win-img2 {
-            width: 100%;
-            height: 2rem;
-            background: url(../../../assets/image/left1.png);
-            background-repeat: no-repeat;
-            background-size: 100%;
+            height: calc(100% - 2.1rem);
+            margin-top: .05rem;
+            background-color: #122032;
+
+            .real-img {
+                width: 100%;
+                height: 2rem;
+                background-size: 100% auto !important;
+                background-repeat: no-repeat;
+                background: url(../../../assets/image/left1_001.png);
+            }
         }
 
         .left-win-img1 {
             width: 100%;
             height: 2rem;
-            background: url(../../../assets/image/left2.png);
+            background: url(../../../assets/image/left2_001.png);
             background-repeat: no-repeat;
             background-size: 100%;
         }
@@ -211,7 +216,27 @@
                 text-align: center;
             }
 
+            img{
+                width: 0.3rem;
+                height: 100%;
+            }
+
+            &.sig-block1{
+                img{
+                    width: 1rem;
+                    height: 100%;
+                }
+            }
+
+            &.sig-block2{
+                img{
+                    width: 0.7rem;
+                    height: 100%;
+                }
+            }
+
             & :last-child {
+                height: 1rem;
                 width: 2rem;
                 font-weight: bold;
                 color: #D0DFF2;
@@ -319,13 +344,27 @@
     width: 10rem !important;
     height: 7rem;
     padding: 0;
+    .ant-modal-content{
+        background: transparent;
+    }
 
     .ant-modal-body {
         padding: 0;
+        background: transparent;
     }
 
     .js-modal-title {
         color: #77b5ff;
         font-size: .18rem;
+    }
+
+    .sig-img {
+        width: 100%;
+        height: 100%;
+
+        &.sig-img2{
+            width: 35%;
+            margin-left: 30%;
+        }
     }
 }

@@ -4,11 +4,18 @@ import * as CesiumApi from "./util/CesiumApi";
 import { Popover, Modal, Slider } from "antd";
 import bz_img from "../../../assets/image/bzAll.png";
 import dm_img from "../../../assets/image/dmimg.png";
-import ai_img from "../../../assets/image/ai2.jpg";
+import ai_img from "../../../assets/image/ai3.png";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import tl from "../../../assets/image/tuli.png";
 import { PointViewArr } from "./util/pointView";
+
+import number1 from "../../../assets/image/number1.png";
+import number2 from "../../../assets/image/number2.png";
+import number3 from "../../../assets/image/number3.png";
+import dmClick from "../../../assets/image/dmClick.png";
+
+
 
 function BigScene(props: any): JSX.Element {
     const mapId = "ID_BIG_SCENE";
@@ -62,6 +69,12 @@ function BigScene(props: any): JSX.Element {
 
         if (hoverInfo && hoverInfo.show) {
             const property: any = hoverInfo.pickedFeature.id;
+            const name = property.name;
+            if (name.indexOf('ai') !== -1) {
+                setIsShowTip(false);
+                return;
+            }
+
             setIsShowTip(true);
             setTipX(hoverInfo.position.x);
             setTipY(hoverInfo.position.y);
@@ -69,6 +82,16 @@ function BigScene(props: any): JSX.Element {
             const typeIndex = property.name.indexOf('type');
             const type = property.name.substring(typeIndex + 4)
             // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
+
+            if (name.indexOf('dmd') !== -1) {
+                const tmpContent = (
+                    <div className="field-container field-container-l2">
+                        <img src={dm_img} alt="" />
+                    </div>
+                )
+                setTipContent(tmpContent);
+                return;
+            }
 
             if (+type === 0) {
                 const tmpContent = (
@@ -78,7 +101,6 @@ function BigScene(props: any): JSX.Element {
                 )
                 setTipContent(tmpContent);
             } else {
-
                 const tmpContent = (
                     <div className="field-container field-container-l2">
                         <img src={dm_img} alt="" />
@@ -106,6 +128,12 @@ function BigScene(props: any): JSX.Element {
         if (name.indexOf('ai') !== -1) {
             setIsShowModal(true);
             setModalType(1);
+            return;
+        }
+        if (name.indexOf('dmd') !== -1) {
+            setIsShowModal(true);
+            setModalType(3);
+            return;
         }
 
         if (+type === 0) {
@@ -214,45 +242,48 @@ function BigScene(props: any): JSX.Element {
                         autoPlay={true}
                         data-setup='{ "aspectRatio":"640:267", "playbackRates": [1, 1.5, 2] }'>
                         <source src='http://192.168.0.104:3001/tv.mp4' type='video/mp4' />
-                    </video> : <img src={ai_img} alt="" />
+                    </video> : modalType === 1 ? <img className="sig-img" src={ai_img} alt="" /> :
+                        <img className="sig-img sig-img2" src={dmClick} alt="" />
                 }
             </Modal>
 
             <div id={mapId} className="big-scene-map-container" />
 
-            <div className="bg-top" />
+            <div className="bg-top"   />
 
-            <div className="btn" onClick={() => { setIsShowWin(!isShowWin) }} >{isShowWin ? "收起" : "展开"}</div>
+            <div className="btn"   onClick={() => { setIsShowWin(!isShowWin) }} >{isShowWin ? "收起" : "展开"}</div>
 
-            <div className={`map-legend ${isShowWin ? "" : "map-legend-left"}`}>
+            <div    className={`map-legend ${isShowWin ? "" : "map-legend-left"}`}>
                 <img src={tl} alt="" />
             </div>
 
-            <div className="mid-display-number" style={{ display: "none" }}>
-                <div className="sig-block">
+            <div className="mid-display-number"  >
+                <div className="sig-block sig-block1">
                     <div>本年预警</div>
-                    <div>1090</div>
+                    <div><img src={number1} alt="" /></div>
                 </div>
-                <div className="sig-block">
+                <div className="sig-block sig-block2">
                     <div>当月预警</div>
-                    <div>398</div>
+                    <div><img src={number2} alt="" /></div>
                 </div>
-                <div className="sig-block">
+                <div className="sig-block sig-block3">
                     <div>当日预警</div>
-                    <div>9</div>
+                    <div><img src={number3} alt="" /></div>
                 </div>
             </div>
 
             <div className={`left-win ${isShowWin ? "" : "win-hide"}`}>
                 <div className=" left-win-img left-win-img1" />
-                <div className="left-win-img left-win-img2" />
+                <div className="left-win-img left-win-img2">
+                    <div className="real-img" />
+                </div>
             </div>
 
             <div className={`right-win ${isShowWin ? "" : "win-hide"}`}>
                 <div className=" right-win-img right-win-img1" />
             </div>
 
-            <div className="test-btn-group" >
+            <div className="test-btn-group" style={{display:"none"}} >
                 <div className="sig-btn" onClick={() => { addBookMark() }}  >点击获取当前相机信息</div>
                 <div className="sig-btn" onClick={() => { CesiumApi.addTestFlightLine(view) }}>测试飞行</div>
 
@@ -272,7 +303,7 @@ function BigScene(props: any): JSX.Element {
                 }
             </div>
 
-            <div className="time-slider-shadow">
+            <div className="time-slider-shadow"  >
                 <div className="tss-text">一天时间变化</div>
                 <div className="tss-choose">
                     <Slider className="slider-lrr"

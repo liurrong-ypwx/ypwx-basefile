@@ -597,15 +597,20 @@ export const addAIPoint = (viewer: any) => {
 
     const featureArr: any = [];
 
-    for (let i = 0; i < 1; i++) {
-        const index = Math.floor(Math.random() * 4);
+    const tmpArr = ['ai','dmd'];
+    // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
+    // const nameArr = ['视频', '人员', '水位', '事件'];
+    const nameArr = ['哈密路监测点', '天山西路绥宁路'];
+
+    for (let i = 0; i < 2; i++) {
+        const index = i;
         const sigEntity = new Cesium.Entity({
             id: `map-no-point${i}no-type${index}`,
-            name: `map-ai-point${i}-type${index}`,
+            name: `map-point${i}-${tmpArr[i]}-type${index}`,
             position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20),
             billboard: {
                 disableDepthTestDistance: 50000,
-                image: `./Models/image/ai.png`,
+                image: `./Models/image/${tmpArr[index]}.png`,
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 scale: 0.6,
                 // heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
@@ -615,7 +620,7 @@ export const addAIPoint = (viewer: any) => {
                 disableDepthTestDistance: 50000,
                 // 竖直的文字
                 // text: '测\n试\n文\n字',
-                text: `哈密路监测点`,
+                text: `${nameArr[index]}`,
                 font: `16px sans-serif`,
                 // fillColor : Cesium.Color.RED,
                 fillColor: Cesium.Color.fromCssColorString('#87CEFA'),
@@ -1361,8 +1366,8 @@ export const addShuiwei = (viewer: any) => {
     const tmpArr = ['o3', 'o4'];
     // const nameArr = ['视频', '人员', '泵闸', '断面', '水位', '事件'];
 
-    let flag = false;
-    for (let i = 1; i < 3; i++) {
+    let flag = true;
+    for (let i = 2; i < 3; i++) {
 
         const index = flag ? 0 : 1;
         const textShow = flag ? "北新泾" : "天山西路绥宁路";
