@@ -14,6 +14,7 @@ import { glbLoc } from './glbloc';
 import { newTreePoint } from './newTreePoint';
 import { newFourPoint } from './newFourPoint';
 import { makeVirticelLine } from '../../../../utils/CesiumApi/CesiumApi';
+import { Timer } from './Timer';
 
 // import { testDataPipe } from './pipe2';
 
@@ -71,7 +72,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     changeViewerColor(viewer);
 
     // 添加建筑物设置样式
-    addGBuilding(viewer);
+    // addGBuilding(viewer);
 
     // 添加管道
     // addPipe(viewer);
@@ -101,7 +102,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
 
     // 添加水位监测点
     addShuiwei(viewer);
-    // 添加摄像头
+    // 添加摄像头 人员点
     addCamera(viewer);
     // 添加AI告警点 
     addAIPoint(viewer);
@@ -569,14 +570,15 @@ export const addCamera = (viewer: any) => {
     // const nameArr = ['视频', '人员', '水位', '事件'];
     const nameArr = ['王晓洲'];
 
-
+    let moveEntity: any = null;
+    let labelEntity: any = null;
     for (let i = 3; i < 4; i++) {
         const index = 0;
         const textShow = nameArr[index];
-        viewer.entities.add({
+        moveEntity = viewer.entities.add({
             id: `map-no-point${i}no-type${index}`,
             name: `map-no-point${i}-type${index}`,
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20),
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 10),
             billboard: {
                 disableDepthTestDistance: 50000,
                 image: `./Models/image/${tmpArr[index]}.png`,
@@ -598,9 +600,8 @@ export const addCamera = (viewer: any) => {
             },
         });
 
-        const offsetText = 0;
-        const sigEntity2 = new Cesium.Entity({
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 20 + offsetText),
+        labelEntity = new Cesium.Entity({
+            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 10),
             billboard: {
                 // image: makeVirticelLine("#EB5CE6"), // default: undefined  
                 image: `./Models/image/textbg_g.png`,
@@ -610,9 +611,50 @@ export const addCamera = (viewer: any) => {
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM
             },
         })
-        viewer.entities.add(sigEntity2);
+
+        viewer.entities.add(labelEntity);
     }
+
+    const startPoint = Cesium.Cartesian3.fromDegrees(121.365748037160984, 31.209247605593807, 10);
+    const endPoint = Cesium.Cartesian3.fromDegrees(121.364879979455293, 31.208458266467884, 20);
+    // console.log('lrr', startPoint, endPoint);
+    // debugger
+
+    const step = 200;
+    let stepIndex = 0;
+    const stepDisX = (endPoint.x - startPoint.x) / step;
+    const stepDisY = (endPoint.y - startPoint.y) / step;
+    const stepDisZ = (endPoint.z - startPoint.z) / step;
+
+
+    let originPosition = labelEntity.position._value;
+    function updatePosition() {
+        if (stepIndex > step) {
+            return;
+        }
+        originPosition.x += stepDisX;
+        originPosition.y += stepDisY;
+        originPosition.z += stepDisZ;
+        stepIndex++;       
+    }
+
+    labelEntity.position = new Cesium.CallbackProperty(function () {
+        return originPosition
+    }, false);
+
+    moveEntity.position = new Cesium.CallbackProperty(function () {
+        return originPosition
+    }, false);
+    
+
+    setInterval(() => {
+        updatePosition();
+    }, 200);
+   
+
 }
+
+
 
 export const addAIPoint = (viewer: any) => {
     // 摄像头
