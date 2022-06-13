@@ -26,7 +26,7 @@ function BigScene(props: any): JSX.Element {
     const [tipContent, setTipContent] = useState<any>(null);
     const [isShowModal, setIsShowModal] = useState(false);
     const [modalType, setModalType] = useState(1);
-    const [isShowWin, setIsShowWin] = useState(true);
+    const [isShowWin, setIsShowWin] = useState(false);
     const [pointView, setPointView] = useState(4);
 
     useEffect(() => {
@@ -240,15 +240,20 @@ function BigScene(props: any): JSX.Element {
                     modalType === 2 ? <video id="my_video_1" className="video-js vjs-default-skin" width="100%" height="100%"
                         controls preload="none" poster='http://video-js.zencoder.com/oceans-clip.jpg'
                         autoPlay={true}
-                        data-setup='{ "aspectRatio":"640:267", "playbackRates": [1, 1.5, 2] }'>
-                        <source src='http://192.168.0.104:3001/tv.mp4' type='video/mp4' />
-                    </video> : modalType === 1 ? <img className="sig-img" src={ai_img} alt="" /> :
-                        <img className="sig-img sig-img2" src={dmClick} alt="" />
+                        data-setup='{ "aspectRatio":"640:267" }'>
+                        <source src={`${window.location.protocol+"//"+window.location.host}/tv2.mp4`} type='video/mp4' />
+                    </video> : null
+                }
+                {
+                    modalType === 1 ? <img className="sig-img" src={ai_img} alt="" /> : null
+                }
+                {
+                    modalType === 3 ? <img className="sig-img sig-img2" src={dmClick} alt="" /> : null
                 }
             </Modal>
 
             <div id={mapId} className="big-scene-map-container" />
-            <div className="big-scene-map-container big-scene-map-container-mask " />
+            <div style={{ display: "none" }} className="big-scene-map-container big-scene-map-container-mask " />
 
 
             <div className="bg-top"   />
@@ -285,7 +290,7 @@ function BigScene(props: any): JSX.Element {
                 <div className=" right-win-img right-win-img1" />
             </div>
 
-            <div className="test-btn-group" style={{display:"none"}} >
+            <div className="test-btn-group" style={{ display: "none" }} >
                 <div className="sig-btn" onClick={() => { addBookMark() }}  >点击获取当前相机信息</div>
                 <div className="sig-btn" onClick={() => { CesiumApi.addTestFlightLine(view) }}>测试飞行</div>
 
@@ -305,7 +310,7 @@ function BigScene(props: any): JSX.Element {
                 }
             </div>
 
-            <div className="time-slider-shadow"  >
+            <div className="time-slider-shadow" style={{ display: "none" }} >
                 <div className="tss-text">一天时间变化</div>
                 <div className="tss-choose">
                     <Slider className="slider-lrr"

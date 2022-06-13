@@ -71,8 +71,13 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // 场景变暗
     changeViewerColor(viewer);
 
+    // 添加道路线
+    addRoad(viewer);
+    // 添加河流
+    addRiver(viewer);
+
     // 添加建筑物设置样式
-    // addGBuilding(viewer);
+    addGBuilding(viewer);
 
     // 添加管道
     // addPipe(viewer);
@@ -110,10 +115,7 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // 添加树木点
     addTree(viewer);
 
-    // 添加道路线
-    addRoad(viewer);
-    // 添加河流
-    addRiver(viewer);
+  
 
     // 添加一个建筑标记,移入信息展示
     addQxsyDth(null, viewer);
@@ -125,7 +127,51 @@ export const initMap = (domID: string, callBack?: any, callBackClick?: any) => {
     // 添加lupai
     addRoadLabel(viewer);
 
+    // 添加断面的glb
+    addDmGlbModel(viewer);
+
+    // 打开近地面
+    OpenUnderGroup(viewer);
+
     return viewer;
+}
+
+export const OpenUnderGroup = (viewer: any) => {
+    //设置鼠标进去地下
+    viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+    //设置地球透明
+    viewer.scene.globe.translucency.enabled = true;
+    viewer.scene.globe.translucency.frontFaceAlphaByDistance =
+        new Cesium.NearFarScalar(400.0, 0.5, 8000, 0.9);
+}
+
+export const CloseUnderGroud = (viewer: any) => {
+    viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
+    viewer.scene.globe.translucency.enabled = false;
+}
+
+
+export const addDmGlbModel=(viewer:any)=>{
+    if (!viewer) return;
+
+    const airplaneUrl = "./Models/duanmian4.glb";
+    const cord = [121.366380414851032, 31.209805905655672, 12];
+    const cartesian = Cesium.Cartesian3.fromDegrees(cord[0], cord[1], cord[2]);
+    const newHeading = Cesium.Math.toRadians(-60); // 初始heading值赋0
+    const newPitch = Cesium.Math.toRadians(0);
+    const newRoll = Cesium.Math.toRadians(0);
+    const headingPitchRoll = new Cesium.HeadingPitchRoll(newHeading, newPitch, newRoll);
+    const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(cartesian, headingPitchRoll, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame, new Cesium.Matrix4());
+
+    const curModel = viewer.scene.primitives.add(Cesium.Model.fromGltf({
+        url: airplaneUrl, // 模型地址
+        // disableDepthTestDistance:50000,
+        // heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        modelMatrix,
+    }));
+
+    // 放大一点
+    curModel.scale = 2.7;
 }
 
 export const addBuildingLabel = (viewer: any) => {
@@ -400,8 +446,9 @@ export const addRiver = (viewer: any) => {
 
     // 背景颜色
     // const color = { r: 84, g: 220, b: 224, a: 150 };
-    const color = { r: 47, g: 90, b: 65, a: 250 };
     // const color ={ r: 174, g: 128, b: 77, a: 150 }
+    // const color = { r: 47, g: 90, b: 65, a: 250 };
+    const color = { r: 47, g: 90, b: 65, a: 180 };
 
     const backMaterial = new Cesium.Material({
         fabric: {
@@ -485,9 +532,11 @@ export const addGBuilding = (viewer: any) => {
     // http://localhost:9003/model/tNMZjFYSa/tileset.json
     // http://localhost:9003/model/tUFIgmo9U/tileset.json
     // http://localhost:9003/model/tT57hO2UY/tileset.json
+    // http://localhost:9003/model/tHvvxr8FW/tileset.json
+    // http://localhost:9003/model/t8OxOVa0n/tileset.json
 
     const tmpTileset = new Cesium.Cesium3DTileset({
-        url: ' http://localhost:9003/model/tT57hO2UY/tileset.json',
+        url: ' http://localhost:9003/model/t8OxOVa0n/tileset.json',
         // 控制切片视角显示的数量，可调整性能
         maximumScreenSpaceError: 2,
         // maximumNumberOfLoadedTiles: 100000,
@@ -571,7 +620,7 @@ export const addCamera = (viewer: any) => {
     const nameArr = ['王晓洲'];
 
     let moveEntity: any = null;
-    let labelEntity: any = null;
+    // let labelEntity: any = null;
     for (let i = 3; i < 4; i++) {
         const index = 0;
         const textShow = nameArr[index];
@@ -600,19 +649,19 @@ export const addCamera = (viewer: any) => {
             },
         });
 
-        labelEntity = new Cesium.Entity({
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 10),
-            billboard: {
-                // image: makeVirticelLine("#EB5CE6"), // default: undefined  
-                image: `./Models/image/textbg_g.png`,
-                width: 100,
-                height: 40,
-                pixelOffset: new Cesium.Cartesian2(0, -70),
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
-            },
-        })
+        // labelEntity = new Cesium.Entity({
+        //     position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 10),
+        //     billboard: {
+        //         // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+        //         image: `./Models/image/textbg_g.png`,
+        //         width: 100,
+        //         height: 40,
+        //         pixelOffset: new Cesium.Cartesian2(0, -70),
+        //         verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+        //     },
+        // })
 
-        viewer.entities.add(labelEntity);
+        // viewer.entities.add(labelEntity);
     }
 
     const startPoint = Cesium.Cartesian3.fromDegrees(121.365748037160984, 31.209247605593807, 10);
@@ -627,7 +676,7 @@ export const addCamera = (viewer: any) => {
     const stepDisZ = (endPoint.z - startPoint.z) / step;
 
 
-    let originPosition = labelEntity.position._value;
+    let originPosition = moveEntity.position._value;
     function updatePosition() {
         if (stepIndex > step) {
             return;
@@ -638,9 +687,9 @@ export const addCamera = (viewer: any) => {
         stepIndex++;       
     }
 
-    labelEntity.position = new Cesium.CallbackProperty(function () {
-        return originPosition
-    }, false);
+    // labelEntity.position = new Cesium.CallbackProperty(function () {
+    //     return originPosition
+    // }, false);
 
     moveEntity.position = new Cesium.CallbackProperty(function () {
         return originPosition
@@ -705,18 +754,18 @@ export const addAIPoint = (viewer: any) => {
         viewer.entities.add(sigEntity);
 
         // const offsetText = 0;
-        const sigEntity2 = new Cesium.Entity({
-            position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 22),
-            billboard: {
-                // image: makeVirticelLine("#EB5CE6"), // default: undefined  
-                image: `./Models/image/${i === 0 ? "textbg_p" : "textbg_lb"}.png`,
-                width: 160,
-                height: 50,
-                pixelOffset: new Cesium.Cartesian2(0, -105),
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
-            },
-        })
-        viewer.entities.add(sigEntity2);
+        // const sigEntity2 = new Cesium.Entity({
+        //     position: Cesium.Cartesian3.fromDegrees(sxtArr[i][0], sxtArr[i][1], 22),
+        //     billboard: {
+        //         // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+        //         image: `./Models/image/${i === 0 ? "textbg_p" : "textbg_lb"}.png`,
+        //         width: 160,
+        //         height: 50,
+        //         pixelOffset: new Cesium.Cartesian2(0, -105),
+        //         verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+        //     },
+        // })
+        // viewer.entities.add(sigEntity2);
     }
 
     const min = 0.60;
@@ -1485,19 +1534,19 @@ export const addShuiwei = (viewer: any) => {
             },
         });
 
-        const offsetText = 0;
-        const sigEntity2 = new Cesium.Entity({
-            position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], 15 + offsetText),
-            billboard: {
-                // image: makeVirticelLine("#EB5CE6"), // default: undefined  
-                image: `./Models/image/textbg_y.png`,
-                width: 100,
-                height: 40,
-                pixelOffset: new Cesium.Cartesian2(0, -70),
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
-            },
-        })
-        viewer.entities.add(sigEntity2);
+        // const offsetText = 0;
+        // const sigEntity2 = new Cesium.Entity({
+        //     position: Cesium.Cartesian3.fromDegrees(pointArr[i][0], pointArr[i][1], 15 + offsetText),
+        //     billboard: {
+        //         // image: makeVirticelLine("#EB5CE6"), // default: undefined  
+        //         image: `./Models/image/textbg_y.png`,
+        //         width: 100,
+        //         height: 40,
+        //         pixelOffset: new Cesium.Cartesian2(0, -70),
+        //         verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+        //     },
+        // })
+        // viewer.entities.add(sigEntity2);
     }
 
     // const updateData = () => {
